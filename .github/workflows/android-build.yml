@@ -35,7 +35,7 @@ jobs:
       - name: Verify www/ matches root assets
         run: |
           fail=0
-          for f in index.html data.js sw.js manifest.webmanifest README.md; do
+          for f in index.html data.js divination.js sw.js manifest.webmanifest README.md; do
             if [ -f "$f" ] && [ -f "www/$f" ]; then
               if cmp -s "$f" "www/$f"; then
                 echo "OK   $f"
