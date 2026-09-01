@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 易道品牌色: 与 web 端 :root token 对齐 -->
+    <color name="app_bg">#14100b</color>
+    <color name="brand_cinnabar">#d04d3e</color>
+    <color name="brand_gold">#c9a876</color>
+    <color name="brand_gold_dim">#8b6f47</color>
+
+    <!-- AppCompat 主题引用 (覆盖 Capacitor 模板默认) -->
+    <color name="colorPrimary">@color/brand_cinnabar</color>
+    <color name="colorPrimaryDark">@color/app_bg</color>
+    <color name="colorAccent">@color/brand_gold</color>
+</resources>

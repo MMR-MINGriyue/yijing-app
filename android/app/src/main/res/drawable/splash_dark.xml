@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 深色启动屏: #14100b 底 + 居中卦标 (与 PWA 启动观感一致) -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/app_bg"/>
+    <item
+        android:drawable="@drawable/ic_gua"
+        android:gravity="center"
+        android:width="132dp"
+        android:height="132dp"/>
+</layer-list>

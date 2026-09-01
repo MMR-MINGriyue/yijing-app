@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="theme-color" content="#d04d3e" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#14100b" />
 <meta name="description" content="易道 · 国风卦象解读移动应用 · 起卦 · 卦象 · 卦辞 · 变卦推演 · 历史记录" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -51,7 +51,7 @@
     --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
 
     /* ===== 触控 ===== */
-    --tap-min: 44px;              /* iOS HIG / Material 最小可点区 */
+    --tap-min: 48px;              /* Material 3 最小可点区 48dp (iOS HIG 44 已兼容) */
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-left: env(safe-area-inset-left, 0px);
@@ -6865,7 +6865,7 @@
     /* 当前屏 → tab 高亮映射；屏4/5 为详情屏，保持原高亮 */
     const SCREEN_TO_TAB = { 0: 0, 1: 2, 2: 1, 5: 3, 6: 3 };
 
-    function gotoScreen(n) {
+    function gotoScreen(n, opts) {
       n = Math.max(0, Math.min(slides.length - 1, n));
       const target = slides[n];
       if (!target) return;
@@ -6885,7 +6885,32 @@
         target.classList.add('flash');
         setTimeout(function () { target.classList.remove('flash'); }, 1200);
       }
+      /* Android 返回键 / 浏览器返回: 主屏导航压栈, 详情屏 (3/4) 由主屏栈回退承接 */
+      if (!(opts && opts.fromPop)) pushHistory(n);
     }
+
+    /* ===== History 栈: 让 Android 硬件返回键回上一屏而非退出 ===== */
+    const HASH_MAP = { today: 0, start: 1, hexagrams: 2, history: 5, me: 6 };
+    const HASH_BY_SCREEN = {};
+    Object.keys(HASH_MAP).forEach(function (k) { HASH_BY_SCREEN[HASH_MAP[k]] = k; });
+    function pushHistory(n) {
+      /* 已在该屏条目 (深链直达 / 重复点击) 不再压栈 */
+      if (history.state && history.state.screen === n) return;
+      const h = HASH_BY_SCREEN[n];
+      if (h) {
+        history.pushState({ screen: n }, '', '#' + h);
+      } else {
+        /* 详情屏: 同 URL 压栈仅记录 state, 返回键仍可回到来路屏 */
+        history.pushState({ screen: n }, '', location.href);
+      }
+    }
+    window.addEventListener('popstate', function (e) {
+      /* 目标屏优先取压栈时存的 state, 其次按 hash, 兜底回屏1 */
+      let n = (e.state && typeof e.state.screen === 'number') ? e.state.screen
+             : HASH_MAP[(location.hash || '').replace('#', '')];
+      if (n === undefined) n = 0;
+      gotoScreen(n, { fromPop: true });
+    });
 
     tabs.forEach(function (tab) {
       const n = parseInt(tab.dataset.goto, 10);
@@ -6907,14 +6932,19 @@
     document.addEventListener('yijing:screenchange', function (e) { syncTabs(e.detail.index); });
 
     /* manifest shortcuts 深链: #today → 屏1 · #start → 屏2 · #history → 屏6 · #me → 屏7 */
-    const HASH_MAP = { today: 0, start: 1, history: 5, me: 6 };
     function applyHash() {
       const h = (location.hash || '').replace('#', '');
       if (h && HASH_MAP[h] !== undefined) gotoScreen(HASH_MAP[h]);
     }
     window.addEventListener('hashchange', applyHash);
-    /* 骨架屏结束后再定位，避免被初始渲染覆盖 */
-    setTimeout(applyHash, 1600);
+    /* 骨架屏结束后再定位，避免被初始渲染覆盖; 并为入口屏补一条 state 供返回 */
+    setTimeout(function () {
+      applyHash();
+      try {
+        const cur = (window.YijingUI && typeof YijingUI.appCurrent === 'function') ? YijingUI.appCurrent() : 0;
+        history.replaceState({ screen: cur }, '', location.hash || '#today');
+      } catch (err) { /* 隐私模式等场景忽略 */ }
+    }, 1600);
 
     window.YijingUI = window.YijingUI || {};
     window.YijingUI.gotoScreen = gotoScreen;

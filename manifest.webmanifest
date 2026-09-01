@@ -10,7 +10,7 @@
   "display_override": ["window-controls-overlay", "standalone", "browser"],
   "orientation": "portrait-primary",
   "background_color": "#0a0806",
-  "theme_color": "#d04d3e",
+  "theme_color": "#14100b",
   "categories": ["lifestyle", "books", "education"],
   "icons": [
     {
