@@ -10,29 +10,60 @@ HTTPS: https://github.com/MMR-MINGriyue/yijing-app
 易道 是一款专注解读卦象的移动端 PWA 应用, 6 屏设计:
 
 1. 今日一卦 - 当前时辰对应卦象 + 解读
-2. 起卦 - 三种起卦方式 (时间 / 数字 / 手动)
+2. 起卦 - 三种起卦方式 (数字 / 蓍草 / 铜钱), 可写入历史
 3. 六十四卦 - 8x2 卦象网格浏览
 4. 卦辞解析 - 卦辞 / 爻辞 / 象传 三 Tab
-5. 变卦推演 - 本卦 + 变卦对比 (支持左右拖动)
-6. 历史记录 - 按月分组, 卦象筛选, 长按多选
+5. 变卦推演 - 真实本卦/变卦/互卦/体用生克计算 (支持左右拖动 / 点击爻切换动爻)
+6. 历史记录 - 按月分组, 卦象筛选, 长按多选, 真实起卦记录落盘 localStorage
 
-## 设计特色
+## 设计系统
 
-- 深色国风调性 (#14100b 底 + 朱红 + 暗金 + 松绿)
-- 衬线字 Noto Serif SC + 37+ 自定义 keyframes
+- **深色国风调性**: `#14100b` 底 + 朱红 + 暗金 + 松绿
+- **移动优先三态布局**:
+  - `app` 模式 (≤900px): 6 屏横向 `scroll-snap` 轮播, `100dvh` 全屏, 内容/顶栏/底栏限制最大 460px 居中, 防止平板竖屏把 390px 设计稿拉成扁条
+  - `grid` 模式 (901–1599px): 390×844 原尺寸换行网格, 纵向滚动, 保证真实可读性
+  - `fit` / `canvas` 模式 (≥1600px): 2940×1300 设计画廊等比缩放
+  - 支持 URL 参数 `?view=app|grid|fit|canvas` 强制切换
+- **安全区适配**: 使用 `env(safe-area-inset-*)` 避开刘海/圆角/Home Indicator; 高度使用 `100dvh` 避免移动端工具栏跳动
+- **触控规范**: 最小触控区 `--tap-min: 44px`; 禁用双击缩放 300ms 延迟与灰色点击高亮
+- **无障碍对比度**: 小字内容统一使用 `--text-tertiary` (4.66:1) 与 `--cinnabar-text` (4.70:1), 满足 WCAG AA; 原 `--text-faint` 降级为装饰/禁用态
+- **排版**: 中文优先回退栈 (`PingFang SC` / `Microsoft YaHei` / `-apple-system`); 字体令牌 `--font-serif` / `--font-sans` / `--font-num`; 字号下限 11px, CJK 行高 1.75
 - 动爻红色高亮 + 波纹呼吸动画
-- 响应式等比缩放, 支持手机/平板/桌面
+- **真实导航**: 底部 tabbar (今日/六十四卦/起卦/我的) 在 App 模式驱动横向轮播、grid 模式滚动定位、画廊模式闪烁提示目标屏, 高亮随当前屏同步
+- **PWA 深链**: manifest shortcuts `#start` / `#today` / `#history` / `#me` 已接通 hash 导航
+- **交互闭环**: 屏4「查看变卦推演」直达屏5, 屏1「查看全部」直达历史, 收藏按钮 localStorage 持久化 (`yijing.favHexes`)
+- **屏6 全动态统计与检索**: 统计卡(总次数/本周/收藏)与顶栏总数由真实数据实时计算; 搜索栏为真实输入框(按卦名/问题/日期过滤当月记录); ⇅ 排序按钮在「最新在前 / 最早在前」间切换
+- **⚙ 设置面板**: 屏1/屏7 齿轮按钮弹出底部抽屉, 支持导出历史数据(JSON 下载)、导入合并(自动去重, 含收藏并集)、二次确认清空本地历史与重置为示例数据(收藏不受影响)
+- **头部分享**: 屏4 顶栏 ↗ 与底部「生成分享卡」行为一致
+- **爻辞弹窗数据驱动**: 05 屏点击任意爻行(本卦/变卦)弹出对应真实爻辞, 事件委托绑定重渲染不失效; 支持 Esc 关闭 / 复制爻辞 / Web Share 分享(不支持时降级复制)
+- **无障碍**: 6 屏 aria-label, tabbar tablist/tab 语义 + 键盘 Enter/Space 激活, hero 全屏 role=dialog + Esc 关闭 + 焦点管理
 - PWA 离线能力 + 图标 + 快捷方式
-- URL 调试参数: ?view=gallery 平铺画廊
+
+## 数据层 (data.js)
+
+- HEX_LIBRARY: 64 卦完整数据 (卦名/卦象/爻位/六爻爻辞+白话解读), 爻位经脚本校验与先天卦象一致
+- HEX_EXTRA: 每卦的卦辞原文 / 大象传 / 全屏 hero 一句话解读, 加载时自动合并进 HEX_LIBRARY
+- 今日一卦 hero 刷新可轮换全部 64 卦, 卦辞与解读跟随真实数据
+- 04 卦辞解析屏按 HEX_LIBRARY 动态渲染: 03 屏卦卡点击 / 06 屏历史卡点击 / URL hex= 参数均可打开对应卦
+- 05 屏变卦推演: 按真实动爻计算变卦, 含互卦、体卦/用卦、五行生克; 点击任意爻可动态切换动爻
+- **02 屏起卦闭环**: 选择起卦方式 → 推演中动画 → 生成卦象 → 同步 04/05 屏 → 写入 localStorage 历史; 方向标签可点击切换并记忆上次选择(radiogroup 语义)
+- **分享卡**: 04 屏顶栏 ↗ / 底部按钮生成 PNG 分享卡, 页脚含干支纪年月日 + 公历落款
+- 06 屏历史记录: 本地起卦数据持久化, 月份导航随真实数据动态扩展, 长按删除同时生效于本地存储; 统计卡/搜索/排序全动态; 按卦象筛选 + 方向筛选(动态 chips, 可复合 AND, 月切换自动重置)
+- **时间真实性**: 状态栏 6 屏实时时钟(30s 刷新); 01 屏日期行显示真实干支(年/月/日) + 公历(儒略日换算, 锚点 JD 2458511=甲子日; 月干支按节气界+年上起月法, 2024-2030 精度±1天); 历史记录带完整时间戳 ts, 排序与「本周」统计按真实时间计算
+- **最近占卜动态化**: 01 屏最近卡由真实历史前 2 条渲染, 点击直达 04 屏解析; 卦卡(03 屏)/历史卡(06 屏)点击后同样自动跳转到解析屏, 04 屏顶栏 ← 返回来路屏
+- **07 屏「我的」个人页**: 统计概览(起卦总数/连续天数/收藏数 + 始于日期), 收藏卦横滑列表(点击直达解析), 问卦方向与起卦方式分布条形图(方向条点击跳 06 屏并自动应用方向筛选), 历史记录与六十四卦快捷入口; 底部 tab「我的」与深链 #me 直达, ⚙ 设置面板双入口共用
+- 全站卦象朝向修复: 画廊 / 历史 / 详情 / hero 均按「上爻在上、初爻在下」正确绘制
 
 ## 文件结构
 
 yijing-app/
-- index.html         单 HTML 主体 (4450+ 行, 含 CSS + JS)
-- data.js            64 卦数据库 + YijingAPI 接口
+- index.html         单 HTML 主体 (5000+ 行, 含 CSS + JS)
+- data.js            64 卦完整数据库 + 卦辞/大象传 + YijingAPI 接口
 - manifest.webmanifest   PWA 清单
 - sw.js              Service Worker 离线缓存
 - icons/             矢量 + PNG 多尺寸图标
+- .github/workflows/deploy.yml   GitHub Pages 自动部署工作流
+- .pwtest/           Playwright 迭代测试脚本 (开发用, 不参与运行)
 - README.md          本文件
 
 ## 本地运行
@@ -42,29 +73,61 @@ node -e "const h=require('http'),f=require('fs'),p=require('path');h.createServe
 
 打开 http://localhost:8723
 
+## 部署 (GitHub Pages)
+
+零构建依赖, 静态文件直接可托管:
+
+1. 推送到 GitHub 仓库 `main` 分支 (工作流 `.github/workflows/deploy.yml` 会先跑内联脚本语法冒烟检查, 再上传部署)
+2. 仓库 Settings → Pages → Source 选 **GitHub Actions**
+3. 访问 `https://<用户名>.github.io/<仓库名>/`
+   - 应用路径均相对 (`./`), 天然兼容子路径, 无需改任何代码
+4. 也可用任意静态托管 (Vercel / Netlify / 自建 nginx): 直接上传根目录全部静态文件即可
+
+> PWA 注意: HTTPS 下 Service Worker 与 `manifest` 才能完整生效; GitHub Pages / Vercel / Netlify 均默认 HTTPS。
+
 ## URL 调试参数
 
-view=gallery  平铺画廊视图 (6 屏 3x2)
-p9=hero       打开 01 屏 hero 全屏
-p9=yao        04 屏切换到爻辞 Tab
-p9=filter     06 屏按卦象筛选 (?p9=filter&hex=2 坤卦)
+view=canvas    强制桌面设计画廊视图(默认在桌面端生效)
+view=fit       强制设计画廊视图(与 canvas 相同)
+view=app       强制移动端 App 模式(即使在大窗口)
+view=grid      强制平板/小桌面网格视图 (390px 原尺寸换行)
+view=gallery   平铺画廊视图 (6 屏 3x2, 旧版兼容)
+p9=hero        打开 01 屏 hero 全屏
+p9=yao         04 屏切换到爻辞 Tab
+p9=filter      06 屏按卦象筛选 (?p9=filter&hex=2 坤卦)
+hex=31         04 屏直接渲染第 31 卦 (咸卦) 的卦辞解析
+hex=3&moving=1,4   05 屏直接推演第 3 卦、动爻为六二与九五
 
 ## 浏览器 API
 
 window.YijingUI.refreshHero / heroByHour / forceHour
 window.YijingUI.openHeroFullscreen / closeHeroFullscreen
-window.YijingUI.transformGoTo / changeMonth
-window.YijingUI.submitQuestion / switchTab
+window.YijingUI.transformGoTo / setTransform / getTransform
+window.YijingUI.submitQuestion / getQuestion / setQuestion
+window.YijingUI.switchTab
+window.YijingUI.openDetail(hexNo, { question, moving, method, summary })
+window.YijingUI.castHex(methodId)          // 触发 02 屏起卦流程
+window.YijingUI.refreshHistory / changeMonth / refreshRecent / refreshMe / openSettings / filterByDirection
+window.YijingHistory.add / all / removeMany
 window.YijingStates.showEmpty / showError / showLoading / showNormal
+window.yijingToast(msg)                   // 全局轻提示
+window.YijingCalendar.jdn/ganzhiDay/ganzhiYear/ganzhiMonth/gregorian  // 干支历法
+
+## 深链
+
+#today    打开屏1 今日一卦
+#start    打开屏2 起卦
+#history  打开屏6 历史记录
+#me       打开屏7 我的
+(与 manifest shortcuts 对应, hashchange 实时响应)
 
 ## 技术栈
 
-- 纯 HTML + CSS + JS (零依赖)
+- 纯 HTML + CSS + JS (零运行时依赖)
 - Service Worker (原生)
-- 6 屏 390x844 移动端画布
-- 响应式 2940x1300 viewport
+- 6 屏 390×844 移动端画布 + 桌面 2940×1300 设计画廊
+- 移动优先响应式: `100dvh` / `scroll-snap-x` / `safe-area-inset` / `dvh`
 
 ## License
 
 MIT
-READMEEOF\nwc -c D:/workspace/yijing-app/README.md 2>&1

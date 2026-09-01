@@ -1,1 +1,12 @@
-<omitted>
+# 开发临时产物 (审计截图 / 诊断脚本 / 测试运行时)
+.audit*
+.check_*.js
+.checkpalace.js
+.diag_*.js
+.move_block.py
+.probe_*.js
+.smoke*.js
+.mimosa/
+preview-*.png
+node_modules/
+*.log

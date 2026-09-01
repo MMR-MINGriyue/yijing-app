@@ -56,15 +56,12 @@
       "short_name": "历史",
       "url": "./index.html#history",
       "description": "查看历次起卦记录"
-    }
-  ],
-  "screenshots": [
+    },
     {
-      "src": "./icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "易道 · 桌面端"
+      "name": "我的",
+      "short_name": "我的",
+      "url": "./index.html#me",
+      "description": "个人统计 · 收藏与偏好"
     }
   ]
 }

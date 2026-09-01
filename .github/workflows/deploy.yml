@@ -1,0 +1,50 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Smoke test (syntax check + node 解析)
+        run: |
+          node --input-type=module -e "
+          import { readFileSync } from 'fs';
+          const html = readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)]
+            .map(m => m[1]).filter(s => s.trim() && !/src=/.test(s));
+          scripts.forEach((s, i) => { new Function(s); });
+          console.log(scripts.length + ' inline script(s) OK');
+          "
+          node -e "new Function(require('fs').readFileSync('sw.js','utf8')); console.log('sw.js OK')"
+          node -e "new Function(require('fs').readFileSync('data.js','utf8')); console.log('data.js OK')"
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
