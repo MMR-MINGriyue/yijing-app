@@ -11,6 +11,9 @@ on:
       - '.github/workflows/android-build.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -70,3 +73,22 @@ jobs:
           name: yijing-apk
           path: android/app/build/outputs/apk/debug/*.apk
           retention-days: 30
+
+      - name: Attach APK to Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(grep -oP "yijing-v\K[0-9]+\.[0-9]+\.[0-9]+" www/sw.js)
+          TAG="v${VERSION}"
+          APK=$(ls android/app/build/outputs/apk/debug/*.apk | head -n1)
+          cp "$APK" "yijing-${TAG}-debug.apk"
+          # 同 tag 旧 release 先清理, 避免同名资产冲突
+          gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" "yijing-${TAG}-debug.apk" \
+            --title "易道 ${TAG}" \
+            --notes "PWA 版本 ${VERSION} 对应的 Android debug 签名包。
+
+          - 直接下载 APK 安装 (需开启未知来源)
+          - debug 签名: 覆盖安装会保留数据; 换正式签名前勿混装
+          - 版本来源: www/sw.js CACHE_VERSION" \
+            --latest
