@@ -29,7 +29,7 @@ HTTPS: https://github.com/MMR-MINGriyue/yijing-app
 - **触控规范**: 最小触控区 `--tap-min: 44px`; 禁用双击缩放 300ms 延迟与灰色点击高亮
 - **无障碍对比度**: 小字内容统一使用 `--text-tertiary` (4.66:1) 与 `--cinnabar-text` (4.70:1), 满足 WCAG AA; 原 `--text-faint` 降级为装饰/禁用态
 - **触控目标达标** (v1.14): 筛选 chips 28→36px、`section-link` 文字链接以负 margin padding 扩大命中区至 39px, 全部可点元素实测 ≥36px
-- **全局按压反馈** (v1.14): chips/方向标签/方法卡/历史卡/卦卡/tab 等 11 类可点元素统一 `:active { scale(0.96) }` 即时确认感, 触摸/点击均有缩放反馈
+- **全局按压反馈** (v1.14): chips/方向标签/方法卡/历史卡/卦卡/tab 等 11 类可点元素统一 `:active { scale(0.96) }` 即时确认感, 触摸/点击均有缩放反馈; v1.17.1 补齐 icon-btn/detail-tab (0.88) 与 hero/transform 大卡 (0.985) 两档力度, 交互反馈覆盖率审计脚本实测无缺口
 - **排版**: 中文优先回退栈 (`PingFang SC` / `Microsoft YaHei` / `-apple-system`); 字体令牌 `--font-serif` / `--font-sans` / `--font-num`; 字号下限 11px, CJK 行高 1.75
 - 动爻红色高亮 + 波纹呼吸动画
 - **入场编排** (v1.17): 01 首屏四段式 stagger (问候 0.03s → 今日一卦 0.14s → 快捷入口 0.26s → 最近占卜 0.38s, quick-item 内部再递进), 全站 40+ keyframes 统一 ease-out-expo 曲线; `prefers-reduced-motion` 一键归零
