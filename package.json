@@ -1,0 +1,28 @@
+{
+  "name": "yijing-app",
+  "version": "1.0.0",
+  "description": "> 国风移动端 PWA - 六爻起卦 - AI 解卦 - 历史回溯",
+  "main": ".audit.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MMR-MINGriyue/yijing-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/MMR-MINGriyue/yijing-app/issues"
+  },
+  "homepage": "https://github.com/MMR-MINGriyue/yijing-app#readme",
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.1"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/core": "^8.5.1"
+  }
+}

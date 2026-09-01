@@ -1,0 +1,12 @@
+{
+  "appId": "com.mmr.yijing",
+  "appName": "易道",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "android": {
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}
