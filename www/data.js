@@ -866,19 +866,26 @@ const YijingEngine = (function () {
 
   /* ---------- 三种起卦法 ---------- */
 
-  /** 铜钱起卦: 三枚铜钱摇六次。3背=老阳9, 2背=少阴8, 1背=少阳7, 0背=老阴6 */
+  /** 铜钱起卦: 三枚铜钱摇六次。3背=老阳9, 2背=少阴8, 1背=少阳7, 0背=老阴6
+   *  tosses: 每轮三枚的正反面明细 (1=背, 0=字), 供抛掷动画呈现真实结果 */
   function castByCoins(rand) {
     const rnd = rand || Math.random;
-    const lines = [], moving = [];
+    const lines = [], moving = [], tosses = [];
     for (let i = 0; i < 6; i++) {
+      const faces = [];
       let backs = 0;
-      for (let k = 0; k < 3; k++) if (rnd() < 0.5) backs++;
+      for (let k = 0; k < 3; k++) {
+        const b = rnd() < 0.5;
+        faces.push(b ? 1 : 0);
+        if (b) backs++;
+      }
+      tosses.push(faces);
       if (backs === 3)      { lines.push('yang'); moving.push(i); }
       else if (backs === 2) { lines.push('yin'); }
       else if (backs === 1) { lines.push('yang'); }
       else                  { lines.push('yin');  moving.push(i); }
     }
-    return { lines: lines, moving: moving };
+    return { lines: lines, moving: moving, tosses: tosses };
   }
 
   /** 蓍草起卦 (大衍之法): 老阳9=3/16 少阴8=7/16 少阳7=5/16 老阴6=1/16 */

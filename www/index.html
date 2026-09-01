@@ -1967,6 +1967,72 @@
     transition: opacity 0.6s ease;
   }
   .skeleton-overlay.hidden { opacity: 0; pointer-events: none; }
+
+  /* ===== 铜钱抛掷仪式 (coin 起卦专属动效) ===== */
+  .coin-overlay {
+    position: fixed; inset: 0; z-index: 9997;
+    background: rgba(10, 7, 5, 0.96);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 30px; opacity: 0; transition: opacity 0.3s ease;
+    cursor: pointer;
+  }
+  .coin-overlay.show { opacity: 1; }
+  .coin-round {
+    font-family: var(--font-serif); font-size: 14px; letter-spacing: 5px;
+    color: var(--text-secondary); height: 20px;
+  }
+  .coin-round b { color: var(--gold); font-weight: 500; }
+  .coin-tray { display: flex; gap: 20px; perspective: 700px; }
+  .coin { width: 66px; height: 66px; }
+  .coin-drop { animation: coinDrop 0.6s cubic-bezier(0.22, 0.9, 0.35, 1) both; }
+  @keyframes coinDrop {
+    0%   { transform: translateY(-150px) scale(0.9); opacity: 0; }
+    55%  { opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .coin-inner {
+    width: 100%; height: 100%; position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.62s cubic-bezier(0.18, 0.85, 0.3, 1);
+  }
+  .cface {
+    position: absolute; inset: 0; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    font-family: var(--font-serif);
+    box-shadow: inset 0 0 0 3px rgba(90, 66, 38, 0.45), inset 0 0 16px rgba(60, 42, 22, 0.5), 0 6px 14px rgba(0, 0, 0, 0.45);
+    border: 1px solid #8a6c45;
+  }
+  /* 字面 (正面) */
+  .cface.cz {
+    background: radial-gradient(circle at 35% 28%, #e3c896, #b08b5c 62%, #96774b);
+    color: #6b4e28; font-size: 26px; font-weight: 600;
+    transform: rotateY(180deg);
+  }
+  /* 背面 (有方孔) */
+  .cface.cb {
+    background: radial-gradient(circle at 35% 28%, #d3b483, #a3815a 62%, #87683f);
+  }
+  .cface.cb::after {
+    content: ''; width: 16px; height: 16px; border: 2px solid rgba(70, 50, 26, 0.55);
+    background: rgba(38, 26, 14, 0.5);
+  }
+  /* 成卦爻位 (column-reverse: 初爻在底) */
+  .coin-lines {
+    display: flex; flex-direction: column-reverse; align-items: center;
+    gap: 7px; min-height: 110px;
+  }
+  .coin-yao { display: flex; gap: 8px; animation: drawLine 0.32s var(--ease-out) both; }
+  .coin-yao .seg { width: 46px; height: 7px; border-radius: 2px; background: var(--gold); }
+  .coin-yao.yin .seg { width: 20px; }
+  .coin-yao.moving .seg {
+    background: var(--cinnabar);
+    box-shadow: 0 0 8px rgba(208, 77, 62, 0.55);
+  }
+  .coin-skip {
+    position: absolute; bottom: calc(34px + env(safe-area-inset-bottom, 0px));
+    font-size: 12px; letter-spacing: 3px; color: var(--text-muted);
+  }
   /* ⚙ 设置面板 (底部抽屉) */
   .settings-overlay {
     position: fixed; inset: 0; z-index: 9998;
@@ -4961,39 +5027,43 @@
         renderCurrentMonth();
       };
     }
+    /* 长按状态: 提升到模块作用域, document 级监听只挂一次,
+       避免历史列表每次重渲染都向 document 累积新监听器 (内存泄漏) */
+    let pressCard = null, pressX = 0, pressY = 0;
+    function onDocMove(e) {
+      if (!pressCard || !longPressTimer) return;
+      const t = e.touches ? e.touches[0] : e;
+      if (Math.abs(t.clientX - pressX) > 8 || Math.abs(t.clientY - pressY) > 8) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+        pressCard.classList.remove('pressing');
+        pressCard = null;
+      }
+    }
+    function onDocUp() {
+      if (!pressCard) return;
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+      pressCard.classList.remove('pressing');
+      pressCard = null;
+    }
     function bindLongPress() {
       const cards = document.querySelectorAll('.hist-card[data-idx]');
       cards.forEach(card => {
-        let startX = 0, startY = 0;
         function onDown(e) {
           if (selectMode) return;
           longPressTriggered = false;
           clearTimeout(longPressTimer);
           const t = e.touches ? e.touches[0] : e;
-          startX = t.clientX; startY = t.clientY;
+          pressCard = card; pressX = t.clientX; pressY = t.clientY;
           card.classList.add('pressing');
           longPressTimer = setTimeout(() => {
             longPressTriggered = true;
             card.classList.remove('pressing');
+            pressCard = null;
             enterSelectMode(card);
             if (navigator.vibrate) navigator.vibrate(20);
           }, LONG_PRESS_MS);
-        }
-        function onMove(e) {
-          if (!longPressTimer) return;
-          const t = e.touches ? e.touches[0] : e;
-          const dx = Math.abs(t.clientX - startX);
-          const dy = Math.abs(t.clientY - startY);
-          if (dx > 8 || dy > 8) {
-            clearTimeout(longPressTimer);
-            longPressTimer = null;
-            card.classList.remove('pressing');
-          }
-        }
-        function onUp() {
-          clearTimeout(longPressTimer);
-          longPressTimer = null;
-          card.classList.remove('pressing');
         }
         function onClick(e) {
           if (longPressTriggered) { e.preventDefault(); e.stopPropagation(); longPressTriggered = false; return; }
@@ -5019,14 +5089,14 @@
         }
         card.addEventListener('mousedown', onDown);
         card.addEventListener('touchstart', onDown, { passive: true });
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('touchmove', onMove, { passive: true });
-        card.addEventListener('mouseup', onUp);
-        card.addEventListener('mouseleave', onUp);
-        card.addEventListener('touchend', onUp);
+        card.addEventListener('mouseup', onDocUp);
+        card.addEventListener('mouseleave', onDocUp);
+        card.addEventListener('touchend', onDocUp);
         card.addEventListener('click', onClick);
       });
     }
+    document.addEventListener('mousemove', onDocMove);
+    document.addEventListener('touchmove', onDocMove, { passive: true });
 
     window.YijingStates = {
       showEmpty: function() {
@@ -5139,6 +5209,109 @@
       return active ? active.textContent.replace(/\s/g, '') : '';
     }
 
+    /* ===== 铜钱抛掷仪式: 六轮三枚, 呈现引擎真实掷出的正反面 ===== */
+    const CoinToss = (function () {
+      const YAO_CN = ['初', '二', '三', '四', '五', '上'];
+      let ov = null, timers = [], doneFn = null, playing = false;
+
+      function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+
+      function build() {
+        const el = document.createElement('div');
+        el.className = 'coin-overlay';
+        el.setAttribute('role', 'dialog');
+        el.setAttribute('aria-label', '铜钱起卦');
+        el.innerHTML =
+          '<div class="coin-round" aria-live="polite"></div>' +
+          '<div class="coin-tray">' +
+            '<div class="coin"><div class="coin-inner"><div class="cface cb"></div><div class="cface cz">易</div></div></div>' +
+            '<div class="coin"><div class="coin-inner"><div class="cface cb"></div><div class="cface cz">易</div></div></div>' +
+            '<div class="coin"><div class="coin-inner"><div class="cface cb"></div><div class="cface cz">易</div></div></div>' +
+          '</div>' +
+          '<div class="coin-lines"></div>' +
+          '<div class="coin-skip">轻触任意处跳过</div>';
+        return el;
+      }
+
+      function escEnd(e) { if (e.key === 'Escape') end(); }
+
+      function end() {
+        if (!playing) return;
+        playing = false;
+        clearTimers();
+        document.removeEventListener('keydown', escEnd);
+        if (ov) {
+          ov.removeEventListener('click', end);
+          ov.classList.remove('show');
+          const o = ov; ov = null;
+          setTimeout(function () { o.remove(); }, 320);
+        }
+        const cb = doneFn; doneFn = null;
+        if (cb) cb();
+      }
+
+      /** 播放抛掷动画; 返回 true 表示已接管流程, false 表示调用方需自行回退 */
+      function play(res, cb) {
+        try {
+          if (playing) return false;
+          playing = true; doneFn = cb;
+          ov = build();
+          document.body.appendChild(ov);
+          requestAnimationFrame(function () { ov.classList.add('show'); });
+          ov.addEventListener('click', end);
+          document.addEventListener('keydown', escEnd);
+
+          const ROUND = 920, SETTLE = 640;
+          const coins = ov.querySelectorAll('.coin');
+          const inners = ov.querySelectorAll('.coin-inner');
+          const roundEl = ov.querySelector('.coin-round');
+          const linesEl = ov.querySelector('.coin-lines');
+
+          res.tosses.forEach(function (faces, i) {
+            timers.push(setTimeout(function () {
+              const isMoving = res.moving.indexOf(i) >= 0;
+              const line = res.lines[i];
+              const quality = line === 'yang' ? (isMoving ? '老阳' : '少阳') : (isMoving ? '老阴' : '少阴');
+              roundEl.innerHTML = '第<b>' + YAO_CN[i] + '爻</b> · ' + quality;
+              /* 三枚铜钱: 先复位再抛出, 落定角度由真实正反面决定 (背=方孔面) */
+              inners.forEach(function (c, k) {
+                c.style.transition = 'none';
+                c.style.transform = 'rotateY(0deg)';
+                void c.offsetWidth;
+                c.style.transition = '';
+                c.style.transform = 'rotateY(' + (1440 + (faces[k] ? 0 : 180)) + 'deg)';
+              });
+              coins.forEach(function (c) {
+                c.classList.remove('coin-drop');
+                void c.offsetWidth;
+                c.classList.add('coin-drop');
+              });
+              /* 落定后成爻 */
+              timers.push(setTimeout(function () {
+                const y = document.createElement('div');
+                y.className = 'coin-yao ' + line + (isMoving ? ' moving' : '');
+                y.innerHTML = line === 'yin' ? '<div class="seg"></div><div class="seg"></div>' : '<div class="seg"></div>';
+                linesEl.appendChild(y);
+              }, SETTLE));
+            }, i * ROUND));
+          });
+
+          timers.push(setTimeout(function () {
+            roundEl.innerHTML = '六 爻 已 成';
+          }, res.tosses.length * ROUND));
+          timers.push(setTimeout(end, res.tosses.length * ROUND + 950));
+          return true;
+        } catch (e) {
+          playing = false;
+          if (ov) { ov.remove(); ov = null; }
+          clearTimers();
+          return false;
+        }
+      }
+
+      return { play: play, isPlaying: function () { return playing; } };
+    })();
+
     function run(methodId) {
       if (typeof YijingEngine === 'undefined') { qToast('起卦引擎未就绪'); return; }
       const q = (window.YijingUI && window.YijingUI.getQuestion) ? window.YijingUI.getQuestion() : '';
@@ -5149,13 +5322,12 @@
         return;
       }
       const label = METHOD_NAME[methodId] || '起卦';
-      showLoading('易道 推演中', label + ' · ' + (q.length > 16 ? q.slice(0, 16) + '…' : q));
 
-      /* 古法起卦需「三变成爻」, 用 1.6s 演卦动画承载 */
-      setTimeout(function () {
-        let res;
-        try { res = YijingEngine.cast(methodId, q); }
-        catch (e) { hideLoading(); qToast('起卦失败，请重试'); return; }
+      let res;
+      try { res = YijingEngine.cast(methodId, q); }
+      catch (e) { qToast('起卦失败，请重试'); return; }
+
+      function finish() {
         const ben = YijingEngine.hexByLines(res.lines);
         const tf = YijingEngine.transform(ben.no, res.moving);
 
@@ -5179,9 +5351,20 @@
             question: q, moving: res.moving, method: label, summary: summary
           });
         }
-        hideLoading();
         qToast('已成卦：' + ben.name + '卦' + (res.moving.length ? ' → ' + tf.changed.name + '卦' : ''));
-      }, 1600);
+      }
+
+      /* 铜钱起卦: 抛掷仪式动效呈现真实六掷; reduced-motion 或动画启动失败时回退骨架屏 */
+      const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (methodId === 'coin' && res && res.tosses && !reduce) {
+        if (CoinToss.play(res, finish)) return;
+        /* play 被拒: 上一场仪式仍在进行 → 提示稍候, 不落入骨架屏路径覆盖动画 */
+        if (CoinToss.isPlaying()) { qToast('铜钱仪式进行中，请稍候'); return; }
+        /* 其余失败 (动画初始化异常) → 回退骨架屏 */
+      }
+
+      showLoading('易道 推演中', label + ' · ' + (q.length > 16 ? q.slice(0, 16) + '…' : q));
+      setTimeout(finish, 1600);
     }
 
     list.addEventListener('click', function (e) {
@@ -5251,7 +5434,8 @@
     }
     function showToast(msg, icon) {
       if (!toast) return;
-      toast.innerHTML = '<span class="ic">' + (icon || '✓') + '</span><span>' + msg + '</span>';
+      /* 用户输入会拼入回显 (如「已收：…」), 必须转义防 XSS */
+      toast.innerHTML = '<span class="ic">' + escapeHtml(icon || '✓') + '</span><span>' + escapeHtml(msg) + '</span>';
       toast.classList.add('show');
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
