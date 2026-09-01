@@ -32,6 +32,27 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Verify www/ matches root assets
+        run: |
+          fail=0
+          for f in index.html data.js sw.js manifest.webmanifest README.md; do
+            if [ -f "$f" ] && [ -f "www/$f" ]; then
+              if cmp -s "$f" "www/$f"; then
+                echo "OK   $f"
+              else
+                echo "DIFF $f  (root vs www/)"
+                fail=1
+              fi
+            elif [ -f "$f" ]; then
+              echo "MISS www/$f"
+              fail=1
+            fi
+          done
+          if [ $fail -ne 0 ]; then
+            echo "::error::www/ is out of sync with root assets — copy the changed files to www/ before building the APK"
+            exit 1
+          fi
+
       - name: Install deps & sync
         run: |
           npm ci
