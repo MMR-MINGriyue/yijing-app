@@ -125,6 +125,9 @@ const { chromium } = require('playwright-core');
 
   /* ===== E. UI: 表单/排盘/时间轴/流年表 ===== */
   await page.evaluate(() => { localStorage.setItem('yijing.history.v1', '[]'); });
+  /* iter25: 更多占法已分页化, 先进入子页 */
+  await page.click('#moreDivEntry');
+  await page.waitForTimeout(300);
   await page.click('#div-bazi');
   await page.waitForTimeout(300);
   const formUi = await page.evaluate(() => ({
@@ -217,7 +220,14 @@ const { chromium } = require('playwright-core');
   t('回看: 不重复入历史', recallUi.histLen === 1, recallUi.histLen + '');
 
   /* ===== G. 乾造顺行对照 (2000-02-05) ===== */
-  await page.evaluate(() => { try { window.YijingUI.gotoScreen(2); } catch (e) {} });
+  await page.evaluate(() => { try { window.YijingUI.gotoScreen(1); } catch (e) {} }); /* 屏2 起卦 (index 1) */
+  await page.waitForTimeout(500);
+  /* iter25: 确保在更多占法子页 */
+  const inMorePage = await page.evaluate(() => !document.getElementById('more-div-list').hidden);
+  if (!inMorePage) {
+    await page.click('#moreDivEntry');
+    await page.waitForTimeout(300);
+  }
   await page.click('#div-bazi');
   await page.waitForTimeout(300);
   await page.evaluate(() => {

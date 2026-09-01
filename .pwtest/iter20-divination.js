@@ -133,6 +133,23 @@ const { chromium } = require('playwright-core');
   t('UI: 三张占法卡片 + 表单 + 结果容器', ui.cards.every(Boolean) && ui.baziForm && ui.meihuaForm && ui.divResult);
   t('UI: 历史屏占法筛选行', ui.typeFilterRow);
 
+  /* iter25: 更多占法分页化 — 默认隐藏, 需先点入口卡进入子页 */
+  const entry = await page.evaluate(() => {
+    const e = document.getElementById('moreDivEntry');
+    const l = document.getElementById('more-div-list');
+    return { entry: !!e, hidden: l.hidden };
+  });
+  t('UI: 更多占法入口卡存在且子页默认隐藏', entry.entry && entry.hidden);
+  await page.click('#moreDivEntry');
+  await page.waitForTimeout(300);
+  const entered = await page.evaluate(() => {
+    const l = document.getElementById('more-div-list');
+    const m = document.getElementById('method-list');
+    return { pageVisible: !l.hidden, methodHidden: m.hidden };
+  });
+  t('UI: 点击入口 → 子页显示 + 起卦方式区隐藏', entered.pageVisible && entered.methodHidden);
+  await page.screenshot({ path: '../_more-page.png' });
+
   /* 点击小六壬卡片 → 结果卡出现 + 入历史 */
   await page.evaluate(() => { localStorage.setItem('yijing.history.v1', '[]'); });
   await page.click('#div-xlr');

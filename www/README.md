@@ -20,10 +20,14 @@ HTTPS: https://github.com/MMR-MINGriyue/yijing-app
 
 - **深色国风调性**: `#14100b` 底 + 朱红 + 暗金 + 松绿
 - **Token 零偏移** (v1.16): CSS 内硬编码颜色全部归一至 `:root` token (审计脚本实测 0 处游离 hex); 新增语义渐变 token 三层深度 `--grad-card` (卡片) / `--grad-sheet` (弹层更深) / `--grad-overlay` (全屏最深) + `--grad-cinnabar`(-v), 高亮白字 `--text-on-fill`, 朱红深端 `--cinnabar-deeper`; 5 处近似色收敛至最近 token (Δ≤15/255 视觉无感); 圆形元素统一 `border-radius: 50%` (替代手写半宽半径)
+- **首屏可见性优化** (v1.20): 屏6 三行 `.hex-filter-row` 加 `flex-shrink: 0` 防父级 flex 列压扁（容器从 12px 恢复到 48px, chips 36px 完整显示）; 屏1 hero-card 紧凑化 (padding 24→16, gap 16→10, hero-body gap 24→18, hero-desc line-clamp 2 行) 省 ~55px 高度, 并在入场 stagger 完成后 auto-scroll 让「最近占卜」两卡完整可见于首屏 (scrollTop 由 `adjustHomeScroll()` 动态计算 = recBottom - tabTop + 12)
+- **横屏矮屏适配** (v1.21): 新增 `@media (orientation: landscape) and (max-height: 520px) and (max-width: 1200px)` —— 手机横屏 (iPhone 12 844×390 / SE 667×375) 自动从「全屏单屏轮播」切换到「多列网格 + 纵向滚动」, 每屏保持 390px 竖屏原比例 + 边框圆角 (恢复画廊观感); 844 宽视口可并排 2-3 屏, 667 宽自动单列; app-pager / app-hint / scroll-snap 全部关闭; 竖屏/平板/正方形视口走原模式, 互不干扰; viewport 纵向 scrollHeight 1652px / 7 屏全部可达
+- **屏2「更多占法」分页化** (v1.22): 屏2 默认只显示「请选择起卦方式」3 卡 + 一个金红渐变「更多占法 ›」入口卡, 点击入口进入独立子页 (返回行 + 3 张占法大卡: 八字/小六壬/梅花); 减少屏2 scrollHeight 5380→更紧凑; CSS 关键修复: `[hidden]` 默认 display:none 会被 `.method-list { display:flex }` 覆盖, 显式 `.method-list[hidden] { display: none !important }` 等保证 hidden 生效; 横屏 hero 进一步紧凑 (200px, 从 324→200px): 隐藏 hero-desc / hex-trigram-label / hex-meta / 英文副名, 卦名 36→26px, 快捷入口圆 44→32px; adjustHomeScroll 横屏跳过, 首屏保持 hero 可见; 横屏 media query 移到矮屏 block 之后避免被覆盖
 - **移动优先三态布局**:
   - `app` 模式 (≤900px): 6 屏横向 `scroll-snap` 轮播, `100dvh` 全屏, 内容/顶栏/底栏限制最大 460px 居中, 防止平板竖屏把 390px 设计稿拉成扁条
   - `grid` 模式 (901–1599px): 390×844 原尺寸换行网格, 纵向滚动, 保证真实可读性
   - `fit` / `canvas` 模式 (≥1600px): 2940×1300 设计画廊等比缩放
+  - **横屏矮屏** (v1.21): orientation: landscape + max-height 520px → 多列网格 + 纵向滚动, 每屏 390×358 保持原比例
   - 支持 URL 参数 `?view=app|grid|fit|canvas` 强制切换
 - **安全区适配**: 使用 `env(safe-area-inset-*)` 避开刘海/圆角/Home Indicator; 高度使用 `100dvh` 避免移动端工具栏跳动
 - **触控规范**: 最小触控区 `--tap-min: 44px`; 禁用双击缩放 300ms 延迟与灰色点击高亮
@@ -52,7 +56,7 @@ HTTPS: https://github.com/MMR-MINGriyue/yijing-app
 - 今日一卦 hero 刷新可轮换全部 64 卦, 卦辞与解读跟随真实数据
 - 04 卦辞解析屏按 HEX_LIBRARY 动态渲染: 03 屏卦卡点击 / 06 屏历史卡点击 / URL hex= 参数均可打开对应卦
 - 05 屏变卦推演: 按真实动爻计算变卦, 含互卦、体卦/用卦、五行生克; 点击任意爻可动态切换动爻
-- **02 屏起卦闭环**: 选择起卦方式 → 推演中动画 → 生成卦象 → 同步 04/05 屏 → 写入 localStorage 历史; 方向标签可点击切换并记忆上次选择(radiogroup 语义)
+- **02 屏起卦闭环**: 选择起卦方式 → 推演中动画 → 生成卦象 → 同步 04/05 屏 → 写入 localStorage 历史; 方向标签可点击切换并记忆上次选择(radiogroup 语义); **iter25 起卦分页**: 屏2 默认只展示易经三式 + 「更多占法 ›」入口卡, 点击进入子页展示八字/小六壬/梅花三式 + 返回行
 - **分享卡**: 04 屏顶栏 ↗ / 底部按钮生成 PNG 分享卡, 页脚含干支纪年月日 + 公历落款
 - 06 屏历史记录: 本地起卦数据持久化, 月份导航随真实数据动态扩展, 长按删除同时生效于本地存储; 统计卡/搜索/排序全动态; 按卦象筛选 + 方向筛选(动态 chips, 可复合 AND, 月切换自动重置)
 - **时间真实性**: 状态栏 6 屏实时时钟(30s 刷新); 01 屏日期行显示真实干支(年/月/日) + 公历(儒略日换算, 锚点 JD 2458511=甲子日; 月干支按节气界+年上起月法, 2024-2030 精度±1天); 历史记录带完整时间戳 ts, 排序与「本周」统计按真实时间计算
@@ -116,6 +120,7 @@ window.YijingHistory.add / all / removeMany
 window.YijingStates.showEmpty / showError / showLoading / showNormal
 window.yijingToast(msg)                   // 全局轻提示
 window.YijingCalendar.jdn/ganzhiDay/ganzhiYear/ganzhiMonth/gregorian  // 干支历法
+window.YijingUI.adjustHomeScroll          // 屏1首屏 auto-scroll (v1.20)
 
 ## 深链
 

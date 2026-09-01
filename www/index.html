@@ -384,10 +384,11 @@
   .hero-card {
     background: var(--grad-card);
     border: 1px solid var(--stroke);
-    border-radius: 24px;
-    padding: 24px;
-    display: flex; flex-direction: column; gap: 16px;
+    border-radius: 22px;
+    padding: 16px 20px 14px;
+    display: flex; flex-direction: column; gap: 10px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    flex-shrink: 0; /* 屏1首屏紧凑 + auto-scroll 联动: 防 .content flex 列压缩 (iter23) */
   }
   .hero-tag {
     align-self: flex-start;
@@ -731,8 +732,8 @@
   }
 
   .hero-body {
-    display: flex; align-items: center; justify-content: center; gap: 24px;
-    padding: 8px 0;
+    display: flex; align-items: center; justify-content: center; gap: 18px;
+    padding: 4px 0;
   }
   .hex-mini { display: flex; flex-direction: column; gap: 7px; align-items: center; }
   .hex-line {
@@ -817,7 +818,9 @@
   }
   .hero-desc {
     font-size: 12px; color: var(--text-secondary);
-    line-height: 20px; letter-spacing: 0.5px;
+    line-height: 18px; letter-spacing: 0.5px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
     transition: opacity 0.3s;
   }
 
@@ -1105,6 +1108,9 @@
   }
 
   .method-list { display: flex; flex-direction: column; gap: 12px; }
+  /* iter25: HTML5 [hidden] 默认 display:none 会被 .method-list {display:flex} 覆盖, 显式声明修复 */
+  .method-list[hidden], .bazi-form[hidden], .meihua-form[hidden], .div-result[hidden],
+  #moreDivEntry[hidden] { display: none !important; }
   .section-cap {
     font-family: var(--font-serif); font-weight: 600;
     font-size: 14px; color: var(--text-primary); letter-spacing: 3px;
@@ -1157,6 +1163,22 @@
     padding: 3px 8px; border: 1px solid rgba(208, 77, 62, 0.4);
     border-radius: 10px;
   }
+  /* ===== iter25: 更多占法 子页 (入口 + 返回行) ===== */
+  .more-div-entry {
+    background: linear-gradient(135deg, rgba(201, 168, 118, 0.12) 0%, rgba(208, 77, 62, 0.06) 100%);
+    border-color: rgba(201, 168, 118, 0.35);
+  }
+  .more-div-entry:hover { border-color: var(--gold); }
+  .more-div-entry .arrow { color: var(--gold); font-size: 18px; }
+  .more-div-page { margin-top: 26px; animation: fadeUp 0.32s var(--ease-out) both; }
+  .more-div-back {
+    display: inline-flex; align-items: center; align-self: flex-start;
+    gap: 6px; padding: 6px 10px; margin-bottom: 2px;
+    font-size: 12px; color: var(--text-secondary); letter-spacing: 1px;
+    cursor: pointer; border-radius: 10px;
+    transition: color 0.2s, background 0.2s;
+  }
+  .more-div-back:hover { color: var(--gold); background: rgba(201, 168, 118, 0.08); }
   /* ===== 更多占法: 八字 / 小六壬 / 梅花易数 ===== */
   .bazi-form, .meihua-form {
     display: flex; flex-direction: column; gap: 14px;
@@ -1998,6 +2020,7 @@
     display: flex; gap: 6px; padding: 4px 0 8px;
     overflow-x: auto;
     scrollbar-width: none;
+    flex-shrink: 0; /* 防父级 .content flex column 压缩容器高 (iter23) */
   }
   .hex-filter-row::-webkit-scrollbar { display: none; }
   .hex-filter-chip {
@@ -2957,6 +2980,103 @@
     .section-title { font-size: var(--fs-body); letter-spacing: 2px; }
   }
 
+  /* ==================================================================
+     横屏矮屏适配（手机横屏 iPhone 12 844×390 / SE 667×375）
+     原 app 模式每屏全宽 100% (≈844px)，内容 max-width 460px 居中，
+     高度 390px 太矮，hero / quick / recent 完全挤出，体验极差。
+     横屏时改为多列换行网格 + 纵向滚动，每屏保持 390px 竖屏比例，
+     既能横向浏览多屏（信息密度高），又保持可读性。
+     定义于矮屏 block 之后，保证 hero/quick 紧凑规则优先 (iter25)。
+     ================================================================== */
+  @media (orientation: landscape) and (max-height: 520px) and (max-width: 1200px) {
+    body { align-items: flex-start; }
+
+    .viewport {
+      position: relative !important;
+      width: 100% !important;
+      height: 100dvh !important;
+      padding: 0 !important;
+      transform: none !important;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    .viewport::-webkit-scrollbar { width: 8px; }
+    .viewport::-webkit-scrollbar-track { background: var(--bg-canvas); }
+    .viewport::-webkit-scrollbar-thumb { background: var(--stroke-soft); border-radius: 4px; }
+
+    .canvas { width: 100% !important; margin: 0 !important; }
+    .canvas-title { display: none !important; }
+
+    /* 7 屏换行网格: 视口宽自动算列数 (390px/屏 + 16px gap) */
+    .phones {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      justify-content: center !important;
+      align-items: flex-start !important;
+      gap: 16px !important;
+      padding: 16px !important;
+      height: auto !important;
+      overflow: visible !important; /* 覆盖 app 模式的 overflow-x: auto */
+      scroll-snap-type: none !important;
+    }
+
+    /* 每屏 390×844 原比例 + 边框 + 圆角 (恢复 gallery 视觉) */
+    .phone-frame { display: block; }
+    .phone {
+      flex: 0 0 auto !important;
+      width: 390px !important;
+      height: calc(100dvh - 32px) !important;
+      border: 1px solid var(--stroke) !important;
+      border-radius: 22px !important;
+      overflow: hidden !important;
+      scroll-snap-align: none !important;
+      scroll-snap-stop: normal !important;
+    }
+    .phone-label { display: block !important; } /* 覆盖 app 模式 !important */
+
+    /* ===== iter25: 横屏 hero / 快捷入口 / 最近卡 进一步紧凑 ===== */
+    .hero-card {
+      padding: 10px 14px 8px; gap: 6px; border-radius: 16px;
+    }
+    .hero-tag { padding: 2px 8px; border-radius: 9px; }
+    .hero-tag .text { font-size: 9px; letter-spacing: 2px; }
+    .hero-body { gap: 10px; padding: 0; }
+    .hex-display { gap: 2px; padding: 0; }
+    .hex-trigram-label { display: none; } /* 上下卦标注横屏隐藏 (iter25 紧凑) */
+    .hex-stack { gap: 2px; }
+    .hex-stack .hex-line { width: 56px; height: 4px; }
+    .hex-stack .hex-line.yin { width: 26px; }
+    .hex-stack .hex-line.yin-right { width: 26px; }
+    .hex-stack .hex-line .line-num { right: -18px; font-size: 9px; }
+    .hex-meta { display: none; } /* 装饰信息横屏隐藏 */
+    .hex-name { font-size: 26px; letter-spacing: 6px; }
+    .hex-idx { font-size: 9px; letter-spacing: 3px; }
+    .hex-en { display: none; } /* 英文副名横屏隐藏 (iter25 紧凑) */
+    .hex-attr { font-size: 11px; letter-spacing: 1.5px; }
+    .hero-quote { font-size: 12px; line-height: 18px; letter-spacing: 1px; }
+    .hero-desc { display: none; } /* 解读正文横屏隐藏, 点 hero 进全屏 */
+    .text-btn { height: 32px; font-size: 12px; border-radius: 16px; }
+    .quick-row { gap: 8px; }
+    .quick-item { padding: 8px; gap: 4px; border-radius: 12px; }
+    .quick-circle { width: 32px; height: 32px; font-size: 13px; }
+    .quick-name { font-size: 10px; }
+    .recent-section { gap: 8px; }
+    .recent-card { padding: 8px 10px; border-radius: 12px; }
+    .recent-hex { gap: 2px; }
+    .recent-line { width: 24px; height: 2px; }
+    .recent-line.yin { width: 12px; }
+    .recent-name { font-size: 13px; }
+    .recent-time { font-size: 9px; }
+    .recent-q { font-size: 10px; }
+    .section-title { font-size: 12px; }
+    .section-link { font-size: 10px; }
+
+    /* 横向轮播指示器在横屏网格模式隐藏 */
+    .app-pager { display: none !important; }
+    .app-hint { display: none !important; }
+  }
+
   /* 横屏矮视口：压缩状态栏与间距，保证内容可见 */
   @media (pointer: coarse) and (max-height: 560px) {
     .status-bar { min-height: 46px; padding-top: calc(8px + var(--safe-top)); }
@@ -3175,7 +3295,18 @@
             <!-- JS injects methods here -->
           </div>
 
-          <div class="method-list" id="more-div-list" style="margin-top: 26px;">
+          <!-- iter25: 更多占法入口 → 独立子页 -->
+          <div class="method-card more-div-entry" id="moreDivEntry" role="button" tabindex="0" aria-label="更多占法">
+            <div class="method-icon gold">占</div>
+            <div class="method-info">
+              <div class="method-name dark">更多占法</div>
+              <div class="method-desc">八字排盘 · 小六壬 · 梅花易数</div>
+            </div>
+            <div class="arrow">›</div>
+          </div>
+
+          <div class="method-list more-div-page" id="more-div-list" hidden>
+            <div class="more-div-back" id="moreDivBack" role="button" tabindex="0" aria-label="返回起卦方式">← 返 回 起 卦</div>
             <div class="section-cap">更 多 占 法</div>
             <div class="method-card" id="div-bazi" role="button" tabindex="0" aria-label="八字解析">
               <div class="method-icon gold">八字</div>
@@ -3906,6 +4037,24 @@
   (function bindRecentList() {
     const box = document.getElementById('recentList');
     if (!box) return;
+    /* iter23: 屏1首屏 auto-scroll 让最近占卜卡完整可见 (hero 已 flex-shrink:0 + 紧凑化)
+       iter25: 横屏(landscape)下跳过 — 横屏网格模式首屏应停留 hero */
+    function adjustHomeScroll() {
+      if (window.matchMedia && window.matchMedia('(orientation: landscape)').matches) return;
+      const rec = document.getElementById('recentList');
+      const c = rec && rec.closest('.content.scroll'); /* 从 recentList 反查所属屏1 content */
+      const tab = document.querySelector('.tabbar');
+      if (!c || !rec || !tab || rec.children.length === 0) return;
+      c.scrollTop = 0; /* 基准: 在 scrollTop=0 时测量 rec/tab 的视口坐标 */
+      const recBottom = rec.getBoundingClientRect().bottom;
+      const tabTop = tab.getBoundingClientRect().top;
+      /* 让 rec.bottom 落在 tabTop - 12 (留 12px 视觉缓冲) */
+      const targetScrollTop = recBottom - tabTop + 12;
+      const maxScroll = c.scrollHeight - c.clientHeight;
+      if (targetScrollTop > 0) c.scrollTop = Math.min(targetScrollTop, maxScroll);
+    }
+    window.YijingUI = window.YijingUI || {};
+    window.YijingUI.adjustHomeScroll = adjustHomeScroll;
     function renderRecent() {
       const list = (typeof window.YijingHistory !== 'undefined')
         ? window.YijingHistory.all()
@@ -3953,8 +4102,9 @@
         });
         box.appendChild(card);
       });
+      /* 屏1入场 stagger 完成后 (hero 0.14s + quick-row 0.26s + recent-section 0.38s + 0.7s anim) 触发 auto-scroll */
+      setTimeout(adjustHomeScroll, 1100);
     }
-    window.YijingUI = window.YijingUI || {};
     window.YijingUI.refreshRecent = renderRecent;
     renderRecent();
   })();
@@ -5764,6 +5914,43 @@
     const result = document.getElementById('divResult');
     const ZHI_NAMES = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
 
+    /* iter25: 更多占法子页切换 — 屏2 默认只显示起卦方式 + 入口卡 */
+    const moreEntry = document.getElementById('moreDivEntry');
+    const moreList = document.getElementById('more-div-list');
+    const moreBack = document.getElementById('moreDivBack');
+    const methodList = document.getElementById('method-list');
+    function enterMorePage() {
+      if (!moreList || !methodList) return;
+      methodList.hidden = true;
+      if (moreEntry) moreEntry.hidden = true;
+      moreList.hidden = false;
+      const content = document.querySelector('#phoneDivination .content');
+      if (content) content.scrollTop = 0;
+      if (moreBack) moreBack.focus({ preventScroll: true });
+    }
+    function exitMorePage() {
+      if (!moreList || !methodList) return;
+      moreList.hidden = true;
+      if (moreEntry) moreEntry.hidden = false;
+      methodList.hidden = false;
+      hideAll();
+      result.hidden = true;
+      const content = document.querySelector('#phoneDivination .content');
+      if (content) content.scrollTop = 0;
+    }
+    function bindActivate(el, fn) {
+      if (!el) return;
+      el.addEventListener('click', fn);
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); }
+      });
+    }
+    bindActivate(moreEntry, enterMorePage);
+    bindActivate(moreBack, exitMorePage);
+    window.YijingUI = window.YijingUI || {};
+    window.YijingUI.enterMorePage = enterMorePage;
+    window.YijingUI.exitMorePage = exitMorePage;
+
     function toast(msg) {
       const t = document.getElementById('qToast');
       if (!t) return;
@@ -6051,13 +6238,6 @@
     }
 
     /* ---- 接线 ---- */
-    function bindActivate(el, fn) {
-      if (!el) return;
-      el.addEventListener('click', fn);
-      el.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); }
-      });
-    }
     bindActivate(baziCard, () => { showOnly(baziForm); result.hidden = true; });
     bindActivate(xlrCard, () => { hideAll(); runXlr(); });
     bindActivate(meihuaCard, () => { showOnly(meihuaForm); result.hidden = true; });
@@ -6065,13 +6245,13 @@
     bindActivate(document.getElementById('baziCancel'), () => { baziForm.hidden = true; });
     bindActivate(document.getElementById('meihuaGo'), runMeihua);
     bindActivate(document.getElementById('meihuaCancel'), () => { meihuaForm.hidden = true; });
-    window.YijingUI = window.YijingUI || {};
     window.YijingUI.runXlr = runXlr;
     window.YijingUI.runMeihuaDice = function () { mhMode = 'dice'; runMeihua(); };
     /* 八字历史回看: 回屏2 重排完整排盘 (含大运流年), 不再入历史 */
     window.YijingUI.recallBazi = function (rec) {
       if (!rec || !rec.birthTs) return false;
       if (window.YijingUI.gotoScreen) window.YijingUI.gotoScreen(2);
+      enterMorePage(); /* iter25: 回看先进更多占法子页 */
       showOnly(baziForm);
       setTimeout(function () { runBazi(rec); }, 60);
       return true;
