@@ -26,6 +26,9 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          # 仓库尚未开启 Pages 时自动启用, 并将 Source 设为 GitHub Actions
+          enablement: true
 
       - name: Smoke test (syntax check + node 解析)
         run: |
