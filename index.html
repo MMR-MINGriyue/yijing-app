@@ -5027,39 +5027,43 @@
         renderCurrentMonth();
       };
     }
+    /* 长按状态: 提升到模块作用域, document 级监听只挂一次,
+       避免历史列表每次重渲染都向 document 累积新监听器 (内存泄漏) */
+    let pressCard = null, pressX = 0, pressY = 0;
+    function onDocMove(e) {
+      if (!pressCard || !longPressTimer) return;
+      const t = e.touches ? e.touches[0] : e;
+      if (Math.abs(t.clientX - pressX) > 8 || Math.abs(t.clientY - pressY) > 8) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+        pressCard.classList.remove('pressing');
+        pressCard = null;
+      }
+    }
+    function onDocUp() {
+      if (!pressCard) return;
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+      pressCard.classList.remove('pressing');
+      pressCard = null;
+    }
     function bindLongPress() {
       const cards = document.querySelectorAll('.hist-card[data-idx]');
       cards.forEach(card => {
-        let startX = 0, startY = 0;
         function onDown(e) {
           if (selectMode) return;
           longPressTriggered = false;
           clearTimeout(longPressTimer);
           const t = e.touches ? e.touches[0] : e;
-          startX = t.clientX; startY = t.clientY;
+          pressCard = card; pressX = t.clientX; pressY = t.clientY;
           card.classList.add('pressing');
           longPressTimer = setTimeout(() => {
             longPressTriggered = true;
             card.classList.remove('pressing');
+            pressCard = null;
             enterSelectMode(card);
             if (navigator.vibrate) navigator.vibrate(20);
           }, LONG_PRESS_MS);
-        }
-        function onMove(e) {
-          if (!longPressTimer) return;
-          const t = e.touches ? e.touches[0] : e;
-          const dx = Math.abs(t.clientX - startX);
-          const dy = Math.abs(t.clientY - startY);
-          if (dx > 8 || dy > 8) {
-            clearTimeout(longPressTimer);
-            longPressTimer = null;
-            card.classList.remove('pressing');
-          }
-        }
-        function onUp() {
-          clearTimeout(longPressTimer);
-          longPressTimer = null;
-          card.classList.remove('pressing');
         }
         function onClick(e) {
           if (longPressTriggered) { e.preventDefault(); e.stopPropagation(); longPressTriggered = false; return; }
@@ -5085,14 +5089,14 @@
         }
         card.addEventListener('mousedown', onDown);
         card.addEventListener('touchstart', onDown, { passive: true });
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('touchmove', onMove, { passive: true });
-        card.addEventListener('mouseup', onUp);
-        card.addEventListener('mouseleave', onUp);
-        card.addEventListener('touchend', onUp);
+        card.addEventListener('mouseup', onDocUp);
+        card.addEventListener('mouseleave', onDocUp);
+        card.addEventListener('touchend', onDocUp);
         card.addEventListener('click', onClick);
       });
     }
+    document.addEventListener('mousemove', onDocMove);
+    document.addEventListener('touchmove', onDocMove, { passive: true });
 
     window.YijingStates = {
       showEmpty: function() {
@@ -5305,7 +5309,7 @@
         }
       }
 
-      return { play: play };
+      return { play: play, isPlaying: function () { return playing; } };
     })();
 
     function run(methodId) {
@@ -5352,7 +5356,12 @@
 
       /* 铜钱起卦: 抛掷仪式动效呈现真实六掷; reduced-motion 或动画启动失败时回退骨架屏 */
       const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (methodId === 'coin' && res && res.tosses && !reduce && CoinToss.play(res, finish)) return;
+      if (methodId === 'coin' && res && res.tosses && !reduce) {
+        if (CoinToss.play(res, finish)) return;
+        /* play 被拒: 上一场仪式仍在进行 → 提示稍候, 不落入骨架屏路径覆盖动画 */
+        if (CoinToss.isPlaying()) { qToast('铜钱仪式进行中，请稍候'); return; }
+        /* 其余失败 (动画初始化异常) → 回退骨架屏 */
+      }
 
       showLoading('易道 推演中', label + ' · ' + (q.length > 16 ? q.slice(0, 16) + '…' : q));
       setTimeout(finish, 1600);
@@ -5425,7 +5434,8 @@
     }
     function showToast(msg, icon) {
       if (!toast) return;
-      toast.innerHTML = '<span class="ic">' + (icon || '✓') + '</span><span>' + msg + '</span>';
+      /* 用户输入会拼入回显 (如「已收：…」), 必须转义防 XSS */
+      toast.innerHTML = '<span class="ic">' + escapeHtml(icon || '✓') + '</span><span>' + escapeHtml(msg) + '</span>';
       toast.classList.add('show');
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);

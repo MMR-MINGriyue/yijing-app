@@ -32,7 +32,7 @@ const { chromium } = require('playwright-core');
   await page.waitForTimeout(900);
   t('合法导入处理 (' + r1 + ')', r1 === 'ok');
   const hist1 = await page.evaluate(() => {
-    const h = JSON.parse(localStorage.getItem('yijing.history') || '[]');
+    const h = JSON.parse(localStorage.getItem('yijing.history.v1') || '[]');
     return { n: h.length, hasQ: h.some(x => x.question === '测试Q') };
   });
   t('合法记录入库 (n=' + hist1.n + ')', hist1.n >= 1 && hist1.hasQ);
@@ -41,7 +41,7 @@ const { chromium } = require('playwright-core');
 
   /* 2. 畸形记录文件 */
   const evil = JSON.stringify({ history: [{ id: 'x' }, { ts: 99, question: '<b>evil</b>' }, null, 'string'] });
-  await page.evaluate(() => { try { localStorage.setItem('yijing.history', '[]'); } catch (e) {} });
+  await page.evaluate(() => { try { localStorage.setItem('yijing.history.v1', '[]'); } catch (e) {} });
   const r2 = await page.evaluate(async (json) => {
     const input = document.querySelector('input[type="file"][accept*="json"]');
     if (!input) return 'no-input';
@@ -53,11 +53,11 @@ const { chromium } = require('playwright-core');
     return 'ok';
   }, evil);
   await page.waitForTimeout(900);
-  const hist2 = await page.evaluate(() => JSON.parse(localStorage.getItem('yijing.history') || '[]'));
+  const hist2 = await page.evaluate(() => JSON.parse(localStorage.getItem('yijing.history.v1') || '[]'));
   console.log('  畸形导入后历史: ' + JSON.stringify(hist2));
 
   /* 3. 畸形记录对屏6渲染的影响 */
-  await page.evaluate(() => { try { localStorage.setItem('yijing.history', JSON.stringify([{ id: 'x' }])); } catch (e) {} });
+  await page.evaluate(() => { try { localStorage.setItem('yijing.history.v1', JSON.stringify([{ id: 'x' }])); } catch (e) {} });
   await page.reload();
   await page.waitForTimeout(2200);
   await page.evaluate(() => window.YijingUI.gotoScreen(5));
