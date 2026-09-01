@@ -32,6 +32,8 @@ HTTPS: https://github.com/MMR-MINGriyue/yijing-app
 - **全局按压反馈** (v1.14): chips/方向标签/方法卡/历史卡/卦卡/tab 等 11 类可点元素统一 `:active { scale(0.96) }` 即时确认感, 触摸/点击均有缩放反馈
 - **排版**: 中文优先回退栈 (`PingFang SC` / `Microsoft YaHei` / `-apple-system`); 字体令牌 `--font-serif` / `--font-sans` / `--font-num`; 字号下限 11px, CJK 行高 1.75
 - 动爻红色高亮 + 波纹呼吸动画
+- **入场编排** (v1.17): 01 首屏四段式 stagger (问候 0.03s → 今日一卦 0.14s → 快捷入口 0.26s → 最近占卜 0.38s, quick-item 内部再递进), 全站 40+ keyframes 统一 ease-out-expo 曲线; `prefers-reduced-motion` 一键归零
+- **收藏 pop 反馈** (v1.17): 屏4 收藏切换 scale(1.34)+rotate(-10°) 弹跳确认, 支持连续点击重触发; 已删除从未使用的 countUp 死 keyframe
 - **真实导航**: 底部 tabbar (今日/六十四卦/起卦/我的) 在 App 模式驱动横向轮播、grid 模式滚动定位、画廊模式闪烁提示目标屏, 高亮随当前屏同步
 - **PWA 深链**: manifest shortcuts `#start` / `#today` / `#history` / `#me` 已接通 hash 导航
 - **交互闭环**: 屏4「查看变卦推演」直达屏5, 屏1「查看全部」直达历史, 收藏按钮 localStorage 持久化 (`yijing.favHexes`)

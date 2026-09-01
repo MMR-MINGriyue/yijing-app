@@ -3,7 +3,7 @@
  * 缓存策略：app shell cache-first，导航/字体 cache-first with network fallback
  * =========================================== */
 
-const CACHE_VERSION = 'yijing-v1.16.0';
+const CACHE_VERSION = 'yijing-v1.17.0';
 const CACHE_RUNTIME = 'yijing-runtime-v1';
 const CACHE_ASSETS  = [
   './',

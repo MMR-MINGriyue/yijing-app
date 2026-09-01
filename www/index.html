@@ -1543,6 +1543,9 @@
     background: rgba(201, 168, 118, 0.14);
     border-color: var(--gold);
   }
+  /* 收藏切换 pop 反馈 (scale + 轻微旋转, 比纯底色变化更有确认感) */
+  .action-row .fav.pop { animation: favPop 0.42s var(--ease-out); }
+  .action-row .fav:active { transform: scale(0.88); }
 
   /* ===== 05 变卦推演 ===== */
   .transform-card {
@@ -2125,10 +2128,6 @@
     from { transform: translateX(-12px); opacity: 0; }
     to   { transform: translateX(0); opacity: 1; }
   }
-  @keyframes countUp {
-    from { transform: translateY(8px); opacity: 0; }
-    to   { transform: translateY(0); opacity: 1; }
-  }
   @keyframes floatY {
     0%, 100% { transform: translateY(0); }
     50%      { transform: translateY(-3px); }
@@ -2145,12 +2144,31 @@
     50%  { transform: scale(1.08); }
     100% { transform: scale(1); }
   }
+  @keyframes favPop {
+    0%   { transform: scale(1) rotate(0deg); }
+    45%  { transform: scale(1.34) rotate(-10deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
 
   /* 入场 */
   .hero-card, .detail-hero, .transform-card, .text-card, .hist-card, .recent-card,
   .method-card, .yao-row, .filter, .tag, .quick-item, .page-title, .section-cap {
     animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
+
+  /* ===== 01 首屏入场编排: 问候 → 今日一卦 → 快捷入口 → 最近占卜, ~110ms 步进 ===== */
+  .phone:first-of-type .header-row,
+  .phone:first-of-type .quick-row,
+  .phone:first-of-type .recent-section {
+    animation: fadeUp 0.6s var(--ease-out) both;
+  }
+  .phone:first-of-type .header-row     { animation-delay: 0.03s; }
+  .phone:first-of-type .hero-card      { animation-delay: 0.14s; }
+  .phone:first-of-type .quick-row      { animation-delay: 0.26s; }
+  .phone:first-of-type .recent-section { animation-delay: 0.38s; }
+  .phone:first-of-type .quick-item:nth-child(1) { animation-delay: calc(0.26s + 0.04s); }
+  .phone:first-of-type .quick-item:nth-child(2) { animation-delay: calc(0.26s + 0.09s); }
+  .phone:first-of-type .quick-item:nth-child(3) { animation-delay: calc(0.26s + 0.14s); }
 
   /* 卦爻逐爻展开 (01 hero 精细卦) */
   .hex-stack .hex-line {
@@ -6080,6 +6098,10 @@
       if (i >= 0) list.splice(i, 1); else list.push(no);
       try { localStorage.setItem(FAV_KEY, JSON.stringify(list)); } catch (e) {}
       paintFav();
+      /* pop 反馈: 移除再触发, 支持连续点击 */
+      fav.classList.remove('pop');
+      void fav.offsetWidth;
+      fav.classList.add('pop');
       try { document.dispatchEvent(new CustomEvent('yijing:favchange')); } catch (e) {}
     });
     document.addEventListener('yijing:detailchange', paintFav);
