@@ -19,6 +19,7 @@ HTTPS: https://github.com/MMR-MINGriyue/yijing-app
 ## 设计系统
 
 - **深色国风调性**: `#14100b` 底 + 朱红 + 暗金 + 松绿
+- **Token 零偏移** (v1.16): CSS 内硬编码颜色全部归一至 `:root` token (审计脚本实测 0 处游离 hex); 新增语义渐变 token 三层深度 `--grad-card` (卡片) / `--grad-sheet` (弹层更深) / `--grad-overlay` (全屏最深) + `--grad-cinnabar`(-v), 高亮白字 `--text-on-fill`, 朱红深端 `--cinnabar-deeper`; 5 处近似色收敛至最近 token (Δ≤15/255 视觉无感); 圆形元素统一 `border-radius: 50%` (替代手写半宽半径)
 - **移动优先三态布局**:
   - `app` 模式 (≤900px): 6 屏横向 `scroll-snap` 轮播, `100dvh` 全屏, 内容/顶栏/底栏限制最大 460px 居中, 防止平板竖屏把 390px 设计稿拉成扁条
   - `grid` 模式 (901–1599px): 390×844 原尺寸换行网格, 纵向滚动, 保证真实可读性
