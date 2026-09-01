@@ -1181,6 +1181,92 @@
     transition: transform 0.15s, opacity 0.2s;
   }
   .bazi-btn:active { transform: scale(0.96); }
+  /* 性别分段 + 时辰未知 */
+  .bazi-meta-row { align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .bazi-gender { display: flex; gap: 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--stroke-soft); }
+  .bazi-gender .g-btn {
+    padding: 8px 14px; cursor: pointer; font-size: 13px; letter-spacing: 1px;
+    background: var(--bg-elevated); color: var(--text-secondary);
+    border: none; transition: background 0.2s, color 0.2s;
+    font-family: var(--font-serif);
+  }
+  .bazi-gender .g-btn.active { background: var(--gold-soft); color: var(--gold); }
+  .bazi-hour-unknown {
+    display: flex; align-items: center; gap: 6px; cursor: pointer;
+    font-size: 12px; color: var(--text-tertiary); user-select: none;
+  }
+  .bazi-hour-unknown input { accent-color: var(--gold); width: 15px; height: 15px; }
+  /* 时柱近似标注 */
+  .bazi-pillar.approx .gz { opacity: 0.65; border-style: dashed; }
+  .bazi-pillar .pos i {
+    font-style: normal; font-size: 10px; color: var(--cinnabar);
+    margin-left: 2px;
+  }
+  /* 大运时间轴 + 流年表 */
+  .dy-meta-line {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin: 10px 0 12px; font-size: 12px; color: var(--text-secondary);
+  }
+  .dy-meta-line .dir {
+    padding: 2px 10px; border-radius: 8px; font-size: 12px; letter-spacing: 2px;
+    background: var(--gold-soft); color: var(--gold);
+  }
+  .dy-edge { font-size: 11px; color: var(--cinnabar); }
+  .dy-timeline {
+    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px;
+    scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
+  }
+  .dy-step {
+    flex: 0 0 auto; min-width: 88px; padding: 10px 8px; border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: var(--bg-elevated); border: 1px solid var(--stroke-soft);
+    cursor: pointer; scroll-snap-align: start;
+    transition: border-color 0.2s, opacity 0.2s, transform 0.15s;
+  }
+  .dy-step:active { transform: scale(0.97); }
+  .dy-step .gz { font-family: var(--font-serif); font-size: 18px; font-weight: 600; color: var(--text-primary); }
+  .dy-step .god { font-size: 11px; color: var(--text-secondary); }
+  .dy-step .yrs { font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.5px; }
+  .dy-step.past { opacity: 0.45; }
+  .dy-step.current { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+  .dy-step.current .gz { color: var(--gold); }
+  .dy-liunian {
+    margin-top: 10px; padding: 12px 12px 8px; border-radius: 12px;
+    background: var(--bg-elevated); border: 1px solid var(--stroke-soft);
+    animation: fadeUp 0.28s var(--ease-out) both;
+  }
+  .dy-liunian[hidden] { display: none; }
+  .ln-head {
+    font-family: var(--font-serif); font-size: 13px; letter-spacing: 2px;
+    color: var(--gold); padding-bottom: 8px; border-bottom: 1px solid var(--stroke-soft);
+  }
+  .ln-row {
+    display: flex; gap: 10px; padding: 9px 2px;
+    border-bottom: 1px dashed var(--stroke-soft);
+  }
+  .ln-row:last-child { border-bottom: none; }
+  .ln-row.current { background: rgba(154, 121, 66, 0.07); border-radius: 8px; }
+  .ln-row .yr {
+    flex: 0 0 64px; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .ln-row .yr b { font-family: var(--font-serif); font-size: 15px; color: var(--text-primary); font-weight: 600; }
+  .ln-row .yr span { font-size: 11px; color: var(--text-tertiary); }
+  .ln-row .yr .now {
+    font-style: normal; font-size: 10px; color: #241505;
+    background: var(--gold); border-radius: 6px; padding: 1px 6px; letter-spacing: 1px;
+  }
+  .ln-row .body { flex: 1; min-width: 0; }
+  .ln-row .ln-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .ln-row .ln-top .god { font-size: 12px; color: var(--gold); font-weight: 600; }
+  .ln-chip {
+    font-size: 10px; padding: 2px 7px; border-radius: 7px;
+    border: 1px solid transparent; letter-spacing: 1px;
+  }
+  .ln-chip.chong { color: var(--cinnabar); border-color: rgba(178, 58, 47, 0.45); background: rgba(178, 58, 47, 0.08); }
+  .ln-chip.he { color: var(--pine, #5f8f6e); border-color: rgba(95, 143, 110, 0.45); background: rgba(95, 143, 110, 0.08); }
+  .ln-chip.xing { color: var(--text-secondary); border-color: var(--stroke-soft); background: var(--bg-card); }
+  .ln-row .ln-text { margin-top: 3px; font-size: 12px; line-height: 1.7; color: var(--text-secondary); }
+  .ln-empty { padding: 14px 0; font-size: 12px; color: var(--text-tertiary); text-align: center; }
   .bazi-btn.primary { background: var(--gold); color: #241505; border: none; font-weight: 600; }
   .bazi-btn.ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--stroke-soft); }
   .meihua-tabs { display: flex; gap: 8px; }
@@ -3126,6 +3212,16 @@
               <input type="number" id="baziDay" min="1" max="31" placeholder="日" inputmode="numeric" />
               <select id="baziHour" aria-label="出生时辰"></select>
             </div>
+            <div class="bazi-row bazi-meta-row">
+              <div class="bazi-gender" id="baziGender" role="radiogroup" aria-label="性别">
+                <button type="button" class="g-btn active" data-g="male" aria-pressed="true">乾造 · 男</button>
+                <button type="button" class="g-btn" data-g="female" aria-pressed="false">坤造 · 女</button>
+              </div>
+              <label class="bazi-hour-unknown">
+                <input type="checkbox" id="baziHourUnknown" />
+                <span>时辰未知（按午时近似）</span>
+              </label>
+            </div>
             <div class="bazi-actions">
               <button type="button" class="bazi-btn ghost" id="baziCancel">取 消</button>
               <button type="button" class="bazi-btn primary" id="baziGo">排 盘</button>
@@ -3639,6 +3735,7 @@
   </div>
 </div>
 <script src="./data.js"></script>
+<script src="./terms.js"></script>
 <script src="./divination.js"></script>
 <script>
   /* ============ 工具函数 ============ */
@@ -3696,8 +3793,33 @@
       });
       return mi;
     }
-    /* 月干支: 年上起月法 — 甲己之年丙作首 (正月建寅) */
+    /* 月干支: 年上起月法 — 甲己之年丙作首 (正月建寅)
+       优先用 terms.js 分钟级节气表 (修掉节气交界日 ±1 天月柱可能错的边界问题),
+       表不可用时回退日期级旧表 */
     function ganzhiMonth(date) {
+      /* 精确路径: 12 节索引 0=小寒..11=大雪 → 月支索引 小寒→丑(11), 立春→寅(0) */
+      if (typeof PreciseTerms !== 'undefined' && PreciseTerms.jieList) {
+        const ts = date.getTime();
+        const y0 = date.getFullYear();
+        const listY = PreciseTerms.jieList(y0);
+        const listPrev = PreciseTerms.jieList(y0 - 1);
+        if (listY && listPrev) {
+          const idx = (function () {
+            for (let i = 11; i >= 0; i--) { if (ts >= listY[i].ts) return i; }
+            return 11; /* 早于当年小寒 → 上一年大雪起的子月 */
+          })();
+          const mi = (idx + 11) % 12;
+          /* 干支年以立春为界: 立春前属上一年 */
+          let y = y0;
+          if (ts < listY[1].ts) y -= 1;
+          const yearGanIdx = (((y - 1984) % 60 + 60) % 60) % 10;
+          const monthGanStart = [2, 4, 6, 8, 0][yearGanIdx % 5];
+          const ganIdx = (monthGanStart + mi) % 10;
+          const zhiIdx = (2 + mi) % 12; /* 寅=2 */
+          return GAN[ganIdx] + ZHI[zhiIdx];
+        }
+      }
+      /* 回退: 日期级旧表 */
       let y = date.getFullYear();
       const m = date.getMonth() + 1, d = date.getDate();
       if (m < 2 || (m === 2 && d < 4)) y -= 1;
@@ -5301,7 +5423,14 @@
             renderSelectToolbar();
             return;
           }
-          /* 普通点击 → 打开该卦的 04 屏解析并跳转 */
+          /* 普通点击 → 八字记录回屏2重排 (含大运流年); 卦类记录打开 04 屏解析 */
+          const idx = parseInt(card.dataset.idx, 10);
+          const rec = getHistory()[idx];
+          if (rec && rec.type === 'bazi' && rec.birthTs &&
+              window.YijingUI && typeof window.YijingUI.recallBazi === 'function') {
+            window.YijingUI.recallBazi(rec);
+            return;
+          }
           const no = parseInt(card.dataset.hex, 10);
           if (no && window.YijingUI && typeof window.YijingUI.openDetail === 'function') {
             window.YijingUI.openDetail(no);
@@ -5691,20 +5820,119 @@
       }
       hourSel.selectedIndex = 12;
     }
-    function runBazi() {
-      const y = parseInt(document.getElementById('baziYear').value, 10);
-      const m = parseInt(document.getElementById('baziMonth').value, 10);
-      const d = parseInt(document.getElementById('baziDay').value, 10);
-      const h = parseInt(hourSel.value, 10);
+    /* 性别分段控件 */
+    const genderGroup = document.getElementById('baziGender');
+    const hourUnknownBox = document.getElementById('baziHourUnknown');
+    let baziGender = 'male';
+    if (genderGroup) {
+      genderGroup.querySelectorAll('.g-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          baziGender = btn.dataset.g;
+          genderGroup.querySelectorAll('.g-btn').forEach(b2 => {
+            const on = b2 === btn;
+            b2.classList.toggle('active', on);
+            b2.setAttribute('aria-pressed', on ? 'true' : 'false');
+          });
+        });
+      });
+    }
+    /* 大运流年渲染: 起运行 + 8 步时间轴 + 可展开流年表 */
+    function renderDaYun(dy) {
+      if (!dy || !dy.qiYun || !dy.steps.length) return '';
+      const qy = dy.qiYun;
+      const dirLabel = dy.forward ? '顺行' : '逆行';
+      const edgeNote = qy.nearEdge ? '<span class="dy-edge">临界节气，起运岁数或有微差</span>' : '';
+      const startYear = new Date(qy.startTs).getFullYear();
+      let stepsHtml = '', panelsHtml = '';
+      const curIdx = Math.max(dy.steps.findIndex(s => s.current), 0);
+      dy.steps.forEach((s, i) => {
+        stepsHtml +=
+          '<div class="dy-step' + (s.current ? ' current' : '') + (s.past ? ' past' : '') +
+            '" data-step="' + i + '" role="button" tabindex="0" aria-expanded="' + (i === curIdx) + '"' +
+            ' aria-label="' + s.gz + '大运' + s.startYear + '至' + s.endYear + '年，' + s.ganGod + '">' +
+            '<div class="gz">' + s.gz + '</div>' +
+            '<div class="god">' + s.ganGod + '</div>' +
+            '<div class="yrs">' + s.startYear + '-' + s.endYear + '</div>' +
+          '</div>';
+        const rows = s.liuNian.map(ln => {
+          const chips = ln.events.map(e =>
+            '<span class="ln-chip ' + e.type + '">' +
+              (e.type === 'chong' ? '冲' : e.type === 'he' ? '合' : '刑') + ' ' +
+              (e.palace === -1 ? '大运' : D.DaYun.PALACE[e.palace]) +
+            '</span>').join('');
+          return '<div class="ln-row' + (ln.current ? ' current' : '') + '">' +
+            '<div class="yr"><b>' + ln.year + '</b><span>' + ln.gz + '</span>' + (ln.current ? '<i class="now">今岁</i>' : '') + '</div>' +
+            '<div class="body">' +
+              '<div class="ln-top"><span class="god">' + ln.god + '</span>' + chips + '</div>' +
+              '<div class="ln-text">' + escapeHtml(ln.text) + '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+        panelsHtml +=
+          '<div class="dy-liunian" data-step="' + i + '"' + (i === curIdx ? '' : ' hidden') + '>' +
+            '<div class="ln-head">' + s.gz + '大运 · ' + s.startYear + '-' + s.endYear + ' 流年</div>' +
+            (rows || '<div class="ln-empty">该步流年超出节气表范围</div>') +
+          '</div>';
+      });
+      return '' +
+        '<div class="section-cap" style="font-size:12px;">大 运 排 布</div>' +
+        '<div class="dy-meta-line"><span class="dir">' + dirLabel + '</span>' +
+          '<span>' + qy.years + '岁' + (qy.months ? qy.months + '个月' : '') + '起运 · 至' + qy.termName + ' · 起于' + startYear + '年</span>' + edgeNote + '</div>' +
+        '<div class="dy-timeline" role="tablist">' + stepsHtml + '</div>' +
+        panelsHtml;
+    }
+    function bindDaYun() {
+      const steps = result.querySelectorAll('.dy-step');
+      const panels = result.querySelectorAll('.dy-liunian');
+      steps.forEach(step => {
+        const toggle = () => {
+          const i = step.dataset.step;
+          panels.forEach(p2 => { p2.hidden = p2.dataset.step !== i; });
+          steps.forEach(s2 => s2.setAttribute('aria-expanded', s2.dataset.step === i ? 'true' : 'false'));
+          const target = result.querySelector('.dy-liunian[data-step="' + i + '"]');
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        };
+        step.addEventListener('click', toggle);
+        step.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+        });
+      });
+    }
+    function runBazi(recallRec) {
+      /* 历史回看传入记录对象 (含 birthTs); 按钮点击传入 Event 需忽略 */
+      const rec = (recallRec && typeof recallRec === 'object' && typeof recallRec.birthTs === 'number') ? recallRec : null;
+      let y, m, d, h, gender, hourUnknown;
+      if (rec) {
+        /* 历史回看: 用存的出生数据重排, 不再入历史 */
+        const bd = new Date(rec.birthTs);
+        y = bd.getFullYear(); m = bd.getMonth() + 1; d = bd.getDate(); h = bd.getHours();
+        gender = rec.gender || 'male';
+        hourUnknown = !!rec.hourUnknown;
+        document.getElementById('baziYear').value = y;
+        document.getElementById('baziMonth').value = m;
+        document.getElementById('baziDay').value = d;
+        hourSel.value = String(h);
+        if (hourUnknownBox) hourUnknownBox.checked = hourUnknown;
+        if (genderGroup) genderGroup.querySelector('.g-btn[data-g="' + gender + '"]').click();
+      } else {
+        y = parseInt(document.getElementById('baziYear').value, 10);
+        m = parseInt(document.getElementById('baziMonth').value, 10);
+        d = parseInt(document.getElementById('baziDay').value, 10);
+        h = parseInt(hourSel.value, 10);
+        gender = baziGender;
+        hourUnknown = !!(hourUnknownBox && hourUnknownBox.checked);
+      }
       if (!(y >= 1901 && y <= 2100) || !(m >= 1 && m <= 12) || !(d >= 1 && d <= 31) || !(h >= 0 && h <= 23)) {
         toast('请完整填写出生年月日时'); return;
       }
-      const r = D.BaZi.compute(new Date(y, m - 1, d, h, 0));
+      const birth = new Date(y, m - 1, d, h, 0);
+      const dy = D.DaYun.analyze(birth, gender, { hourUnknown: hourUnknown });
+      const r = dy ? dy.bazi : D.BaZi.compute(birth);
       if (!r) { toast('排盘失败，请检查日期'); return; }
       const wxMax = Math.max.apply(null, Object.values(r.wuxing)) || 1;
       const pillarsHtml = r.pillars.map(p =>
-        '<div class="bazi-pillar">' +
-          '<div class="pos">' + p.pos + '柱</div>' +
+        '<div class="bazi-pillar' + (hourUnknown && p.pos === '时' ? ' approx' : '') + '">' +
+          '<div class="pos">' + p.pos + '柱' + (hourUnknown && p.pos === '时' ? '<i>近似</i>' : '') + '</div>' +
           '<div class="gz">' + p.gan + p.zhi + '</div>' +
           '<div class="god">' + p.ganGod + '</div>' +
         '</div>').join('');
@@ -5718,24 +5946,28 @@
       const dayHidden = r.pillars[2].hidden.map(hh =>
         '<span class="hidden-god">' + hh.gan + ' · ' + hh.god + '</span>').join('');
       const lunar = r.lunar;
-      const verdict = '此造日主<b>' + r.dayGan + '</b>（' + r.dayElement + '），生于' +
-        (lunar ? lunar.yearGanZhi + '年' + lunar.monthLabel + lunar.day + '日' : '') + ' ' + r.shichen + '。' +
+      const verdict = '此造' + (gender === 'female' ? '坤造' : '乾造') + '，日主<b>' + r.dayGan + '</b>（' + r.dayElement + '），生于' +
+        (lunar ? lunar.yearGanZhi + '年' + lunar.monthLabel + lunar.day + '日' : '') + ' ' + r.shichen + (hourUnknown ? '（近似）' : '') + '。' +
         '五行之中<b>' + (function () { let mk = '', mv = -1; Object.keys(r.wuxing).forEach(k => { if (r.wuxing[k] > mv) { mv = r.wuxing[k]; mk = k; } }); return mk; })() + '</b>最旺，' +
         '日主<b>' + r.strength + '</b>。' +
         '日支藏干' + dayHidden + '，与日主亲疏之象已列于上，可参详格局配置。';
       result.innerHTML =
         '<div class="div-head"><div class="div-title">八字排盘</div>' +
-          '<div class="div-sub">' + escapeHtml((lunar ? lunar.yearGanZhi + '年 ' : '') + y + '年' + m + '月' + d + '日 ' + r.shichen) + '</div></div>' +
+          '<div class="div-sub">' + escapeHtml((lunar ? lunar.yearGanZhi + '年 ' : '') + y + '年' + m + '月' + d + '日 ' + r.shichen + (hourUnknown ? ' · 时辰未知' : '')) + '</div></div>' +
         '<div class="bazi-pillars">' + pillarsHtml + '</div>' +
         '<div class="section-cap" style="font-size:12px;">五 行 分 布</div>' +
         '<div class="wx-bars">' + wxHtml + '</div>' +
-        '<div class="div-verdict">' + verdict + '</div>';
+        '<div class="div-verdict">' + verdict + '</div>' +
+        renderDaYun(dy);
       result.hidden = false;
       hideAll();
+      bindDaYun();
       result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (rec) return; /* 回看不再入历史 */
       addHistory(Object.assign(historyBase('bazi', '八字解析', currentQuestion()), {
         name: r.pillars[0].gan + r.pillars[0].zhi + '年 · ' + r.dayGan + r.dayElement + '命',
         hexNo: null, lines: null, moving: [],
+        birthTs: birth.getTime(), gender: gender, hourUnknown: hourUnknown,
         baziSummary: r.pillars.map(p => p.gz).join(' ')
       }));
     }
@@ -5836,6 +6068,14 @@
     window.YijingUI = window.YijingUI || {};
     window.YijingUI.runXlr = runXlr;
     window.YijingUI.runMeihuaDice = function () { mhMode = 'dice'; runMeihua(); };
+    /* 八字历史回看: 回屏2 重排完整排盘 (含大运流年), 不再入历史 */
+    window.YijingUI.recallBazi = function (rec) {
+      if (!rec || !rec.birthTs) return false;
+      if (window.YijingUI.gotoScreen) window.YijingUI.gotoScreen(2);
+      showOnly(baziForm);
+      setTimeout(function () { runBazi(rec); }, 60);
+      return true;
+    };
   })();
 
   /* ============ 02 屏输入框 (光标 + 字数 + 回车提交) ============ */

@@ -171,6 +171,177 @@
     return { compute: compute, tenGod: tenGod, hourPillar: hourPillar };
   })();
 
+  /* ============ 大运流年 (八字) ============ */
+  var DaYun = (function () {
+    /* 地支六冲 */
+    var CHONG = { '子':'午','午':'子','丑':'未','未':'丑','寅':'申','申':'寅','卯':'酉','酉':'卯','辰':'戌','戌':'辰','巳':'亥','亥':'巳' };
+    /* 地支六合 */
+    var HE = { '子':'丑','丑':'子','寅':'亥','亥':'寅','卯':'戌','戌':'卯','辰':'酉','酉':'辰','巳':'申','申':'巳','午':'未','未':'午' };
+    /* 地支相刑 (简化三刑表, 不含自刑) */
+    var XING = {
+      '寅':['巳','申'], '巳':['申','寅'], '申':['寅','巳'],
+      '丑':['戌','未'], '戌':['未','丑'], '未':['丑','戌'],
+      '子':['卯'], '卯':['子']
+    };
+    /* 天干五合 */
+    var GAN_HE = { '甲':'己','己':'甲','乙':'庚','庚':'乙','丙':'辛','辛':'丙','丁':'壬','壬':'丁','戊':'癸','癸':'戊' };
+    var SHENG = { 木:'火', 火:'土', 土:'金', 金:'水', 水:'木' }; /* 我生 */
+    var KE = { 木:'土', 土:'水', 水:'火', 火:'金', 金:'木' };   /* 我克 */
+    /* 宫位语义: 0年柱 1月柱 2日柱 3时柱, -1 = 大运 */
+    var PALACE = ['年柱·根基', '月柱·父母事业', '日柱·自身婚姻', '时柱·子女'];
+
+    /* 十神主事句 (模板, 无自由文本) */
+    var GOD_MAIN = {
+      '比肩': '比肩主事，同侪助力与竞争并见，宜自立不宜依赖',
+      '劫财': '劫财当值，破财分福之忧，忌合伙借贷',
+      '食神': '食神主事，才艺生发，口福安逸，顺遂之年',
+      '伤官': '伤官吐秀，才华显露，慎言辞招忌',
+      '偏财': '偏财主事，意外之财可期，忌贪多',
+      '正财': '正财主事，勤勉得财，婚姻家庭之象',
+      '七杀': '七杀攻身，压力与机遇并存，宜静制不宜躁进',
+      '正官': '正官主事，名分职守，功名可期',
+      '偏印': '偏印主事，领悟独到，防孤僻多虑',
+      '正印': '正印主事，学业文书有喜，贵人扶助'
+    };
+    var EVENT_TPL = {
+      chong: '冲动{p}，主变动',
+      he: '合入{p}，主牵绊亦有成',
+      xing: '刑扰{p}，主是非烦扰'
+    };
+
+    function isYangGan(g) { return GAN.indexOf(g) % 2 === 0; }
+
+    /** 起运: 顺行取生 → 下一节 的间隔, 逆行取生 → 上一节; 3日折1岁, 精确到月 */
+    function qiYun(birthTs, fwd) {
+      if (typeof PreciseTerms === 'undefined' || !PreciseTerms.around) return null;
+      var a = PreciseTerms.around(birthTs);
+      if (!a) return null;
+      var gapMin = Math.round((fwd ? a.next.ts - birthTs : birthTs - a.prev.ts) / 60000);
+      var totalMonths = Math.round(gapMin / (3 * 24 * 60) * 12);
+      return {
+        years: Math.floor(totalMonths / 12),
+        months: totalMonths % 12,
+        /* 起运时刻 = 出生 + 折算后的年月 (3日折1岁的换算结果, 非实际间隔) */
+        startTs: addMonths(birthTs, totalMonths),
+        termName: fwd ? a.next.name : a.prev.name,
+        nearEdge: Math.min(a.next.ts - birthTs, birthTs - a.prev.ts) < 24 * 3600000
+      };
+    }
+
+    function isLeap(y) { return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0; }
+    /* 公历月加法 (日期钳到目标月末) */
+    function addMonths(ts, n) {
+      var d = new Date(ts);
+      var y = d.getFullYear(), mo = d.getMonth() + n;
+      y += Math.floor(mo / 12); mo = ((mo % 12) + 12) % 12;
+      var last = new Date(y, mo + 1, 0).getDate();
+      var da = Math.min(d.getDate(), last);
+      return new Date(y, mo, da, d.getHours(), d.getMinutes()).getTime();
+    }
+    /* 公历年加法 (处理 2/29 → 3/1) */
+    function addYears(ts, n) {
+      var d = new Date(ts);
+      var y = d.getFullYear() + n, mo = d.getMonth(), da = d.getDate();
+      if (mo === 1 && da === 29 && !isLeap(y)) { mo = 2; da = 1; }
+      return new Date(y, mo, da, d.getHours(), d.getMinutes()).getTime();
+    }
+    /* 时刻 ts 所属的立春年 (立春前属上一年) */
+    function liChunYear(ts) {
+      var y = new Date(ts + 8 * 3600000).getUTCFullYear();
+      if (typeof PreciseTerms === 'undefined' || !PreciseTerms.jieList) return y;
+      var list = PreciseTerms.jieList(y);
+      if (list && ts < list[1].ts) return y - 1;
+      return y;
+    }
+
+    /** 单个流年分析: 全量生克 (十神主事 + 冲合刑事件 + 岁运天干关系) */
+    function analyzeYear(bazi, gzY, stepGZ) {
+      var god = BaZi.tenGod(bazi.dayGan, gzY[0]);
+      var zhiY = gzY[1];
+      var events = [];
+      var targets = bazi.pillars.map(function (p, i) { return { zhi: p.zhi, palace: i }; });
+      targets.push({ zhi: stepGZ[1], palace: -1 });
+      targets.forEach(function (t) {
+        var type = null;
+        if (CHONG[zhiY] === t.zhi) type = 'chong';
+        else if (HE[zhiY] === t.zhi) type = 'he';
+        else if ((XING[zhiY] || []).indexOf(t.zhi) >= 0) type = 'xing';
+        if (type && !events.some(function (e) { return e.type === type && e.palace === t.palace; })) {
+          events.push({ type: type, palace: t.palace, zhi: t.zhi });
+        }
+      });
+      var eventText = events.map(function (e) {
+        return EVENT_TPL[e.type].replace('{p}', e.palace === -1 ? '大运' : PALACE[e.palace]);
+      }).join('；');
+      /* 岁运天干关系 */
+      var me = WUXING[gzY[0]], dy = WUXING[stepGZ[0]];
+      var ganRel;
+      if (GAN_HE[gzY[0]] === stepGZ[0]) ganRel = '岁运天干相合，情事牵绊';
+      else if (SHENG[me] === dy) ganRel = '岁生运，顺势';
+      else if (SHENG[dy] === me) ganRel = '运生岁，得助';
+      else if (KE[me] === dy) ganRel = '岁克运，制衡';
+      else if (KE[dy] === me) ganRel = '运克岁，受阻';
+      else ganRel = '岁运比和';
+      var text = (GOD_MAIN[god] || (god + '主事')) + '。' + (eventText ? eventText + '。' : '') + ganRel + '。';
+      return { god: god, events: events, ganRel: ganRel, text: text };
+    }
+
+    /** 大运流年总分析
+     * @param date      出生日期 (Date, 含时间)
+     * @param gender    'male' | 'female'
+     * @param opts      { hourUnknown: bool }
+     * @return { bazi, forward, qiYun, steps[] } */
+    function analyze(date, gender, opts) {
+      var hourUnknown = !!(opts && opts.hourUnknown);
+      var bazi = BaZi.compute(date);
+      if (!bazi) return null;
+      /* 阳男顺 / 阴男逆 / 阳女逆 / 阴女顺 */
+      var fwd = (gender !== 'female') === isYangGan(bazi.pillars[0].gan);
+      var ts = date.getTime();
+      var qy = qiYun(ts, fwd);
+      if (!qy) return { bazi: bazi, forward: fwd, qiYun: null, steps: [], hourUnknown: hourUnknown };
+
+      var mGZ = bazi.pillars[1].gz;
+      var mg = GAN.indexOf(mGZ[0]), mz = ZHI.indexOf(mGZ[1]);
+      var dir = fwd ? 1 : -1;
+      var nowTs = Date.now();
+      var curLYear = liChunYear(nowTs);
+      var steps = [];
+      for (var i = 0; i < 8; i++) {
+        var gz = GAN[(mg + dir * (i + 1) + 100) % 10] + ZHI[(mz + dir * (i + 1) + 120) % 12];
+        var sTs = i === 0 ? qy.startTs : addYears(steps[i - 1].startTs, 10);
+        var eTs = addYears(sTs, 10);
+        var y0 = liChunYear(sTs);
+        var liuNian = [];
+        for (var k = 0; k < 10; k++) {
+          var yy = y0 + k;
+          if (yy > 2100) break; /* 节气表上限 */
+          var gzY = (typeof YijingCalendar !== 'undefined') ? YijingCalendar.ganzhiYear(new Date(yy, 6, 1)) : null;
+          if (!gzY) break;
+          var ev = analyzeYear(bazi, gzY, gz);
+          ev.year = yy; ev.gz = gzY; ev.current = (yy === curLYear);
+          liuNian.push(ev);
+        }
+        steps.push({
+          gz: gz, ganGod: BaZi.tenGod(bazi.dayGan, gz[0]),
+          startTs: sTs, endTs: eTs,
+          startYear: new Date(sTs).getFullYear(),
+          endYear: new Date(eTs - 86400000).getFullYear(),
+          startAge: qy.years + 10 * i,
+          current: nowTs >= sTs && nowTs < eTs,
+          past: nowTs >= eTs,
+          liuNian: liuNian
+        });
+      }
+      return { bazi: bazi, forward: fwd, qiYun: qy, steps: steps, hourUnknown: hourUnknown };
+    }
+
+    return {
+      analyze: analyze, analyzeYear: analyzeYear, qiYun: qiYun,
+      CHONG: CHONG, HE: HE, XING: XING, PALACE: PALACE
+    };
+  })();
+
   /* ============ 小六壬 (六宫) ============ */
   var XiaoLiuRen = (function () {
     /* 固定次序: 大安→留连→速喜→赤口→小吉→空亡, 循环 */
@@ -282,5 +453,5 @@
     return { byTime: byTime, byNumbers: byNumbers, byDice: byDice, buildLines: buildLines, trigramByNum: trigramByNum, XIAN_TIAN: XIAN_TIAN };
   })();
 
-  window.YijingDivination = { LunarCalendar: LunarCalendar, BaZi: BaZi, XiaoLiuRen: XiaoLiuRen, MeiHua: MeiHua };
+  window.YijingDivination = { LunarCalendar: LunarCalendar, BaZi: BaZi, DaYun: DaYun, XiaoLiuRen: XiaoLiuRen, MeiHua: MeiHua };
 })();
