@@ -842,7 +842,18 @@
     font-family: var(--font-serif); font-weight: 600;
     font-size: 15px; color: var(--text-primary); letter-spacing: 3px;
   }
-  .section-link { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; }
+  .section-link {
+    font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px;
+    /* 命中区扩大: padding 补偿负 margin, 布局不变 */
+    display: inline-flex; align-items: center;
+    padding: 10px 6px; margin: -10px -6px;
+    border-radius: 8px; cursor: pointer;
+  }
+  .section-link:active { transform: scale(0.95); }
+  /* 全局按压反馈: 所有可点卡片/标签/chips 触摸时轻微缩小, 提供即时确认感 */
+  .hex-filter-chip:active, .tag:active, .quick-item:active, .method-card:active,
+  .hist-card:active, .recent-card:active, .me-fav-chip:active, .me-history-link:active,
+  .me-bar.clickable:active, .hex-card:active, .tab:active { transform: scale(0.96); }
 
   .recent-card, .hist-card {
     display: flex; align-items: center; gap: 14px;
@@ -1776,12 +1787,12 @@
   .hex-filter-chip {
     flex-shrink: 0;
     display: flex; align-items: center; gap: 4px;
-    height: 28px; padding: 0 10px;
+    height: 36px; padding: 0 12px;
     background: var(--bg-card);
     border: 1px solid var(--stroke-soft);
-    border-radius: 14px;
+    border-radius: 18px;
     font-family: var(--font-serif);
-    font-size: 11px; color: var(--text-secondary);
+    font-size: 12px; color: var(--text-secondary);
     letter-spacing: 1px;
     cursor: pointer;
     transition: all 0.2s;

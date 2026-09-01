@@ -27,6 +27,8 @@ HTTPS: https://github.com/MMR-MINGriyue/yijing-app
 - **安全区适配**: 使用 `env(safe-area-inset-*)` 避开刘海/圆角/Home Indicator; 高度使用 `100dvh` 避免移动端工具栏跳动
 - **触控规范**: 最小触控区 `--tap-min: 44px`; 禁用双击缩放 300ms 延迟与灰色点击高亮
 - **无障碍对比度**: 小字内容统一使用 `--text-tertiary` (4.66:1) 与 `--cinnabar-text` (4.70:1), 满足 WCAG AA; 原 `--text-faint` 降级为装饰/禁用态
+- **触控目标达标** (v1.14): 筛选 chips 28→36px、`section-link` 文字链接以负 margin padding 扩大命中区至 39px, 全部可点元素实测 ≥36px
+- **全局按压反馈** (v1.14): chips/方向标签/方法卡/历史卡/卦卡/tab 等 11 类可点元素统一 `:active { scale(0.96) }` 即时确认感, 触摸/点击均有缩放反馈
 - **排版**: 中文优先回退栈 (`PingFang SC` / `Microsoft YaHei` / `-apple-system`); 字体令牌 `--font-serif` / `--font-sans` / `--font-num`; 字号下限 11px, CJK 行高 1.75
 - 动爻红色高亮 + 波纹呼吸动画
 - **真实导航**: 底部 tabbar (今日/六十四卦/起卦/我的) 在 App 模式驱动横向轮播、grid 模式滚动定位、画廊模式闪烁提示目标屏, 高亮随当前屏同步
