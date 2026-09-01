@@ -68,7 +68,7 @@ yijing-app/
 - manifest.webmanifest   PWA 清单
 - sw.js              Service Worker 离线缓存
 - icons/             矢量 + PNG 多尺寸图标
-- .github/workflows/deploy.yml   GitHub Pages 自动部署工作流
+- .github/workflows/android-build.yml   Android APK 自动构建工作流
 - .pwtest/           Playwright 迭代测试脚本 (开发用, 不参与运行)
 - README.md          本文件
 
@@ -79,17 +79,15 @@ node -e "const h=require('http'),f=require('fs'),p=require('path');h.createServe
 
 打开 http://localhost:8723
 
-## 部署 (GitHub Pages)
+## 分发 (安卓 APK)
 
-零构建依赖, 静态文件直接可托管:
+仓库保持私有 (GitHub Free 计划不支持私有仓库的 Pages, 无网页版):
 
-1. 推送到 GitHub 仓库 `main` 分支 (工作流 `.github/workflows/deploy.yml` 会先跑内联脚本语法冒烟检查, 再上传部署)
-2. 仓库 Settings → Pages → Source 选 **GitHub Actions**
-3. 访问 `https://<用户名>.github.io/<仓库名>/`
-   - 应用路径均相对 (`./`), 天然兼容子路径, 无需改任何代码
-4. 也可用任意静态托管 (Vercel / Netlify / 自建 nginx): 直接上传根目录全部静态文件即可
+1. 推送到 `main` 分支自动触发 `.github/workflows/android-build.yml` (含 www/ 与根目录哈希一致性守卫 + 内联脚本语法冒烟检查)
+2. Actions 运行页下载 `yijing-debug` 构建产物, 解压取 APK 传输安装
+3. 如后续需要网页版, 可将仓库转公开 (Pages 自动可用) 或迁移 Cloudflare Pages (免费支持私有仓库)
 
-> PWA 注意: HTTPS 下 Service Worker 与 `manifest` 才能完整生效; GitHub Pages / Vercel / Netlify 均默认 HTTPS。
+> PWA 注意: HTTPS 下 Service Worker 与 `manifest` 才能完整生效; 本地 http://localhost 与 APK 内嵌 WebView 不受影响。
 
 ## URL 调试参数
 
