@@ -3509,11 +3509,13 @@
       const list = (typeof window.YijingHistory !== 'undefined')
         ? window.YijingHistory.all()
         : ((typeof YIJING_DATA !== 'undefined') ? YIJING_DATA.HISTORY : []);
-      const items = list.slice(0, 2);
+      /* 容错: 跳过缺关键字段的畸形记录 (导入数据可能不完整), 避免渲染出 undefined */
+      const items = list.filter(h => h && h.name && h.question).slice(0, 2);
       box.innerHTML = '';
       items.forEach(h => {
+        const rec = (h && typeof h.lines === 'object' && h.lines) ? h.lines : {};
         const linesHtml = HEX_DRAW_ORDER.map(i => {
-          const t = h.lines[i];
+          const t = rec[i];
           if (t === 'yin') return '<div class="recent-line yin"></div>';
           if (t === 'movingYin') return '<div class="recent-line yin moving"></div>';
           return '<div class="recent-line' + (t === 'moving' ? ' moving' : '') + '"></div>';
@@ -3710,8 +3712,9 @@
     D.forEach((h, i) => {
       const card = document.createElement('div');
       card.className = 'hist-card' + (h.highlight ? ' highlight' : '');
+      const rec = (h && typeof h.lines === 'object' && h.lines) ? h.lines : {};
       const linesHtml = HEX_DRAW_ORDER.map(i => {
-        const t = h.lines[i];
+        const t = rec[i];
         if (t === 'yin') {
           return '<div class="hist-line" style="width:14px;"></div>';
         }
@@ -4540,8 +4543,10 @@
       card.className = 'hist-card month-card' + (h.highlight ? ' highlight' : '');
       card.dataset.idx = idx;
       card.dataset.hex = h.hexNo;
+      /* 容错: 导入的旧格式/缺字段记录无 lines 时按全阳爻渲染, 不抛异常 */
+      const rec = (h && typeof h.lines === 'object' && h.lines) ? h.lines : {};
       const linesHtml = HEX_DRAW_ORDER.map(i => {
-        const t = h.lines[i];
+        const t = rec[i];
         if (t === 'yin') return '<div class="hist-line" style="width:14px;"></div>';
         if (t === 'movingYin') return '<div class="hist-line moving" style="width:14px;"></div>';
         return '<div class="hist-line' + (t==='moving'?' moving':'') + '"></div>';
