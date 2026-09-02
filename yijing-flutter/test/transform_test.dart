@@ -54,7 +54,8 @@ void main() {
   group('TransformViewModel — MVVM 状态管理', () {
     late TransformViewModel vm;
     setUp(() {
-      HexRepository.instance..init();
+      HexRepository.instance
+        ..init();
       vm = TransformViewModel();
     });
 

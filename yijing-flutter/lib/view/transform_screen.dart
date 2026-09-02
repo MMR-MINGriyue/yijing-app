@@ -89,7 +89,7 @@ class _TransformScreenState extends State<TransformScreen> {
   Widget _movingNote(TransformState s) {
     final r = s.result;
     final mvText = r.moving.isEmpty ? '无 动 爻'
-        : r.moving.map((i) => r.ben.yaoName(i) + ' 动').join(' · ');
+        : r.moving.map((i) => '${r.ben.yaoName(i)} 动').join(' · ');
     return Row(
       children: [
         Container(width: 7, height: 7, decoration: const BoxDecoration(color: YiColors.cinnabar, shape: BoxShape.circle)),
