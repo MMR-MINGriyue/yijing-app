@@ -4,17 +4,34 @@ import '../data/hex_library.dart';
 class Hex {
   final int no;
   final String name;
+  final String en;
+  final String desc; // 乾为天 · 刚健中正
   final String triU;
   final String triD;
+  final String triUN; // 上卦自然名
+  final String triDN;
+  final String guaci;
+  final String daxiang;
+  final String intro;
+  final List<YaoEntry> yao; // 六爻辞
   final List<bool> yangs; // 初→上
 
-  Hex({required this.no, required this.name, required this.triU, required this.triD, required List<bool> yangs})
-      : yangs = List.unmodifiable(yangs);
+  Hex({
+    required this.no, required this.name, required this.en, required this.desc,
+    required this.triU, required this.triD, required this.triUN, required this.triDN,
+    required this.guaci, required this.daxiang, required this.intro, required this.yao,
+    required List<bool> yangs,
+  }) : yangs = List.unmodifiable(yangs);
 
   factory Hex.fromEntry(HexEntry e) => Hex(
-        no: e.no, name: e.name, triU: e.triU, triD: e.triD, yangs: e.yangs);
+        no: e.no, name: e.name, en: e.en, desc: e.desc,
+        triU: e.triU, triD: e.triD, triUN: e.triUN, triDN: e.triDN,
+        guaci: e.guaci, daxiang: e.daxiang, intro: e.intro, yao: e.yao,
+        yangs: e.yangs);
 
   bool isYang(int i) => yangs[i];
+  String get title => desc.contains('·') ? desc.split('·').first.trim() : desc;
+  String get virtue => desc.contains('·') ? desc.split('·').last.trim() : '';
   String yaoName(int i) {
     const pos = ['初', '二', '三', '四', '五', '上'];
     final nine = yangs[i] ? '九' : '六';
