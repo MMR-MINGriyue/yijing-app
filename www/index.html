@@ -887,6 +887,22 @@
     font-size: 11px; color: var(--cinnabar-text);
     letter-spacing: 1px;
   }
+  /* iter28: 历史屏搜索高亮 — 匹配关键字 <mark> 金色高亮 + 卡片左侧朱砂条 */
+  .hist-card.search-hit { border-color: rgba(208, 77, 62, 0.45); }
+  .hist-card.search-hit::after {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--grad-cinnabar-v);
+    border-radius: 12px 0 0 12px;
+  }
+  .hist-mark {
+    background: rgba(201, 168, 118, 0.32);
+    color: var(--gold);
+    padding: 0 2px;
+    border-radius: 2px;
+    font-weight: 600;
+  }
   .hist-card.selectable { position: relative; transition: transform 0.2s, border-color 0.2s, background 0.2s; }
   .hist-card .select-check {
     position: absolute; top: 12px; right: 12px;
@@ -5103,9 +5119,21 @@
     const monthPrev = document.getElementById('monthPrev');
     const monthNext = document.getElementById('monthNext');
     if (!today) return;
+    /* iter28: 搜索关键字高亮 (在转义后安全地插入 <mark>) */
+    function highlight(text, kw) {
+      const s = String(text == null ? '' : text);
+      if (!kw) return escapeHtml(s);
+      const lower = s.toLowerCase();
+      const kwl = kw.toLowerCase();
+      const idx = lower.indexOf(kwl);
+      if (idx < 0) return escapeHtml(s);
+      return escapeHtml(s.slice(0, idx)) +
+        '<mark class="hist-mark">' + escapeHtml(s.slice(idx, idx + kw.length)) + '</mark>' +
+        escapeHtml(s.slice(idx + kw.length));
+    }
     function renderOne(h, idx) {
       const card = document.createElement('div');
-      card.className = 'hist-card month-card' + (h.highlight ? ' highlight' : '');
+      card.className = 'hist-card month-card' + (h.highlight ? ' highlight' : '') + (histKeyword ? ' search-hit' : '');
       card.dataset.idx = idx;
       card.dataset.hex = h.hexNo;
       /* 容错: 导入的旧格式/缺字段记录无 lines 时按全阳爻渲染, 不抛异常
@@ -5127,12 +5155,12 @@
         '<div class="hist-info">' +
           '<div class="hist-head">' +
             '<div style="display:flex;align-items:center;gap:8px;">' +
-              '<div class="hist-name">' + escapeHtml(h.name) + '</div>' +
+              '<div class="hist-name">' + highlight(h.name, histKeyword) + '</div>' +
               '<div class="tag-mini ' + h.directionColor + '">' + escapeHtml(h.direction) + '</div>' +
             '</div>' +
             '<div class="hist-time">' + escapeHtml(fmtRecordTime(h)) + '</div>' +
           '</div>' +
-          '<div class="hist-q">' + escapeHtml(h.question) + '</div>' +
+          '<div class="hist-q">' + highlight(h.question, histKeyword) + '</div>' +
         '</div>';
       return card;
     }
