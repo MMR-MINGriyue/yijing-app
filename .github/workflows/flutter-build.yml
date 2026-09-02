@@ -1,0 +1,72 @@
+name: Build Flutter APK (yijing-transform)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'yijing-flutter/**'
+      - '.github/workflows/flutter-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  flutter-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: yijing-flutter
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+          cache: true
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Show Flutter version
+        run: flutter --version
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run engine verification
+        run: dart run tool/verify_engine.dart
+
+      - name: Build debug APK
+        run: flutter build apk --debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: yijing-flutter-apk
+          path: yijing-flutter/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 30
+
+      - name: Attach APK to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(grep -oP "version:\s*\K[0-9]+\.[0-9]+\.[0-9]+\+\d+" pubspec.yaml | head -1 | sed 's/+.*//')
+          TAG="v${VERSION}"
+          APK="build/app/outputs/flutter-apk/app-debug.apk"
+          cp "$APK" "yijing-flutter-${TAG}-debug.apk"
+          gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" "yijing-flutter-${TAG}-debug.apk" \
+            --title "易道 (Flutter) ${TAG}" \
+            --notes "Flutter 实验田 (iter30): 屏5 变卦推演 MVVM 重写 demo. debug 签名." \
+            --latest

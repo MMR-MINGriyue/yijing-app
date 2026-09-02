@@ -19,3 +19,23 @@ android/local.properties
 android/.idea/
 android/captures/
 androidVariables.gradle
+
+# Flutter 实验田 (iter30) — 编译产物与本机配置
+yijing-flutter/.dart_tool/
+yijing-flutter/build/
+yijing-flutter/.flutter-plugins
+yijing-flutter/.flutter-plugins-dependencies
+yijing-flutter/android/.gradle/
+yijing-flutter/android/build/
+yijing-flutter/android/local.properties
+yijing-flutter/android/.idea/
+yijing-flutter/android/app/build/
+yijing-flutter/android/captures/
+yijing-flutter/ios/Pods/
+yijing-flutter/ios/.symlinks/
+yijing-flutter/ios/Flutter/.last_build_id
+yijing-flutter/web/.dart_tool/
+yijing-flutter/web/build/
+yijing-flutter/web/canvaskit/
+
+.flutter_tool_state
