@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'data/hex_repository.dart';
 import 'theme/yijing_theme.dart';
 import 'view/detail_screen.dart';
+import 'view/history_screen.dart';
 import 'view/transform_screen.dart';
 import 'viewmodel/detail_viewmodel.dart';
+import 'viewmodel/history_viewmodel.dart';
 import 'viewmodel/transform_viewmodel.dart';
 
 void main() {
@@ -26,7 +28,7 @@ class YijingApp extends StatelessWidget {
   }
 }
 
-/// 双屏导航 Hub: 屏 4 卦辞解析 / 屏 5 变卦推演
+/// 三屏导航 Hub: 屏 4 卦辞 / 屏 5 推演 / 屏 6 历史
 class _HubScreen extends StatefulWidget {
   const _HubScreen();
 
@@ -35,24 +37,25 @@ class _HubScreen extends StatefulWidget {
 }
 
 class _HubScreenState extends State<_HubScreen> {
-  int _screen = 0;
+  int _screen = 2; // 默认历史, 便于展示筛选/搜索
 
   @override
   Widget build(BuildContext context) {
+    const titles = ['卦 辞 解 析', '变 卦 推 演', '历 史 记 录'];
     return Scaffold(
       backgroundColor: YiColors.ink,
       appBar: AppBar(
         backgroundColor: YiColors.ink,
         foregroundColor: YiColors.gold,
         centerTitle: true,
-        title: Text(_screen == 0 ? '卦 辞 解 析' : '变 卦 推 演',
-            style: const TextStyle(letterSpacing: 6, fontSize: 17)),
+        title: Text(titles[_screen], style: const TextStyle(letterSpacing: 6, fontSize: 17)),
       ),
       body: IndexedStack(
         index: _screen,
         children: [
           DetailScreen(vm: DetailViewModel(hexNo: 1)),
           TransformScreen(vm: TransformViewModel()),
+          HistoryScreen(vm: HistoryViewModel()),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -64,6 +67,7 @@ class _HubScreenState extends State<_HubScreen> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.menu_book_outlined), label: '卦辞解析'),
           BottomNavigationBarItem(icon: Icon(Icons.change_history_outlined), label: '变卦推演'),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: '历史记录'),
         ],
       ),
     );

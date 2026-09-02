@@ -6,7 +6,8 @@ void main() {
   group('HexRepository.transform — 与易道 YijingEngine 一致', () {
     late HexRepository repo;
     setUpAll(() {
-      repo = HexRepository.instance..init();
+      repo = HexRepository.instance
+        ..init();
     });
 
     test('64 卦数据完整加载 (kHexLibrary = 64)', () {
@@ -54,8 +55,7 @@ void main() {
   group('TransformViewModel — MVVM 状态管理', () {
     late TransformViewModel vm;
     setUp(() {
-      HexRepository.instance
-        ..init();
+      HexRepository.instance.init();
       vm = TransformViewModel();
     });
 

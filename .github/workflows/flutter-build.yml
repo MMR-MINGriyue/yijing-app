@@ -47,6 +47,9 @@ jobs:
       - name: Run engine verification
         run: dart run tool/verify_engine.dart
 
+      - name: Run Flutter tests
+        run: flutter test --no-pub 2>&1 | tail -60
+
       - name: Build debug APK
         run: flutter build apk --debug
 

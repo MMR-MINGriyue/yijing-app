@@ -223,7 +223,7 @@ class _DetailScreenState extends State<DetailScreen> {
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(h.yao[i].n, style: const TextStyle(fontSize: 13, color: YiColors.textPrimary)),
               const SizedBox(height: 2),
-              Text('${h.yao[i].q}${h.yao[i].d.isNotEmpty ? ' ' + h.yao[i].d : ''}',
+              Text(h.yao[i].d.isEmpty ? h.yao[i].q : '${h.yao[i].q} ${h.yao[i].d}',
                   style: const TextStyle(fontSize: 11, height: 1.6, color: YiColors.textSecondary)),
             ])),
           ]),

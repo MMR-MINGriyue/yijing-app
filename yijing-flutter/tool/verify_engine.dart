@@ -1,7 +1,9 @@
-// 引擎 + 屏4数据逻辑验证 (纯 Dart)
+// 引擎 + 屏4数据 + 屏6数据 逻辑验证 (纯 Dart, 无 flutter 依赖)
 // 运行: flutter/bin/dart run tool/verify_engine.dart
+// 说明: ViewModel 测试见 test/ (需 flutter test)
 // ignore_for_file: avoid_print
 import 'package:yijing_transform/data/hex_repository.dart';
+import 'package:yijing_transform/data/history_repository.dart';
 
 int pass = 0, fail = 0;
 void check(String name, bool ok, [String? detail]) {
@@ -69,6 +71,17 @@ void main() {
       r4.relation == '比和' && r4.verdict == '吉', '${r4.relation}/${r4.verdict}');
   final r5 = repo.transform(3, [0, 4]);
   check('动爻排序', r5.moving.join(',') == '0,4', r5.moving.join(','));
+
+  // ---- 屏6 历史数据 (repository 层) ----
+  final histRepo = HistoryRepository.instance;
+  final list = histRepo.load();
+  check('历史 mock 数据 ≥ 8 条', list.length >= 8, list.length.toString());
+  check('月份范围覆盖上月', histRepo.monthRange().minM <= DateTime.now().month - 1,
+      '${histRepo.monthRange().minY}-${histRepo.monthRange().minM}');
+  check('本月记录非空', histRepo.ofMonth(DateTime.now().year, DateTime.now().month).isNotEmpty);
+  check('含非卦类占法 (type=bazi/xlr)', list.any((r) => r.type == 'bazi') && list.any((r) => r.type == 'xlr'));
+  check('含卦象 lines (iching)', list.where((r) => r.type == 'iching').every((r) => r.lines != null && r.lines!.length == 6));
+  check('方向覆盖事业/感情/财运', ['事业', '感情', '财运'].every((d) => list.any((r) => r.direction == d)));
 
   print('\n结果: $pass 通过, $fail 失败');
   if (fail > 0) { throw StateError('$fail 项失败'); }
