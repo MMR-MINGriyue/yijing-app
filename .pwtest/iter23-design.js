@@ -1,7 +1,7 @@
 /* iter23: 设计打磨 — 修复 hex-filter-row 压扁 + 屏1首屏看到最近占卜 + 统计色一致性 */
 const { chromium } = require('playwright-core');
 (async () => {
-  const browser = await chromium.launch({ channel: 'msedge' });
+  const browser = await chromium.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe' });
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));

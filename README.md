@@ -7,10 +7,10 @@ HTTPS: https://github.com/MMR-MINGriyue/yijing-app
 
 ## 简介
 
-易道 是一款专注解读卦象的移动端 PWA 应用, 6 屏设计:
+易道 是一款专注解读卦象的移动端 PWA 应用, 7 屏设计:
 
 1. 今日一卦 - 当前时辰对应卦象 + 解读
-2. 起卦 - 三种起卦方式 (数字 / 蓍草 / 铜钱), 可写入历史; 更多占法板块: **八字解析** (四柱/五行/十神, 农历 1900-2100), **小六壬** (时辰起课六宫落宫), **梅花易数** (时间/数字/掷骰三式起卦, 复用体用生克推演), 结果统一入历史并支持占法筛选
+2. 起卦 - 三种起卦方式 (数字 / 蓍草 / 铜钱), 可写入历史; 更多占法板块 (子页): **八字解析** (四柱/五行/十神/大运流年, 农历 1900-2100, 节气精确化), **小六壬** (时辰起课六宫落宫), **梅花易数** (时间/数字/掷骰三式起卦, 复用体用生克推演), 结果统一入历史并支持占法筛选
 3. 六十四卦 - 8x2 卦象网格浏览
 4. 卦辞解析 - 卦辞 / 爻辞 / 象传 三 Tab
 5. 变卦推演 - 真实本卦/变卦/互卦/体用生克计算 (支持左右拖动 / 点击爻切换动爻)
@@ -23,6 +23,7 @@ HTTPS: https://github.com/MMR-MINGriyue/yijing-app
 - **首屏可见性优化** (v1.20): 屏6 三行 `.hex-filter-row` 加 `flex-shrink: 0` 防父级 flex 列压扁（容器从 12px 恢复到 48px, chips 36px 完整显示）; 屏1 hero-card 紧凑化 (padding 24→16, gap 16→10, hero-body gap 24→18, hero-desc line-clamp 2 行) 省 ~55px 高度, 并在入场 stagger 完成后 auto-scroll 让「最近占卜」两卡完整可见于首屏 (scrollTop 由 `adjustHomeScroll()` 动态计算 = recBottom - tabTop + 12)
 - **横屏矮屏适配** (v1.21): 新增 `@media (orientation: landscape) and (max-height: 520px) and (max-width: 1200px)` —— 手机横屏 (iPhone 12 844×390 / SE 667×375) 自动从「全屏单屏轮播」切换到「多列网格 + 纵向滚动」, 每屏保持 390px 竖屏原比例 + 边框圆角 (恢复画廊观感); 844 宽视口可并排 2-3 屏, 667 宽自动单列; app-pager / app-hint / scroll-snap 全部关闭; 竖屏/平板/正方形视口走原模式, 互不干扰; viewport 纵向 scrollHeight 1652px / 7 屏全部可达
 - **屏2「更多占法」分页化** (v1.22): 屏2 默认只显示「请选择起卦方式」3 卡 + 一个金红渐变「更多占法 ›」入口卡, 点击入口进入独立子页 (返回行 + 3 张占法大卡: 八字/小六壬/梅花); 减少屏2 scrollHeight 5380→更紧凑; CSS 关键修复: `[hidden]` 默认 display:none 会被 `.method-list { display:flex }` 覆盖, 显式 `.method-list[hidden] { display: none !important }` 等保证 hidden 生效; 横屏 hero 进一步紧凑 (200px, 从 324→200px): 隐藏 hero-desc / hex-trigram-label / hex-meta / 英文副名, 卦名 36→26px, 快捷入口圆 44→32px; adjustHomeScroll 横屏跳过, 首屏保持 hero 可见; 横屏 media query 移到矮屏 block 之后避免被覆盖
+- **屏 5 变卦推演卡片修复** (v1.23): 修复 3 个 view 全部挤在 transform-card 内 (本卦/变卦/推演徽标文字重叠) 的设计 bug — slider 改 `width: 300%` + `flex-shrink: 0` 防父级压缩, 每个 view 改 `width: calc(100% / 3)` + `min-width: 0`, 配合 transform `translateX(calc(-100% / 3))` 切换 (本卦/变卦/推演每次只显示 1 个); transform-card 加 `flex-shrink: 0` 防 flex 列压缩 (view 高度 259px), 去掉 `justify-content: center` 让 slider 从 card content left 开始; 推演视图 6 行 diff rows (上卦/下卦/动爻/互卦/体用/吉凶) 居中显示无溢出
 - **移动优先三态布局**:
   - `app` 模式 (≤900px): 6 屏横向 `scroll-snap` 轮播, `100dvh` 全屏, 内容/顶栏/底栏限制最大 460px 居中, 防止平板竖屏把 390px 设计稿拉成扁条
   - `grid` 模式 (901–1599px): 390×844 原尺寸换行网格, 纵向滚动, 保证真实可读性

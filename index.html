@@ -1780,10 +1780,11 @@
     border-radius: 20px;
     /* 左右留白容纳爻序号(line-num 右侧 -22px)与动爻标签(line-tag 左侧 -8px)的外挂定位 */
     padding: 20px 28px 20px 30px;
-    display: flex; align-items: center; justify-content: center; gap: 16px;
+    display: flex; align-items: center; /* iter26: 去掉 justify-content: center (slider 300% 居中会让 view 0/2 看不到) */
     transition: transform 0.4s, box-shadow 0.4s, border-color 0.4s;
     overflow: hidden;
     position: relative;
+    flex-shrink: 0; /* iter26: 防止父级 .content flex column 压扁 (view 内容高 259px) */
   }
   .transform-card.dragging { transition: none; cursor: grabbing; }
   .transform-card:hover {
@@ -1802,10 +1803,21 @@
   }
   .transform-slider {
     display: flex;
-    align-items: center; gap: 16px;
-    width: 100%;
+    align-items: stretch;
+    width: 300%; /* 3 个 view 横向并排, 每次只显示 1 个 */
+    flex-shrink: 0; /* iter26: 父级 transform-card flex 布局不压缩 slider (300% 才能撑开 3 个 view) */
     transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: transform;
+  }
+  /* iter26: 修复 view 0/1/2 全部堆在 card 内 (slider 100% × min-width 110 × 3 + gap 16×2 = 362px > 292px 视口, 全部并排显示)
+     改为 33.333% 宽各占 1 屏, 配合 transform translateX(-33.333%) 切换 */
+  .hex-pair.view {
+    width: calc(100% / 3);
+    min-width: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 10px;
+    flex-shrink: 0;
   }
   .transform-dots {
     display: flex; justify-content: center; gap: 6px;
@@ -4856,7 +4868,8 @@
       } else {
         slider.style.transition = 'none';
       }
-      slider.style.transform = 'translateX(' + (-idx * 100) + '%)';
+      /* iter26: slider 宽 300% / view 各 33.333%, 切换 = -33.333% per view (而非 -100%) */
+      slider.style.transform = 'translateX(calc(' + (-idx * 100) + '% / 3))';
       dotEls.forEach((d, i) => d.classList.toggle('active', i === idx));
     }
 
@@ -4879,8 +4892,9 @@
       const x = getEventX(e);
       dragDelta = x - startX;
       const w = card.offsetWidth;
-      const basePct = (-currentIdx * 100);
-      const dragPct = (dragDelta / w) * 100;
+      /* iter26: 配合 33.333% per view, basePct 也需除 3 */
+      const basePct = (-currentIdx * 100 / 3);
+      const dragPct = (dragDelta / w) * 100 / 3;
       slider.style.transform = 'translateX(calc(' + basePct + '% + ' + dragPct + '%))';
     }
     function onEnd(e) {

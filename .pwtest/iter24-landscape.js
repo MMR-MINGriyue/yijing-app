@@ -1,7 +1,7 @@
 /* iter24: 横屏适配 — 手机横屏时改为网格模式 + 回归保证 */
 const { chromium } = require('playwright-core');
 (async () => {
-  const browser = await chromium.launch({ channel: 'msedge' });
+  const browser = await chromium.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe' });
   const errs = [];
   let pass = 0, fail = 0;
   const t = (name, ok, detail) => { ok ? pass++ : fail++; console.log((ok ? 'PASS' : 'FAIL') + ' + ' + name + (detail ? ' — ' + detail : '')); };

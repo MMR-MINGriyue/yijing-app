@@ -1,7 +1,7 @@
 /* iter25: 横屏 hero 紧凑 + 屏2 更多占法分页化 */
 const { chromium } = require('playwright-core');
 (async () => {
-  const browser = await chromium.launch({ channel: 'msedge' });
+  const browser = await chromium.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe' });
   const errs = [];
   let pass = 0, fail = 0;
   const t = (name, ok, detail) => { ok ? pass++ : fail++; console.log((ok ? 'PASS' : 'FAIL') + ' + ' + name + (detail ? ' — ' + detail : '')); };

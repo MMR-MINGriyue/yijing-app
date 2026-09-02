@@ -1,7 +1,7 @@
 /* iter20: 更多占法板块 — 八字 / 小六壬 / 梅花易数 + 历史整合 */
 const { chromium } = require('playwright-core');
 (async () => {
-  const browser = await chromium.launch({ channel: 'msedge' });
+  const browser = await chromium.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe' });
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));

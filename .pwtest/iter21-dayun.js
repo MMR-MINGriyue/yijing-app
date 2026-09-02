@@ -1,7 +1,7 @@
 /* iter21: 八字大运流年 — 精确节气表 / 起运顺逆 / 大运序列 / 流年生克 / UI 时间轴 / 历史回看 */
 const { chromium } = require('playwright-core');
 (async () => {
-  const browser = await chromium.launch({ channel: 'msedge' });
+  const browser = await chromium.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe' });
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));

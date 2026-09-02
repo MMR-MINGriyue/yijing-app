@@ -1,7 +1,7 @@
 /* iter19: 漏洞修复验证 — XSS 转义 / 监听器泄漏 / CoinToss 竞态 */
 const { chromium } = require('playwright-core');
 (async () => {
-  const browser = await chromium.launch({ channel: 'msedge' });
+  const browser = await chromium.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe' });
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   /* 在页面脚本运行前挂钩 document.addEventListener 计数 */
   await ctx.addInitScript(() => {
