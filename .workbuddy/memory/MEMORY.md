@@ -5,7 +5,7 @@
 - 国风易经 PWA，单 HTML + 零运行时依赖，7 屏移动优先（app ≤900 / landscape / grid / fit 四态）
 - 64 卦完整数据层（HEX_LIBRARY + HEX_EXTRA + YijingEngine 起卦推演）
 - 四大占法：易经（数字/蓍草/铜钱）、八字（含大运流年/节气精确化）、小六壬、梅花易数
-- v1.22.0 / 25 轮迭代；sw.js 缓存策略 app-shell cache-first
+- v1.23.0 / 26 轮迭代；sw.js 缓存策略 app-shell cache-first
 
 ## 设计系统要点
 
@@ -22,7 +22,7 @@
 - **大桌面 (≥1600px)**：fit/canvas 模式, 2940×1300 设计画廊等比缩放
 - **正方形视口**：orientation: square 不触发 landscape media query, 保持竖屏模式
 
-## 设计打磨教训（重要 — 8 条踩坑记录）
+## 设计打磨教训（重要 — 10 条踩坑记录）
 
 1. **flex shrink 子项坍塌陷阱**：任何在 `.content` flex column 下的子项若没有 `flex-shrink: 0`，即使有 padding 也会被父级压成 padding-only 高度（hex-filter-row 12px / chip 36px → 视觉"扁条"）。修复一律加 flex-shrink: 0
 2. **屏1首屏 hero 紧凑化**：hero-card 在 390×844 视口占 409px 会挤掉快捷入口和最近占卜；hero-card 加 flex-shrink:0 + 紧凑 padding/gap，配合 auto-scroll 让「最近占卜」完整可见（scrollTop = recBottom - tabTop + 12）
@@ -32,6 +32,8 @@
 6. **CSS 后定义胜出陷阱**：两个 media query 同特异性同时命中时（如横屏 844x390 同时满足 orientation:landscape max-height:520 和 max-width:900 max-height:740），后定义的 media query 胜出。横屏规则必须放在矮屏 block 之后才能生效
 7. **`[hidden]` 默认 display:none 被覆盖**：HTML5 `[hidden]` 属性的默认 display:none 会被元素自身的 `display:flex/grid` 覆盖。设置 hidden=true 后元素仍 visible。修复：显式声明 `.xxx[hidden] { display: none !important }`
 8. **gotoScreen 是 0-based**：YijingUI.gotoScreen(N) 跳到第 N+1 屏，gotoScreen(1)=起卦屏2，gotoScreen(2)=64卦屏3
+9. **transform 100% 参考 element 自身 box**：translateX(calc(-100% / 3)) 是 element 自身宽度的 1/3。如果想相对父级, 用 `calc(-33.333% of parentWidth)` 需要明确
+10. **slider 300% 必须 flex-shrink: 0**：父级 flex item 默认会压缩子项回到 100%, slider 撑不到 300% 就被截回 card 视口宽
 
 ## 数据层
 
