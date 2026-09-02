@@ -5,7 +5,8 @@
 - 国风易经 PWA，单 HTML + 零运行时依赖，7 屏移动优先（app ≤900 / landscape / grid / fit 四态）
 - 64 卦完整数据层（HEX_LIBRARY + HEX_EXTRA + YijingEngine 起卦推演）
 - 四大占法：易经（数字/蓍草/铜钱）、八字（含大运流年/节气精确化）、小六壬、梅花易数
-- v1.23.0 / 26 轮迭代；sw.js 缓存策略 app-shell cache-first
+- v1.26.0 / 29 轮迭代；sw.js 缓存策略 app-shell cache-first
+- 架构 (iter29): 移动 App 分层 — 壳层 index.html (CSS+HTML) / 数据层 data·terms·divination.js / 核心层 js/00-core / 屏控制器 js/01-05 / 布局层 js/06-layout-nav / 工具层 js/07-extra；加载顺序 data→terms→divination→00→01→…→07
 
 ## 设计系统要点
 
@@ -55,9 +56,10 @@
 
 ## 调试与测试
 
-- `.pwtest/check-syntax.js` Node 内联脚本 new Function 语法冒烟
-- `.pwtest/iter*.js` Playwright + Edge 渠道断言；iter17-iter25 共 208 项回归全过
-- 测试教训：跨午夜日期断言必须用 Date.now() 动态推；localStorage.clear() 必须在 page.goto 之后；统计截图用 getImageData 像素亮度；点击元素前 hidden 元素不可点需先点入口（iter25 子页）
+- `.pwtest/check-syntax.js` 检查 index.html 内联 + js/ 8 模块 + data/terms/divination (11 项, new Function 语法冒烟)
+- `.pwtest/iter*.js` Playwright + Edge (executablePath 显式) 断言；iter17-iter28 共 248 项回归全过
+- 测试教训：跨午夜日期断言必须用 Date.now() 动态推；localStorage.clear() 必须在 page.goto 之后；统计截图用 getImageData 像素亮度；点击元素前 hidden 元素不可点需先点入口（iter25 子页）；测试内不要留 screenshot 调用（污染 git 遗留 PNG，iter29 已清理）
+- 测试浏览器: `chromium.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe' })` (新会话 channel:'msedge' 探测失败)
 
 ## 分发
 
