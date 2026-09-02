@@ -1480,16 +1480,16 @@
   .detail-hero {
     background: var(--grad-card);
     border: 1px solid var(--stroke);
-    border-radius: 24px;
-    padding: 28px 24px;
-    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    border-radius: 20px;
+    padding: 16px 20px; /* iter27: 28/24 → 16/20 紧凑, 让 tabs + 内容上移 */
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   }
-  .detail-hero .hex-mini { width: 60px; height: 84px; gap: 4px; }
-  .detail-hero .hex-mini .hex-line { width: 54px; height: 4px; }
+  .detail-hero .hex-mini { width: 54px; height: 66px; gap: 3px; }
+  .detail-hero .hex-mini .hex-line { width: 48px; height: 4px; }
   .detail-hero .hex-name {
     font-family: var(--font-serif); font-weight: 700;
-    font-size: 28px; color: var(--text-primary); letter-spacing: 8px;
+    font-size: 24px; color: var(--text-primary); letter-spacing: 8px;
   }
   .detail-hero .hex-sub {
     font-size: 11px; color: var(--text-muted); letter-spacing: 1.5px;
