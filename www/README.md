@@ -70,14 +70,38 @@ HTTPS: https://github.com/MMR-MINGriyue/yijing-app
 ## 文件结构
 
 yijing-app/
-- index.html         单 HTML 主体 (5000+ 行, 含 CSS + JS)
+- index.html         应用壳层 (CSS + HTML 结构 + 模块引用)
 - data.js            64 卦完整数据库 + 卦辞/大象传 + YijingAPI 接口
+- terms.js           分钟级节气表 (自动生成, 1901-2100)
+- divination.js      更多占法: 八字/小六壬/梅花易数
+- js/                应用逻辑模块 (iter29 移动 App 架构分层拆分)
+  - 00-core.js        核心层: escapeHtml / HEX_DRAW_ORDER / YijingCalendar / YijingHistory / 时钟
+  - 01-init.js        初始化: 屏1 最近占卜 / 屏3 网格 / 屏2 方法+方向 / 屏6 分组注入
+  - 02-home-cast.js   屏1 今日一卦 (时辰卦/问候) + 屏3 搜索过滤
+  - 03-transform.js   屏5 变卦推演 (滑动切换 + 真实变卦计算)
+  - 04-history.js     屏6 历史 (月份/状态/筛选/排序/搜索/统计) + 屏2 起卦闭环 + 更多占法 + 输入
+  - 05-detail.js      屏4 卦辞解析 (Tab/动态渲染) + 屏5 爻辞 Modal
+  - 06-layout-nav.js  布局层: 四态响应式 / 屏框 / 缩放 / App 轮播 / tabbar 导航
+  - 07-extra.js       工具层: 杂项接线 / 分享卡 / 设置面板 / 屏7 我的 / 骨架屏 / URL 参数 / SW 注册
 - manifest.webmanifest   PWA 清单
-- sw.js              Service Worker 离线缓存
+- sw.js              Service Worker 离线缓存 (app-shell cache-first)
 - icons/             矢量 + PNG 多尺寸图标
 - .github/workflows/android-build.yml   Android APK 自动构建工作流
 - .pwtest/           Playwright 迭代测试脚本 (开发用, 不参与运行)
 - README.md          本文件
+
+## 架构 (iter29 移动 App 分层)
+
+```
+┌─ 应用壳层 index.html (CSS + HTML + 模块引用)
+├─ 数据层  data.js / terms.js / divination.js (64 卦库 / 节气表 / 占法引擎)
+├─ 核心层  js/00-core.js (干支历 / 历史存储 / 共享常量)
+├─ 屏控制器 js/01-init · 02-home-cast · 03-transform · 04-history · 05-detail (7 屏)
+├─ 布局层  js/06-layout-nav.js (四态响应式 + tabbar + 路由)
+└─ 工具层  js/07-extra.js (分享 / 设置 / 骨架 / SW)
+加载顺序: data.js → terms.js → divination.js → 00-core → 01-init → ... → 07-extra
+(跨文件共享常量通过 window 挂载, 如 window.HEX_DRAW_ORDER)
+```
 
 ## 本地运行
 

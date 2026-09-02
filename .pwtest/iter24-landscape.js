@@ -38,7 +38,6 @@ const { chromium } = require('playwright-core');
   t('横屏 844x390: 每屏 ≈844px 高 缩到 (390-32)', a.sample.every(p => p.h === 358 || p.h === 360 || p.h === 355 || p.h === 844 - 32), JSON.stringify(a.sample.map(p => p.h)));
   t('横屏 844x390: phone-label 显示 (画廊模式)', a.labelDisplay !== 'none', a.labelDisplay);
   t('横屏 844x390: app-pager 隐藏 (非轮播模式)', a.pagerDisplay === 'none', a.pagerDisplay);
-  await p1.screenshot({ path: '../_ls1-fixed.png' });
 
   /* ===== B. iPhone SE 横屏 667×375 (单列) ===== */
   const p2 = await browser.newPage({ viewport: { width: 667, height: 375 } });
@@ -58,7 +57,6 @@ const { chromium } = require('playwright-core');
   t('横屏 667x375: 每屏 ≈390px 宽', b.w0 === 390, 'w=' + b.w0);
   /* 667 < 390*2 + 16 + 32 = 828, 所以只能 1 列 */
   t('横屏 667x375: 单列布局 (容不下 2 列)', b.cols === 1, 'cols=' + b.cols);
-  await p2.screenshot({ path: '../_ls2-fixed.png' });
 
   /* ===== C. 竖屏回归: 390×844 保持原 app 轮播 ===== */
   const p3 = await browser.newPage({ viewport: { width: 390, height: 844 } });

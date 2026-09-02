@@ -3,7 +3,7 @@
  * 缓存策略：app shell cache-first，导航/字体 cache-first with network fallback
  * =========================================== */
 
-const CACHE_VERSION = 'yijing-v1.25.0';
+const CACHE_VERSION = 'yijing-v1.26.0';
 const CACHE_RUNTIME = 'yijing-runtime-v1';
 const CACHE_ASSETS  = [
   './',
@@ -11,6 +11,14 @@ const CACHE_ASSETS  = [
   './data.js',
   './terms.js',
   './divination.js',
+  './js/00-core.js',
+  './js/01-init.js',
+  './js/02-home-cast.js',
+  './js/03-transform.js',
+  './js/04-history.js',
+  './js/05-detail.js',
+  './js/06-layout-nav.js',
+  './js/07-extra.js',
   './manifest.webmanifest',
   './icons/icon.svg',
   './icons/icon-192.png',

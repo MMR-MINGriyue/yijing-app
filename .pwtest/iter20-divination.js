@@ -148,7 +148,6 @@ const { chromium } = require('playwright-core');
     return { pageVisible: !l.hidden, methodHidden: m.hidden };
   });
   t('UI: 点击入口 → 子页显示 + 起卦方式区隐藏', entered.pageVisible && entered.methodHidden);
-  await page.screenshot({ path: '../_more-page.png' });
 
   /* 点击小六壬卡片 → 结果卡出现 + 入历史 */
   await page.evaluate(() => { localStorage.setItem('yijing.history.v1', '[]'); });
