@@ -2,7 +2,7 @@
 
 ## 项目定位
 
-- **纯 App 主线 (iter40, v1.35.1)** — 已推送 GitHub; 自研图标 (墨底金坎卦+朱砂动爻, 自适应+通知白色小图标); 模拟器实测全过 (含 08:00 通知真实弹出); 动效体系 YiMotion + 卡面渐变/筛选动画 + flutter_local_notifications 每日提醒 (需 desugaring); 腾讯 gradle 镜像 + kotlin.incremental=false — 模拟器实测全过 (含 08:00 通知真实弹出); 动效体系 YiMotion + 卡面渐变/筛选动画 + flutter_local_notifications 每日提醒 (需 desugaring); 腾讯 gradle 镜像 + kotlin.incremental=false: yijing-flutter/ 为唯一交付形态 — Flutter MVVM 7 屏全量 + 持久化 + 设置面板数据互通 (PWA 导出格式); 架构见 yijing-flutter/ARCHITECTURE.md
+- **纯 App 主线 (iter41, v1.36.0)** — 已推送 GitHub: iOS 工程脚手架 (Runner/Info.plist 中文化易道/Podfile/ 18 个 AppIcon 与 Android 同源生成) + 文件级备份 (file_picker + share_plus) + 通知点击直达起卦屏 (NotificationTapBus + Darwin 通道 + 冷启动 payload) + Android 启动期全墨化 + App 名易道; 自研图标 (墨底金坎卦+朱砂动爻, 自适应+通知白色小图标); 模拟器实测全过 (含 08:00 通知真实弹出); 动效体系 YiMotion + 卡面渐变/筛选动画 + flutter_local_notifications 每日提醒 (需 desugaring); 腾讯 gradle 镜像 + kotlin.incremental=false: yijing-flutter/ 为唯一交付形态 — Flutter MVVM 7 屏全量 + 持久化 + 设置面板数据互通 (PWA 导出格式); 架构见 yijing-flutter/ARCHITECTURE.md
 - 国风易经 PWA (仓库根目录) 保留为设计基准与数据源, 单 HTML + 零运行时依赖, 7 屏移动优先
 - 64 卦完整数据层 (HEX_LIBRARY + HEX_EXTRA + YijingEngine 起卦推演)
 - 四大占法: 易经（数字/蓍草/铜钱）、八字（iter34 接通, 分钟级节气起运）、小六壬、梅花易数（时间式+数字式）— 全部接通
@@ -57,7 +57,7 @@
 
 ## 调试与测试
 
-- Flutter: `flutter analyze` (0 issue 基线) + `flutter test` (68 项) + `dart run tool/verify_engine.dart` (59 项, 纯 Dart 无 Flutter 依赖)
+- Flutter: `flutter analyze` (0 issue 基线) + `flutter test` (120 项, iter41) + `dart run tool/verify_engine.dart` (79 项, 纯 Dart 无 Flutter 依赖)
 - **JS→Dart 哈希三语义**: `^` Int32 有符号 / `*` double 53 位舍入 / `>>>0` 负数 mod — 直译必错, 见 cast_engine.numbersFromText 注释
 - **CI pipefail**: `flutter test | tail` 吞退出码, workflow 必须 `set -o pipefail` (iter33 修)
 - **Prefs 存储单独文件**: history_store_prefs 若并入核心 data 文件, dart run verify_engine 传递 dart:ui 崩溃
@@ -66,9 +66,18 @@
 - 测试教训 (沿用): 跨午夜断言动态推; 注入 MemoryHistoryStore(seedSamples: false) 保确定性; 计数相等的 sort 断言不稳定 (Dart sort 非稳定)
 - PWA: `.pwtest/check-syntax.js` 语法冒烟; `.pwtest/iter*.js` Playwright + Edge (executablePath 显式) 断言; iter17-28 共 248 项回归
 - 测试浏览器: `chromium.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe' })` (新会话 channel:'msedge' 探测失败)
+- **iter41 Windows 沙箱坑 (关键)**: ① git bash 丢 `PROGRAMFILES(X86)` → flutter test 报
+  `%PROGRAMFILES(X86)% environment variable not found.`; 解决 `env 'PROGRAMFILES(X86)=C:\Program Files (x86)' flutter test`
+  (bash 不支持 export 带括号名)。 ③ HTTPS_PROXY 致 flutter_tester WebSocket 走代理握手失败
+  (`Invalid WebSocket upgrade request`) → 清空 `http_proxy= https_proxy= HTTP_PROXY= HTTPS_PROXY=`
+- **iOS AppIcon 几何 (iter41)**: 4x 超采样 PIL + numpy 径向光晕; 绘制必须在 ss 画布上以 ss/2 为中心,
+  与最终尺寸分离 (k=(size*0.56)/40, cx=cy=ss/2); 32×32 缩略图肉眼可校位
 
 ## 分发
 
-- APK：`.github/workflows/android-build.yml` 推 main 自动出 debug APK，attach 到 GitHub Release
+- APK：`.github/workflows/android-build.yml` 推 main 自动出 Capacitor debug APK，attach 到 GitHub Release
+- Flutter APK: `.github/workflows/flutter-build.yml` (Ubuntu + 腾讯 gradle 镜像 + TZ=Asia/Shanghai)
+- iOS App: `.github/workflows/ios-build.yml` (Ubuntu 冒烟 + macos-15 构建 `--no-codesign`, iter41)
 - 网页版：GitHub Free 私有仓库不支持 Pages；如需公开可 Cloudflare Pages
 - 本地：`node -e` 一行起 8723 端口 HTTP 服务
+- iOS 本地 mac 构建: `cd yijing-flutter && flutter pub get && cd ios && pod install && cd .. && flutter build ios --no-codesign --debug`
