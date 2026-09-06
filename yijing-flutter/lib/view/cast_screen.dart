@@ -706,9 +706,5 @@ class _CastScreenState extends State<CastScreen> {
         _ => YiColors.gold,
       };
 
-  BoxDecoration _card() => BoxDecoration(
-        color: YiColors.inkCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: YiColors.strokeSoft),
-      );
+  Decoration _card() => yiCardDecoration();
 }

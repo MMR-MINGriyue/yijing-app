@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/hexgrid_viewmodel.dart';
 import 'widgets/hex_glyph.dart';
+import 'widgets/pressable.dart';
 
 /// 屏 3 六十四卦 — 网格浏览 + 八宫筛选 + 搜索
 class HexGridScreen extends StatefulWidget {
@@ -71,7 +72,20 @@ class _HexGridScreenState extends State<HexGridScreen> {
           ),
         ),
         Expanded(
-          child: GridView.builder(
+          // iter39: 宫筛选/搜索切换时网格淡入滑入过渡
+          child: AnimatedSwitcher(
+            duration: YiMotion.base,
+            switchInCurve: YiMotion.easeOutExpo,
+            transitionBuilder: (child, anim) => FadeTransition(
+              opacity: anim,
+              child: SlideTransition(
+                position: Tween(begin: const Offset(0, 0.02), end: Offset.zero)
+                    .animate(anim),
+                child: child,
+              ),
+            ),
+            child: GridView.builder(
+            key: ValueKey('${widget.vm.palaceFilter}|${widget.vm.keyword}|${list.length}'),
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 4,
@@ -88,11 +102,7 @@ class _HexGridScreenState extends State<HexGridScreen> {
                 borderRadius: BorderRadius.circular(14),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                  decoration: BoxDecoration(
-                    color: YiColors.inkCard,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: YiColors.strokeSoft),
-                  ),
+                  decoration: yiCardDecoration(),
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                     HexGlyph(lines: h.yangs, width: 26, lineH: 3, gap: 2.4),
                     const SizedBox(height: 8),
@@ -105,6 +115,7 @@ class _HexGridScreenState extends State<HexGridScreen> {
               );
             },
           ),
+          ),
         ),
       ]),
     );
@@ -113,11 +124,7 @@ class _HexGridScreenState extends State<HexGridScreen> {
   Widget _searchBox() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: YiColors.inkCard,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: YiColors.strokeSoft),
-      ),
+      decoration: yiCardDecoration(radius: 12),
       child: Row(children: [
         const Icon(Icons.search, size: 18, color: YiColors.textMuted),
         const SizedBox(width: 8),
@@ -149,10 +156,12 @@ class _HexGridScreenState extends State<HexGridScreen> {
   Widget _chip(String label, bool active, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: InkWell(
+      child: PressableScale(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
+        scale: 0.94,
+        child: AnimatedContainer(
+          duration: YiMotion.base,
+          curve: YiMotion.easeOutExpo,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
             color: active ? const Color(0x33D04D3E) : YiColors.inkCard,

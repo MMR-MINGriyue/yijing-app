@@ -4,6 +4,8 @@ import 'package:yijing_transform/data/history_repository.dart';
 import 'package:yijing_transform/data/history_store.dart';
 import 'package:yijing_transform/data/hex_repository.dart';
 import 'package:yijing_transform/viewmodel/me_viewmodel.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:yijing_transform/service/reminder_service.dart';
 import 'package:yijing_transform/viewmodel/settings_viewmodel.dart';
 import 'package:yijing_transform/model/history.dart';
 import 'package:yijing_transform/viewmodel/cast_viewmodel.dart';
@@ -406,6 +408,78 @@ void main() {
     });
   });
 
+  group('ReminderService/SettingsViewModel — iter39 每日提醒', () {
+    late FakeScheduler fake;
+
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      fake = FakeScheduler();
+    });
+
+    test('开启提醒: 授权 → 调度每日 + 落盘', () async {
+      final svc = ReminderService(scheduler: fake);
+      final ok = await svc.setEnabled(true, hour: 7, minute: 30);
+      expect(ok, isTrue);
+      expect(fake.schedules, 1);
+      expect(fake.last!.hour, 7);
+      expect(fake.last!.minute, 30);
+      final prefs = await svc.loadPrefs();
+      expect(prefs.enabled, isTrue);
+      expect(prefs.hour, 7);
+    });
+
+    test('未授权: 开关不生效', () async {
+      final svc = ReminderService(scheduler: fake..granted = false);
+      final ok = await svc.setEnabled(true);
+      expect(ok, isFalse);
+      expect(fake.schedules, 0);
+      final prefs = await svc.loadPrefs();
+      expect(prefs.enabled, isFalse);
+    });
+
+    test('关闭提醒: 取消调度', () async {
+      final svc = ReminderService(scheduler: fake);
+      await svc.setEnabled(true);
+      await svc.setEnabled(false);
+      expect(fake.cancels, 1);
+      expect((await svc.loadPrefs()).enabled, isFalse);
+    });
+
+    test('改时间: 仅在开启时重排', () async {
+      final svc = ReminderService(scheduler: fake);
+      await svc.setTime(9, 15, enabled: false);
+      expect(fake.schedules, 0); // 未开启只落盘
+      await svc.setEnabled(true, hour: 8);
+      await svc.setTime(21, 0, enabled: true);
+      expect(fake.schedules, 2);
+      expect(fake.last!.hour, 21);
+    });
+
+    test('VM toggleReminder: 未授权弹回 false + notify', () async {
+      final vm = SettingsViewModel(
+        history: newHist(seed: false),
+        favs: FavoritesRepository(store: MemoryFavoritesStore()),
+        reminder: ReminderService(scheduler: fake..granted = false),
+      );
+      await vm.toggleReminder(true);
+      expect(vm.remindEnabled, isFalse);
+      expect(vm.reminderTimeLabel, '08:00'); // 默认 8:00
+    });
+
+    test('VM loadReminderPrefs 载入落盘偏好', () async {
+      final svc = ReminderService(scheduler: fake);
+      await svc.setEnabled(true, hour: 6, minute: 40);
+      final vm = SettingsViewModel(
+        history: newHist(seed: false),
+        favs: FavoritesRepository(store: MemoryFavoritesStore()),
+        reminder: svc,
+      );
+      await vm.loadReminderPrefs();
+      expect(vm.remindEnabled, isTrue);
+      expect(vm.reminderTimeLabel, '06:40');
+    });
+  });
+
   group('HistoryViewModel — 收藏数联动', () {
     test('favCount 来自 FavoritesRepository', () {
       final favs = FavoritesRepository(store: MemoryFavoritesStore([5, 14]));
@@ -413,4 +487,25 @@ void main() {
       expect(vm.favCount, 2);
     });
   });
+}
+
+
+/// 提醒调度 Fake (VM/服务单测)
+class FakeScheduler implements ReminderScheduler {
+  bool granted = true;
+  int schedules = 0;
+  int cancels = 0;
+  ({int hour, int minute})? last;
+
+  @override
+  Future<bool> requestPermission() async => granted;
+
+  @override
+  Future<void> scheduleDaily({required int hour, required int minute}) async {
+    schedules++;
+    last = (hour: hour, minute: minute);
+  }
+
+  @override
+  Future<void> cancel() async => cancels++;
 }

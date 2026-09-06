@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../model/history.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/history_viewmodel.dart';
+import 'widgets/pressable.dart';
 
 /// 屏 6 历史记录 — View 层
 class HistoryScreen extends StatefulWidget {
@@ -167,10 +168,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget _chip({required String label, required int count, required bool active, required VoidCallback onTap}) {
     return Padding(
       padding: const EdgeInsets.only(right: 6),
-      child: InkWell(
+      child: PressableScale(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(17),
-        child: Container(
+        scale: 0.94,
+        child: AnimatedContainer(
+          duration: YiMotion.base,
+          curve: YiMotion.easeOutExpo,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           alignment: Alignment.center,
           decoration: BoxDecoration(
@@ -284,11 +287,5 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return '${r.ts.month}/${r.ts.day} $hh:$mm';
   }
 
-  BoxDecoration _card() {
-    return BoxDecoration(
-      color: YiColors.inkCard,
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: YiColors.strokeSoft),
-    );
-  }
+  Decoration _card() => yiCardDecoration();
 }

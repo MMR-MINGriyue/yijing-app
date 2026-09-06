@@ -119,6 +119,9 @@ void main() {
     // 危险项默认非确认态
     expect(find.text('清空本地历史'), findsOneWidget);
     expect(find.text('重置为示例数据'), findsOneWidget);
+    // iter39: 每日提醒区块
+    expect(find.text('每日占卜提醒'), findsOneWidget);
+    expect(find.text('提醒时间'), findsOneWidget);
   });
 
   testWidgets('起卦闭环: CTA → 推演动画 → 结果 (iter37 回归)', (tester) async {

@@ -58,7 +58,7 @@ model/                  Hex / HistoryRecord (JSON 容错序列化) / CastResult
 
 ```
 flutter analyze                 # 0 issue
-flutter test                    # 102 项 (引擎/ViewModel/壳层/动效组件)
+flutter test                    # 108 项 (引擎/ViewModel/壳层/动效组件/提醒调度)
 dart run tool/verify_engine.dart  # 78 项 (历法/农历/节气/起卦/八字/大运/梅花/八宫/小六壬)
 flutter build apk --debug       # CI 自动构建
 ```
@@ -75,4 +75,7 @@ flutter build apk --debug       # CI 自动构建
   卦辞/所问/干支落款, PictureRecorder 渲染 PNG → share_plus 系统分享) + 爻辞弹窗复制
 - **iter38 (v1.34.0)**: 动效体系 YiMotion (easeOutExpo 曲线/全站按压 0.96/首页四段 stagger/
   动爻呼吸动画/六爻逐爻点亮推演动画/收藏弹跳/页面转场) + 屏5 长按爻辞弹窗; Android 模拟器实测通过
-- 待办: 卡面渐变逐屏铺开 / 文件级导入导出 / 通知提醒 / iOS 适配
+- **iter39 (v1.35.0)**: 卡面渐变全屏铺开 + 卦库宫筛选网格过渡动画 + 历史筛选 chips 动效 +
+  每日占卜提醒 (flutter_local_notifications 定时通知, 设置面板开关/时间, 重启自动恢复,
+  模拟器实测 08:00 整点弹出)
+- 待办: 文件级导入导出 / iOS 适配 / 提醒点通知直达起卦屏

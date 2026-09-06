@@ -225,13 +225,7 @@ class _TransformScreenState extends State<TransformScreen> {
     );
   }
 
-  BoxDecoration _cardDeco() {
-    return BoxDecoration(
-      color: YiColors.inkCard,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: YiColors.stroke),
-    );
-  }
+  Decoration _cardDeco() => yiCardDecoration(border: YiColors.stroke, radius: 16);
 }
 
 /// 爻象竖排 (上爻在上, 初爻在下); 阳爻实线 阴爻两短段

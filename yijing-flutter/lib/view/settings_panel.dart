@@ -24,10 +24,30 @@ class _SettingsPanelState extends State<SettingsPanel> {
   Timer? _resetTimer;
 
   @override
+  void initState() {
+    super.initState();
+    widget.vm.addListener(_onVm);
+    widget.vm.loadReminderPrefs(); // 载入提醒偏好 (开关/时间)
+  }
+
+  void _onVm() => setState(() {});
+
+  @override
   void dispose() {
+    widget.vm.removeListener(_onVm);
     _clearTimer?.cancel();
     _resetTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _pickRemindTime() async {
+    final t = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: widget.vm.remindHour, minute: widget.vm.remindMinute),
+      helpText: '选择提醒时间',
+    );
+    if (t == null || !mounted) return;
+    await widget.vm.setReminderTime(t.hour, t.minute);
   }
 
   void _toast(String msg) {
@@ -169,6 +189,50 @@ class _SettingsPanelState extends State<SettingsPanel> {
           desc: '清空真实记录，恢复内置示例 (收藏不受影响)',
           danger: _resetArmed,
           onTap: _reset,
+        ),
+        const Divider(color: YiColors.strokeSoft, height: 20),
+        // iter39: 每日占卜提醒
+        Row(children: [
+          const Icon(Icons.notifications_outlined, size: 20, color: YiColors.gold),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('每日占卜提醒',
+                style: TextStyle(fontSize: 14, color: YiColors.textPrimary)),
+            const SizedBox(height: 2),
+            Text('每天 ${widget.vm.reminderTimeLabel} 提醒来起今日一卦',
+                style: const TextStyle(fontSize: 11, color: YiColors.textTertiary)),
+          ])),
+          Switch(
+            value: widget.vm.remindEnabled,
+            activeThumbColor: YiColors.cinnabar,
+            onChanged: (on) async {
+              await widget.vm.toggleReminder(on);
+              if (!mounted) return;
+              if (on && !widget.vm.remindEnabled) {
+                _toast('未获得通知权限，请在系统设置中开启');
+              }
+            },
+          ),
+        ]),
+        InkWell(
+          onTap: _pickRemindTime,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+            child: Row(children: [
+              const SizedBox(width: 32),
+              Expanded(child: Text('提醒时间',
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: widget.vm.remindEnabled
+                          ? YiColors.textPrimary
+                          : YiColors.textMuted))),
+              Text(widget.vm.reminderTimeLabel,
+                  style: const TextStyle(fontSize: 14, color: YiColors.gold)),
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right, size: 18, color: YiColors.textMuted),
+            ]),
+          ),
         ),
       ]),
     );

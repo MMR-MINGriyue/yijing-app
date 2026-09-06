@@ -84,11 +84,7 @@ class _DetailScreenState extends State<DetailScreen> {
   Widget _hero(Hex h) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: YiColors.inkCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: YiColors.stroke),
-      ),
+      decoration: yiCardDecoration(border: YiColors.stroke, radius: 20),
       child: Column(children: [
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           _miniYaoStack(h),
@@ -172,11 +168,7 @@ class _DetailScreenState extends State<DetailScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: YiColors.inkCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: YiColors.strokeSoft),
-      ),
+      decoration: yiCardDecoration(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label, style: const TextStyle(
             fontSize: 11, letterSpacing: 3, color: YiColors.textTertiary)),

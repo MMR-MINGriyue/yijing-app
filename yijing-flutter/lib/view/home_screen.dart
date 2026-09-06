@@ -243,9 +243,5 @@ class _HomeScreenState extends State<HomeScreen> {
   String _fmtTime(DateTime ts) =>
       '${ts.month}/${ts.day} ${ts.hour}:${ts.minute.toString().padLeft(2, '0')}';
 
-  BoxDecoration _card() => BoxDecoration(
-        color: YiColors.inkCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: YiColors.strokeSoft),
-      );
+  Decoration _card() => yiCardDecoration();
 }

@@ -5,6 +5,7 @@ import 'data/favorites_store.dart';
 import 'data/history_repository.dart';
 import 'data/hex_repository.dart';
 import 'data/history_store_prefs.dart';
+import 'service/reminder_service.dart';
 import 'theme/yijing_theme.dart';
 
 Future<void> main() async {
@@ -13,6 +14,9 @@ Future<void> main() async {
   installPrefsStores(); // 真机持久化: 默认存储工厂 → shared_preferences 实现
   await HistoryRepository.instance.warmUp(); // 预热历史
   await FavoritesRepository.instance.warmUp(); // 预热收藏
+  try {
+    await PluginReminderScheduler.instance.init(); // 通知通道 + 时区 (iter39)
+  } catch (_) {} // 桌面/测试环境无通道, 静默
   runApp(const YijingApp());
 }
 

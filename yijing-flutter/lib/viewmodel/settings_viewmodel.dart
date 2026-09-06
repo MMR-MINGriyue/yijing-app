@@ -5,23 +5,66 @@ import 'package:flutter/foundation.dart';
 import '../data/favorites_store.dart';
 import '../data/history_repository.dart';
 import '../model/history.dart';
+import '../service/reminder_service.dart';
 
-/// ViewModel — 设置面板 (导出 / 导入合并 / 清空 / 重置示例)
+/// ViewModel — 设置面板 (导出 / 导入合并 / 清空 / 重置 / 每日提醒)
 /// 数据格式与易道 PWA 互通: {app, exportedAt, history, favorites}
 class SettingsViewModel extends ChangeNotifier {
   final HistoryRepository _history;
   final FavoritesRepository _favs;
+  final ReminderService _reminder;
 
   SettingsViewModel({
     HistoryRepository? history,
     FavoritesRepository? favs,
+    ReminderService? reminder,
   })  : _history = history ?? HistoryRepository.instance,
-        _favs = favs ?? FavoritesRepository.instance;
+        _favs = favs ?? FavoritesRepository.instance,
+        _reminder = reminder ?? ReminderService();
+
+  bool _remindEnabled = false;
+  int _remindHour = 8;
+  int _remindMinute = 0;
+  bool _remindLoaded = false;
+
+  bool get remindEnabled => _remindEnabled;
+  int get remindHour => _remindHour;
+  int get remindMinute => _remindMinute;
+  bool get remindLoaded => _remindLoaded;
 
   int get recordCount => _history.load().length;
   int get favCount => _favs.load().length;
 
   String get metaLine => '本地记录 $recordCount 条 · 收藏 $favCount 卦';
+
+  /// 启动时载入提醒偏好 (落盘值即真相; 恢复调度由插件 boot receiver 负责)
+  Future<void> loadReminderPrefs() async {
+    final p = await _reminder.loadPrefs();
+    _remindEnabled = p.enabled;
+    _remindHour = p.hour;
+    _remindMinute = p.minute;
+    _remindLoaded = true;
+    notifyListeners();
+  }
+
+  /// 开关每日提醒; 未授权时开关弹回 false
+  Future<void> toggleReminder(bool on) async {
+    final ok = await _reminder.setEnabled(on,
+        hour: _remindHour, minute: _remindMinute);
+    _remindEnabled = on && ok;
+    notifyListeners();
+  }
+
+  /// 修改提醒时间
+  Future<void> setReminderTime(int hour, int minute) async {
+    _remindHour = hour;
+    _remindMinute = minute;
+    await _reminder.setTime(hour, minute, enabled: _remindEnabled);
+    notifyListeners();
+  }
+
+  String get reminderTimeLabel =>
+      '${_remindHour.toString().padLeft(2, '0')}:${_remindMinute.toString().padLeft(2, '0')}';
 
   /// 导出 JSON (PWA 兼容格式; 记录按时间倒序同 PWA load 顺序)
   String exportJson() {
