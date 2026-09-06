@@ -149,6 +149,15 @@ void main() {
       expect(hourHex(DateTime(2026, 9, 6, 17)).no, 2); // 坤
     });
 
+    test('中文数字 cnNumber (PWA 对齐)', () {
+      expect(cnNumber(1), '一');
+      expect(cnNumber(10), '十');
+      expect(cnNumber(15), '十五');
+      expect(cnNumber(20), '二十');
+      expect(cnNumber(31), '三十一');
+      expect(cnNumber(64), '六十四');
+    });
+
     test('刷新轮换: n % 64', () {
       expect(refreshHex(0).no, 1);
       expect(refreshHex(64).no, 1);

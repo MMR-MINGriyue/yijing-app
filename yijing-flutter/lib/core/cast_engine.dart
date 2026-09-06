@@ -128,6 +128,17 @@ CastResult cast(String method, String question, {double Function()? rand}) {
   return castByNumbers(n[0], n[1]);
 }
 
+/// 中文数字 (PWA cnNumber): 1→一 10→十 15→十五 20→二十 64→六十四
+const List<String> _kCn = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+
+String cnNumber(int n) {
+  if (n <= 10) return n == 10 ? '十' : _kCn[n];
+  if (n < 20) return '十${_kCn[n - 10]}';
+  final s = _kCn[n ~/ 10];
+  final g = n % 10;
+  return '$s十${g > 0 ? _kCn[g] : ''}';
+}
+
 /// 今日一卦: 时辰卦 — HEX_LIBRARY[hour % 16] (PWA 02-home-cast.js getByHour)
 HexEntry hourHex(DateTime dt) => kHexLibrary[dt.hour % 16];
 

@@ -13,15 +13,26 @@ class DetailViewModel extends ChangeNotifier {
   final FavoritesRepository _favs;
   late Hex _hex;
   DetailTab _tab = DetailTab.guaci;
+  String _question = ''; // 所问之事 (分享卡用)
 
-  DetailViewModel({HexRepository? repo, FavoritesRepository? favs, int hexNo = 1})
-      : _repo = repo ?? HexRepository.instance,
+  /// 动爻索引 (来自历史记录/起卦结果, 分享卡与推演跳转用)
+  final List<int> moving;
+
+  DetailViewModel({
+    HexRepository? repo,
+    FavoritesRepository? favs,
+    int hexNo = 1,
+    String question = '',
+    this.moving = const [],
+  })  : _repo = repo ?? HexRepository.instance,
         _favs = favs ?? FavoritesRepository.instance {
     _hex = _repo.hexByNo(hexNo);
+    _question = question;
   }
 
   Hex get hex => _hex;
   DetailTab get tab => _tab;
+  String get question => _question;
 
   void selectHex(int no) {
     _hex = _repo.hexByNo(no);

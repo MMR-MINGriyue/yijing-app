@@ -247,7 +247,10 @@ void main() {
       mhTime.upper == '艮' && mhTime.lower == '巽' && mhTime.movingIdx == 2 && mhTime.hexNo == 18,
       '${mhTime.upper}${mhTime.lower} no=${mhTime.hexNo}');
   final mhNum = meiHuaByNumbers(3, 8);
-  check('梅花数字式 3/8 = 火地晋 动五爻',
+  check('中文数字 cnNumber 1/10/20/64',
+      cnNumber(1) == '一' && cnNumber(10) == '十' && cnNumber(20) == '二十' && cnNumber(64) == '六十四',
+      cnNumber(64));
+    check('梅花数字式 3/8 = 火地晋 动五爻',
       mhNum.upper == '离' && mhNum.lower == '坤' && mhNum.movingIdx == 4 && mhNum.hexNo == 35,
       'no=${mhNum.hexNo}');
 

@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yijing_transform/app/app_shell.dart';
 import 'package:yijing_transform/data/hex_repository.dart';
+import 'package:yijing_transform/view/widgets/share_card.dart';
+import 'package:yijing_transform/viewmodel/detail_viewmodel.dart';
+import 'package:yijing_transform/view/detail_screen.dart';
+import 'package:yijing_transform/data/favorites_store.dart';
 
 /// App 壳层冒烟: 5 Tab 渲染 + 详情路由 (纯 App 架构 iter33)
 void main() {
@@ -58,6 +62,48 @@ void main() {
     await goTab(tester, '起卦');
     expect(find.text('起 卦'), findsOneWidget);
     expect(find.text('更多占法 ›  八字 · 小六壬 · 梅花易数'), findsOneWidget);
+  });
+
+  testWidgets('分享卡预览渲染 (720×1040 painter 不抛异常)', (tester) async {
+    HexRepository.instance.init();
+    final hex = HexRepository.instance.hexByNo(31);
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: ShareCardPreview(
+            data: ShareCardData(
+            hex: hex,
+            moving: const [0],
+            question: '与TA关系走向',
+            now: DateTime(2026, 9, 6),
+          )),
+        ),
+      ),
+    ));
+    await tester.pump();
+    expect(find.byType(ShareCardPreview), findsOneWidget);
+  });
+
+  testWidgets('屏4 爻行点击 → 爻辞弹窗 (含复制按钮)', (tester) async {
+    HexRepository.instance.init();
+    await tester.pumpWidget(MaterialApp(
+      home: DetailScreen(
+        vm: DetailViewModel(hexNo: 1, favs: FavoritesRepository(store: MemoryFavoritesStore())),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    // 爻辞 Tab → 点击初九
+    await tester.tap(find.text('爻辞'));
+    await tester.pumpAndSettle();
+    // 底部爻行带 InkWell (Tab 卡片无点击), 在视口外需先滚动
+    final yaoRow = find.descendant(of: find.byType(InkWell), matching: find.text('初九'));
+    await tester.scrollUntilVisible(yaoRow, 300, scrollable: find.byType(Scrollable).first);
+    await tester.pumpAndSettle();
+    await tester.tap(yaoRow);
+    await tester.pumpAndSettle();
+    expect(find.text('初九 · 乾卦'), findsOneWidget);
+    expect(find.text('潜龙勿用。'), findsWidgets);
+    expect(find.byIcon(Icons.copy), findsOneWidget);
   });
 
   testWidgets('屏7 ⚙ → 设置面板 (导出/导入/清空/重置)', (tester) async {

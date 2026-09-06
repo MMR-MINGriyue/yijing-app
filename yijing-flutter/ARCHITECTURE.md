@@ -78,4 +78,6 @@ core 与 data 不 import Flutter (仅 ViewModel 用 foundation.ChangeNotifier)�
 - iter34 (v1.31.0): 八字引擎 (四柱/十神/大运流年, 分钟级节气表起运) + 梅花时间式接通屏2
 - iter35 (v1.32.0): SettingsViewModel + 设置面板 (导出/导入合并/清空/重置, PWA 数据互通)
   + 大运流年展开 UI; HistoryRecord.fromJson 兼容 PWA 字符串 lines
-- 待办: 分享卡 / 文件级导入导出 (share_plus) / 屏 4 爻辞弹窗复制
+- iter36 (v1.33.0): view/widgets/share_card.dart (PictureRecorder 纯 Canvas 渲染,
+  PWA 卡面逐项对齐) + share_plus 系统分享 + 屏4 爻辞弹窗复制; +share_plus/path_provider
+- 待办: 文件级导入导出 / 通知提醒 / iOS 适配

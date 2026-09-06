@@ -46,7 +46,7 @@ class _AppShellState extends State<AppShell> {
   void _openDetail(int hexNo, {String? question, List<int> moving = const []}) {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => DetailScreen(
-        vm: DetailViewModel(hexNo: hexNo),
+        vm: DetailViewModel(hexNo: hexNo, question: question ?? '', moving: moving),
         onOpenTransform: (hex) => _openTransform(hex.no, moving),
       ),
     ));
