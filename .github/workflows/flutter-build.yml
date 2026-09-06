@@ -41,14 +41,17 @@ jobs:
         run: flutter pub get
 
       - name: Analyze
-        # info 级 lint 不应阻塞 CI (engine 正确性由 verify_engine 单独验证)
+        # lint 不阻塞 (engine 正确性由 verify_engine + flutter test 单独验证)
         run: flutter analyze 2>&1 | tail -200 || true
 
       - name: Run engine verification
         run: dart run tool/verify_engine.dart
 
       - name: Run Flutter tests
-        run: flutter test --no-pub 2>&1 | tail -60
+        # pipefail: 测试失败必须让 step 失败 (纯管道会吞退出码, iter33 修复)
+        run: |
+          set -o pipefail
+          flutter test --no-pub 2>&1 | tail -60
 
       - name: Build debug APK
         run: flutter build apk --debug

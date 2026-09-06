@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../data/favorites_store.dart';
 import '../data/history_repository.dart';
 import '../model/history.dart';
 
@@ -38,11 +39,13 @@ class HistoryState {
 /// ViewModel — 屏 6 历史 (筛选 + 搜索 + 统计)
 class HistoryViewModel extends ChangeNotifier {
   final HistoryRepository _repo;
+  final FavoritesRepository _favs;
   late HistoryState _s;
   late final ({int minY, int minM, int maxY, int maxM}) _range;
 
-  HistoryViewModel({HistoryRepository? repo})
-      : _repo = repo ?? HistoryRepository.instance {
+  HistoryViewModel({HistoryRepository? repo, FavoritesRepository? favs})
+      : _repo = repo ?? HistoryRepository.instance,
+        _favs = favs ?? FavoritesRepository.instance {
     _range = _repo.monthRange();
     final n = DateTime.now();
     _s = HistoryState(year: n.year, month: n.month);
@@ -148,6 +151,6 @@ class HistoryViewModel extends ChangeNotifier {
     final weekStart = DateTime(now.year, now.month, now.day - 6);
     return _repo.load().where((r) => !r.ts.isBefore(weekStart)).length;
   }
-  int get favCount => 3; // 实验田 mock
+  int get favCount => _favs.load().length;
   int get monthCount => monthAll.length;
 }

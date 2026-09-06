@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 
+import 'app/app_shell.dart';
+import 'data/favorites_store.dart';
+import 'data/history_repository.dart';
 import 'data/hex_repository.dart';
+import 'data/history_store_prefs.dart';
 import 'theme/yijing_theme.dart';
-import 'view/detail_screen.dart';
-import 'view/history_screen.dart';
-import 'view/transform_screen.dart';
-import 'viewmodel/detail_viewmodel.dart';
-import 'viewmodel/history_viewmodel.dart';
-import 'viewmodel/transform_viewmodel.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   HexRepository.instance.init(); // 加载 64 卦
+  installPrefsStores(); // 真机持久化: 默认存储工厂 → shared_preferences 实现
+  await HistoryRepository.instance.warmUp(); // 预热历史
+  await FavoritesRepository.instance.warmUp(); // 预热收藏
   runApp(const YijingApp());
 }
 
@@ -20,56 +22,10 @@ class YijingApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '易道 · Flutter 实验田',
+      title: '易道 · 卦象解读',
       debugShowCheckedModeBanner: false,
       theme: buildYiTheme(),
-      home: const _HubScreen(),
-    );
-  }
-}
-
-/// 三屏导航 Hub: 屏 4 卦辞 / 屏 5 推演 / 屏 6 历史
-class _HubScreen extends StatefulWidget {
-  const _HubScreen();
-
-  @override
-  State<_HubScreen> createState() => _HubScreenState();
-}
-
-class _HubScreenState extends State<_HubScreen> {
-  int _screen = 2; // 默认历史, 便于展示筛选/搜索
-
-  @override
-  Widget build(BuildContext context) {
-    const titles = ['卦 辞 解 析', '变 卦 推 演', '历 史 记 录'];
-    return Scaffold(
-      backgroundColor: YiColors.ink,
-      appBar: AppBar(
-        backgroundColor: YiColors.ink,
-        foregroundColor: YiColors.gold,
-        centerTitle: true,
-        title: Text(titles[_screen], style: const TextStyle(letterSpacing: 6, fontSize: 17)),
-      ),
-      body: IndexedStack(
-        index: _screen,
-        children: [
-          DetailScreen(vm: DetailViewModel(hexNo: 1)),
-          TransformScreen(vm: TransformViewModel()),
-          HistoryScreen(vm: HistoryViewModel()),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: YiColors.ink,
-        selectedItemColor: YiColors.cinnabar,
-        unselectedItemColor: YiColors.textTertiary,
-        currentIndex: _screen,
-        onTap: (i) => setState(() => _screen = i),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book_outlined), label: '卦辞解析'),
-          BottomNavigationBarItem(icon: Icon(Icons.change_history_outlined), label: '变卦推演'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: '历史记录'),
-        ],
-      ),
+      home: const AppShell(),
     );
   }
 }

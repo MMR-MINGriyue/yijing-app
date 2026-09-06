@@ -34,15 +34,22 @@ void main() {
       expect(r.hu.name, '乾');
     });
 
-    test('体用生克: 乾(金) 用坤(土) → 用生体大吉', () {
-      // 需构造"用卦 = 土": 动爻在上卦 → 上卦为用。坤卦在上 = 否卦? 否 = 地天否 no.12
-      // 用卦土, 体卦乾金: 土生金 → 用生体大吉
-      final r = repo.transform(12, [5]); // 否卦 上爻动 → 用 = 上卦坤(土)
+    test('体用生克: 用坤(土) 体乾(金) → 用生体大吉', () {
+      // 否卦 = 天地否 (上乾☰下坤☷): 下爻动 → 用 = 下卦坤(土), 体 = 上卦乾(金)
+      // 土生金 → 用生体大吉
+      final r = repo.transform(12, [0]); // 否卦 初爻动 → 用 = 下卦坤(土)
       expect(r.ben.name, '否');
       expect(r.yongWuxing, '土');
       expect(r.tiWuxing, '金');
       expect(r.relation, '用生体');
       expect(r.verdict, '大吉');
+    });
+
+    test('体用生克: 上爻动 → 用 = 上卦 (乾金) → 体生用平', () {
+      final r = repo.transform(12, [5]);
+      expect(r.yongWuxing, '金');
+      expect(r.tiWuxing, '土');
+      expect(r.relation, '体生用');
     });
 
     test('比和: 上下卦同五行 (乾乾金) → 比和吉', () {

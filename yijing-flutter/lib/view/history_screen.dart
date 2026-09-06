@@ -7,7 +7,9 @@ import '../viewmodel/history_viewmodel.dart';
 /// 屏 6 历史记录 — View 层
 class HistoryScreen extends StatefulWidget {
   final HistoryViewModel vm;
-  const HistoryScreen({super.key, required this.vm});
+  final void Function(HistoryRecord r)? onOpenRecord;
+
+  const HistoryScreen({super.key, required this.vm, this.onOpenRecord});
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
@@ -211,7 +213,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _recordCard(HistoryRecord r) {
-    return Container(
+    return GestureDetector(
+      onTap: r.hexNo == null ? null : () => widget.onOpenRecord?.call(r),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: _card(),
@@ -246,6 +250,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         const SizedBox(width: 8),
         Text(_fmtTime(r), style: const TextStyle(fontSize: 10, color: YiColors.textMuted)),
       ]),
+      ),
     );
   }
 

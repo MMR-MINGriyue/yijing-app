@@ -5,6 +5,11 @@
 仓库地址: git@github.com:MMR-MINGriyue/yijing-app.git
 HTTPS: https://github.com/MMR-MINGriyue/yijing-app
 
+> **纯 App 主线 (iter33, v1.30.0)**: Flutter 原生 App 已成为唯一交付形态 —
+> 7 屏全量 + 真实持久化, 见 [`yijing-flutter/`](yijing-flutter/README.md) 与
+> [`yijing-flutter/ARCHITECTURE.md`](yijing-flutter/ARCHITECTURE.md)。
+> 本 README 描述的 PWA 保留为设计基准与数据源, 不再打包分发。
+
 ## 简介
 
 易道 是一款专注解读卦象的移动端 PWA 应用, 7 屏设计:

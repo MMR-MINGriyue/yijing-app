@@ -2,11 +2,12 @@
 
 ## 项目定位
 
-- 国风易经 PWA，单 HTML + 零运行时依赖，7 屏移动优先（app ≤900 / landscape / grid / fit 四态）
-- 64 卦完整数据层（HEX_LIBRARY + HEX_EXTRA + YijingEngine 起卦推演）
-- 四大占法：易经（数字/蓍草/铜钱）、八字（含大运流年/节气精确化）、小六壬、梅花易数
-- v1.26.0 / 29 轮迭代；sw.js 缓存策略 app-shell cache-first
-- 架构 (iter29): 移动 App 分层 — 壳层 index.html (CSS+HTML) / 数据层 data·terms·divination.js / 核心层 js/00-core / 屏控制器 js/01-05 / 布局层 js/06-layout-nav / 工具层 js/07-extra；加载顺序 data→terms→divination→00→01→…→07
+- **纯 App 主线 (iter33, v1.30.0)**: yijing-flutter/ 为唯一交付形态 — Flutter MVVM 7 屏全量 + shared_preferences 持久化; 架构见 yijing-flutter/ARCHITECTURE.md
+- 国风易经 PWA (仓库根目录) 保留为设计基准与数据源, 单 HTML + 零运行时依赖, 7 屏移动优先
+- 64 卦完整数据层 (HEX_LIBRARY + HEX_EXTRA + YijingEngine 起卦推演)
+- 四大占法: 易经（数字/蓍草/铜钱）、八字（iter34, 农历表已就绪）、小六壬（已接通）、梅花易数（数字式已接通）
+- Flutter 架构 (iter33): app_shell(5 Tab IndexedStack) / view ×7 / viewmodel ×7 / core 纯 Dart 引擎 / data 双实现存储
+- core 引擎: yi_calendar(干支历) / lunar_calendar(农历 1900-2100) / cast_engine(起卦三式+JS语义哈希) / palace(京房八宫) / xiaoliuren(小六壬)
 
 ## 设计系统要点
 
@@ -56,9 +57,13 @@
 
 ## 调试与测试
 
-- `.pwtest/check-syntax.js` 检查 index.html 内联 + js/ 8 模块 + data/terms/divination (11 项, new Function 语法冒烟)
-- `.pwtest/iter*.js` Playwright + Edge (executablePath 显式) 断言；iter17-iter28 共 248 项回归全过
-- 测试教训：跨午夜日期断言必须用 Date.now() 动态推；localStorage.clear() 必须在 page.goto 之后；统计截图用 getImageData 像素亮度；点击元素前 hidden 元素不可点需先点入口（iter25 子页）；测试内不要留 screenshot 调用（污染 git 遗留 PNG，iter29 已清理）
+- Flutter: `flutter analyze` (0 issue 基线) + `flutter test` (68 项) + `dart run tool/verify_engine.dart` (59 项, 纯 Dart 无 Flutter 依赖)
+- **JS→Dart 哈希三语义**: `^` Int32 有符号 / `*` double 53 位舍入 / `>>>0` 负数 mod — 直译必错, 见 cast_engine.numbersFromText 注释
+- **CI pipefail**: `flutter test | tail` 吞退出码, workflow 必须 `set -o pipefail` (iter33 修)
+- **Prefs 存储单独文件**: history_store_prefs 若并入核心 data 文件, dart run verify_engine 传递 dart:ui 崩溃
+- **IndexedStack 测试**: 离屏子树可被 find 命中; Tab 定位用 find.descendant(BottomNavigationBar, text)
+- 测试教训 (沿用): 跨午夜断言动态推; 注入 MemoryHistoryStore(seedSamples: false) 保确定性; 计数相等的 sort 断言不稳定 (Dart sort 非稳定)
+- PWA: `.pwtest/check-syntax.js` 语法冒烟; `.pwtest/iter*.js` Playwright + Edge (executablePath 显式) 断言; iter17-28 共 248 项回归
 - 测试浏览器: `chromium.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe' })` (新会话 channel:'msedge' 探测失败)
 
 ## 分发

@@ -7,7 +7,9 @@ import '../viewmodel/detail_viewmodel.dart';
 /// 屏 4 卦辞解析 — View 层 (纯 UI)
 class DetailScreen extends StatefulWidget {
   final DetailViewModel vm;
-  const DetailScreen({super.key, required this.vm});
+  final void Function(Hex hex)? onOpenTransform;
+
+  const DetailScreen({super.key, required this.vm, this.onOpenTransform});
 
   @override
   State<DetailScreen> createState() => _DetailScreenState();
@@ -56,6 +58,8 @@ class _DetailScreenState extends State<DetailScreen> {
           ..._tabContent(h),
           const SizedBox(height: 14),
           _advice(h),
+          const SizedBox(height: 16),
+          if (widget.onOpenTransform != null) _openTransformBtn(h),
           const SizedBox(height: 16),
           _yaoList(h),
         ],
@@ -192,6 +196,23 @@ class _DetailScreenState extends State<DetailScreen> {
         Text(h.intro, style: const TextStyle(
             fontSize: 13, height: 1.7, color: YiColors.textSecondary)),
       ]),
+    );
+  }
+
+  Widget _openTransformBtn(Hex h) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: () => widget.onOpenTransform!(h),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: YiColors.gold,
+          side: const BorderSide(color: YiColors.goldDark),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+        ),
+        icon: const Icon(Icons.change_history_outlined, size: 18),
+        label: const Text('查看变卦推演', style: TextStyle(letterSpacing: 4, fontSize: 13)),
+      ),
     );
   }
 

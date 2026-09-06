@@ -1,22 +1,23 @@
 import 'package:flutter/foundation.dart';
 
+import '../data/favorites_store.dart';
 import '../data/hex_repository.dart';
 import '../model/hex.dart';
 
 /// 屏 4 卦辞解析 Tab
 enum DetailTab { guaci, yaoci, xiangzhuan }
 
-/// ViewModel — 持当前卦 + 激活 Tab + 收藏态
+/// ViewModel — 持当前卦 + 激活 Tab + 收藏态 (FavoritesRepository 真实持久化)
 class DetailViewModel extends ChangeNotifier {
   final HexRepository _repo;
+  final FavoritesRepository _favs;
   late Hex _hex;
   DetailTab _tab = DetailTab.guaci;
-  final Set<int> _fav = <int>{};
 
-  DetailViewModel({HexRepository? repo, int hexNo = 1})
-      : _repo = repo ?? HexRepository.instance {
+  DetailViewModel({HexRepository? repo, FavoritesRepository? favs, int hexNo = 1})
+      : _repo = repo ?? HexRepository.instance,
+        _favs = favs ?? FavoritesRepository.instance {
     _hex = _repo.hexByNo(hexNo);
-    _loadFav();
   }
 
   Hex get hex => _hex;
@@ -34,19 +35,10 @@ class DetailViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool isFav(int no) => _fav.contains(no);
+  bool isFav(int no) => _favs.isFav(no);
 
   void toggleFav(int no) {
-    if (!_fav.remove(no)) _fav.add(no);
-    _saveFav();
+    _favs.toggle(no);
     notifyListeners();
   }
-
-  /* 与易道 localStorage 键一致: yijing.favHexes */
-  void _loadFav() {
-    // web 版用 localStorage (通过 dart:html 不可行; 降级到内存 + SharedPreferences 由外部注入)
-    // 此处保持内存态, 由 UI 层持久化 (见 detail_screen fav 按钮旁注)
-  }
-
-  void _saveFav() {}
 }
