@@ -75,6 +75,8 @@ flutter build apk --debug       # CI 自动构建
   卦辞/所问/干支落款, PictureRecorder 渲染 PNG → share_plus 系统分享) + 爻辞弹窗复制
 - **iter38 (v1.34.0)**: 动效体系 YiMotion (easeOutExpo 曲线/全站按压 0.96/首页四段 stagger/
   动爻呼吸动画/六爻逐爻点亮推演动画/收藏弹跳/页面转场) + 屏5 长按爻辞弹窗; Android 模拟器实测通过
+- **iter40 (v1.35.1)**: 应用图标重设计 — 墨底 + 暗金坎卦 + 朱砂九二动爻 (自适应图标含
+  Android 13 主题单色层; 通知专用白色小图标; 与 App 内 HexGlyph 视觉同源)
 - **iter39 (v1.35.0)**: 卡面渐变全屏铺开 + 卦库宫筛选网格过渡动画 + 历史筛选 chips 动效 +
   每日占卜提醒 (flutter_local_notifications 定时通知, 设置面板开关/时间, 重启自动恢复,
   模拟器实测 08:00 整点弹出)

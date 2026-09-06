@@ -2,7 +2,7 @@
 
 ## 项目定位
 
-- **纯 App 主线 (iter39, v1.35.0)** — 模拟器实测全过 (含 08:00 通知真实弹出); 动效体系 YiMotion + 卡面渐变/筛选动画 + flutter_local_notifications 每日提醒 (需 desugaring); 腾讯 gradle 镜像 + kotlin.incremental=false: yijing-flutter/ 为唯一交付形态 — Flutter MVVM 7 屏全量 + 持久化 + 设置面板数据互通 (PWA 导出格式); 架构见 yijing-flutter/ARCHITECTURE.md
+- **纯 App 主线 (iter40, v1.35.1)** — 已推送 GitHub; 自研图标 (墨底金坎卦+朱砂动爻, 自适应+通知白色小图标); 模拟器实测全过 (含 08:00 通知真实弹出); 动效体系 YiMotion + 卡面渐变/筛选动画 + flutter_local_notifications 每日提醒 (需 desugaring); 腾讯 gradle 镜像 + kotlin.incremental=false — 模拟器实测全过 (含 08:00 通知真实弹出); 动效体系 YiMotion + 卡面渐变/筛选动画 + flutter_local_notifications 每日提醒 (需 desugaring); 腾讯 gradle 镜像 + kotlin.incremental=false: yijing-flutter/ 为唯一交付形态 — Flutter MVVM 7 屏全量 + 持久化 + 设置面板数据互通 (PWA 导出格式); 架构见 yijing-flutter/ARCHITECTURE.md
 - 国风易经 PWA (仓库根目录) 保留为设计基准与数据源, 单 HTML + 零运行时依赖, 7 屏移动优先
 - 64 卦完整数据层 (HEX_LIBRARY + HEX_EXTRA + YijingEngine 起卦推演)
 - 四大占法: 易经（数字/蓍草/铜钱）、八字（iter34 接通, 分钟级节气起运）、小六壬、梅花易数（时间式+数字式）— 全部接通

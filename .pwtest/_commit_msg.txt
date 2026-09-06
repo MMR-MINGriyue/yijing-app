@@ -1,0 +1,8 @@
+feat(iter40): 应用图标重设计 — 墨底金坎卦 + 朱砂动爻 (v1.35.1)
+
+- 自适应图标: 墨底 background + 前景矢量 (氛围光晕 + 坎卦六爻圆角线, 九二朱砂动爻)
+  + monochrome 单色层 (Android 13 主题图标)
+- 遗留 PNG 全密度 (48/72/96/144/192, PIL 超采样渲染, 圆角 + 全圆两版)
+- 通知专用白色小图标 ic_notification (通知栏单色规范), ReminderService 改用
+- 生成脚本 .pwtest/_gen_icons.py (几何与 App 内 HexGlyph 同源)
+- 模拟器应用抽屉实测: 遮罩/辨识度 OK

@@ -41,7 +41,7 @@ class PluginReminderScheduler implements ReminderScheduler {
     tz.setLocalLocation(tz.getLocation('Asia/Shanghai')); // 目标受众锁定北京时区
     await _plugin.initialize(
       const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        android: AndroidInitializationSettings('ic_notification') // 专用白色卦象小图标,
       ),
     );
     final android = _plugin.resolvePlatformSpecificImplementation<
