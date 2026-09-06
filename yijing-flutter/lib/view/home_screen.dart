@@ -4,6 +4,7 @@ import '../model/hex.dart';
 import '../model/history.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/home_viewmodel.dart';
+import 'hero_fullscreen.dart';
 import 'widgets/hex_glyph.dart';
 import 'widgets/pressable.dart';
 import 'widgets/stagger_in.dart';
@@ -105,7 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // ---------- 今日一卦 hero ----------
   Widget _hero(Hex h) {
     return PressableScale(
-      onTap: () => widget.onOpenDetail(h.no),
+      onTap: () => Navigator.of(context).push(
+        HeroFullscreen.route(h, onGoCast: widget.onGoCast),
+      ),
       scale: 0.985,
       child: Container(
         padding: const EdgeInsets.all(20),

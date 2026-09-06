@@ -144,6 +144,22 @@ class HistoryViewModel extends ChangeNotifier {
 
   bool get hasFilter => _s.hexFilter != null || _s.dirFilter.isNotEmpty || _s.typeFilter.isNotEmpty || _s.keyword.isNotEmpty;
 
+  /// 删除选中的记录 (从 filtered 列表选取, 内部映射到 load() 索引降序删除)
+  void removeRecords(List<HistoryRecord> records) {
+    if (records.isEmpty) return;
+    final all = _repo.load();
+    final indices = <int>[];
+    for (final r in records) {
+      final idx = all.indexOf(r);
+      if (idx >= 0) indices.add(idx);
+    }
+    if (indices.isEmpty) return;
+    indices.sort((a, b) => b - a); // 降序删除避免索引偏移
+    _repo.removeMany(indices);
+    _range = _repo.monthRange(); // 刷新月份范围
+    notifyListeners();
+  }
+
   // ---- 统计 ----
   int get totalCount => _repo.load().length;
   int get weekCount {

@@ -181,6 +181,14 @@ void main() {
       expect(r.method, '数字起卦');
     });
 
+    test('数字式 2/2 → 兑为泽 (兑三爻 [1,1,0] 回归)', () {
+      final r = meiHuaByNumbers(2, 2);
+      expect(r.upper, '兑');
+      expect(r.lower, '兑');
+      expect(r.hexNo, 58); // 兑为泽
+      expect(r.lines, [true, true, false, true, true, false]);
+    });
+
     test('数字式 0 取 1, 8/16 归 8', () {
       expect(meiHuaByNumbers(0, 0).upper, '乾'); // 0→1
       expect(meiHuaByNumbers(8, 16).upper, '坤'); // 8%8=0→8 坤

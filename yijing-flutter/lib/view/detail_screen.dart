@@ -24,6 +24,8 @@ class DetailScreen extends StatefulWidget {
 }
 
 class _DetailScreenState extends State<DetailScreen> {
+  bool _yaoExpanded = false; // 六爻展开/折叠 (PWA对齐: 默认仅显示初/二爻)
+
   @override
   void initState() {
     super.initState();
@@ -245,8 +247,9 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  // ---------- 六爻解读 ----------
+  // ---------- 六爻解读 (PWA对齐: 默认显示初/二爻, 可展开全部六爻) ----------
   Widget _yaoList(Hex h) {
+    final visibleCount = _yaoExpanded ? 6 : 2;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: const [
         Expanded(child: Divider(color: YiColors.strokeSoft)),
@@ -255,34 +258,96 @@ class _DetailScreenState extends State<DetailScreen> {
         Expanded(child: Divider(color: YiColors.strokeSoft)),
       ]),
       const SizedBox(height: 6),
-      for (var i = 0; i < 6; i++)
-        InkWell(
-          onTap: () => showYaoSheet(context, h, i),
-          borderRadius: BorderRadius.circular(10),
-          child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Container(
-              width: 28, height: 28,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: const Color(0x22C9A876),
-                borderRadius: BorderRadius.circular(8),
+      AnimatedSize(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        child: Column(children: [
+          for (var i = 0; i < visibleCount; i++)
+            InkWell(
+              key: ValueKey('yao-$i'),
+              onTap: () => showYaoSheet(context, h, i),
+              borderRadius: BorderRadius.circular(10),
+              child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Container(
+                  width: 28, height: 28,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0x22C9A876),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(h.yao[i].n[0], style: const TextStyle(
+                      fontSize: 13, color: YiColors.gold, fontWeight: FontWeight.w500)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(h.yao[i].n, style: const TextStyle(fontSize: 13, color: YiColors.textPrimary)),
+                  const SizedBox(height: 2),
+                  Text(h.yao[i].d.isEmpty ? h.yao[i].q : '${h.yao[i].q} ${h.yao[i].d}',
+                      style: const TextStyle(fontSize: 11, height: 1.6, color: YiColors.textSecondary)),
+                ])),
+              ]),
               ),
-              child: Text(h.yao[i].n[0], style: const TextStyle(
-                  fontSize: 13, color: YiColors.gold, fontWeight: FontWeight.w500)),
             ),
-            const SizedBox(width: 12),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(h.yao[i].n, style: const TextStyle(fontSize: 13, color: YiColors.textPrimary)),
-              const SizedBox(height: 2),
-              Text(h.yao[i].d.isEmpty ? h.yao[i].q : '${h.yao[i].q} ${h.yao[i].d}',
-                  style: const TextStyle(fontSize: 11, height: 1.6, color: YiColors.textSecondary)),
-            ])),
-          ]),
-          ),
-        ),
+        ]),
+      ),
+      const SizedBox(height: 8),
+      _yaoToggle(),
     ]);
+  }
+
+  /// 六爻展开/折叠切换按钮 (PWA yao-toggle 同款: 虚线框 + 卦象图标 + 文字 + 箭头)
+  Widget _yaoToggle() {
+    return InkWell(
+      onTap: () => setState(() => _yaoExpanded = !_yaoExpanded),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          border: Border.all(color: YiColors.strokeSoft, style: BorderStyle.solid),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          // 卦象小图标 (5条横线)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            decoration: BoxDecoration(
+              color: YiColors.gold.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              for (var k = 0; k < 5; k++)
+                Container(
+                  width: 14, height: 1.5,
+                  margin: const EdgeInsets.only(bottom: 2),
+                  decoration: BoxDecoration(
+                    color: _yaoExpanded ? YiColors.cinnabar : YiColors.gold,
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+            ]),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            _yaoExpanded ? '收 起 末 四 爻' : '展 开 全 部 六 爻',
+            style: TextStyle(
+              fontSize: 11, letterSpacing: 2,
+              color: _yaoExpanded ? YiColors.cinnabar : YiColors.textTertiary,
+            ),
+          ),
+          const SizedBox(width: 8),
+          AnimatedRotation(
+            turns: _yaoExpanded ? 0.5 : 0,
+            duration: const Duration(milliseconds: 300),
+            child: Icon(
+              Icons.keyboard_arrow_down, size: 16,
+              color: _yaoExpanded ? YiColors.cinnabar : YiColors.gold,
+            ),
+          ),
+        ]),
+      ),
+    );
   }
 }
 

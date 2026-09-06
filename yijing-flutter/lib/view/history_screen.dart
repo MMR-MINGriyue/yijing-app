@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../model/history.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/history_viewmodel.dart';
 import 'widgets/pressable.dart';
 
-/// 屏 6 历史记录 — View 层
+/// 屏 6 历史记录 — View 层 (长按多选删除, PWA 对齐)
 class HistoryScreen extends StatefulWidget {
   final HistoryViewModel vm;
   final void Function(HistoryRecord r)? onOpenRecord;
@@ -17,6 +18,9 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
+  bool _selectMode = false;
+  final Set<HistoryRecord> _selected = {};
+
   @override
   void initState() {
     super.initState();
@@ -31,44 +35,113 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   void _onVm() => setState(() {});
 
+  void _enterSelectMode(HistoryRecord r) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _selectMode = true;
+      _selected.add(r);
+    });
+  }
+
+  void _exitSelectMode() {
+    setState(() {
+      _selectMode = false;
+      _selected.clear();
+    });
+  }
+
+  void _toggleSelect(HistoryRecord r) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      if (_selected.contains(r)) {
+        _selected.remove(r);
+      } else {
+        _selected.add(r);
+      }
+    });
+  }
+
+  Future<void> _deleteSelected() async {
+    if (_selected.isEmpty) return;
+    final count = _selected.length;
+    final records = _selected.toList();
+    widget.vm.removeRecords(records);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text('已删除 $count 条记录', style: const TextStyle(color: YiColors.textPrimary)),
+        backgroundColor: const Color(0xFF231A11),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+      ));
+    _exitSelectMode();
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = widget.vm.state;
     return Scaffold(
       backgroundColor: YiColors.ink,
-      appBar: AppBar(
-        backgroundColor: YiColors.ink,
-        foregroundColor: YiColors.gold,
-        centerTitle: true,
-        title: const Text('历 史 记 录', style: TextStyle(letterSpacing: 6, fontSize: 17)),
-      ),
+      appBar: _selectMode ? _selectAppBar() : _normalAppBar(),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
         children: [
-          _stats(s),
-          const SizedBox(height: 14),
-          _monthNav(s),
-          const SizedBox(height: 14),
-          _searchBox(s),
-          const SizedBox(height: 8),
-          if (widget.vm.hexChips.isNotEmpty) _chips('卦象', widget.vm.hexChips
-              .map((c) => _chip(label: c.name, count: c.count, active: s.hexFilter == c.no,
-                  onTap: () => widget.vm.setHexFilter(s.hexFilter == c.no ? null : c.no))).toList(),
-              s.hexFilter != null, () => widget.vm.setHexFilter(null)),
-          if (widget.vm.dirChips.isNotEmpty) _chips('方向', widget.vm.dirChips
-              .map((c) => _chip(label: c.dir, count: c.count, active: s.dirFilter == c.dir,
-                  onTap: () => widget.vm.setDirFilter(s.dirFilter == c.dir ? '' : c.dir))).toList(),
-              s.dirFilter.isNotEmpty, () => widget.vm.setDirFilter('')),
-          if (widget.vm.typeChips.isNotEmpty) _chips('占法', widget.vm.typeChips
-              .map((c) => _chip(label: c.label, count: c.count, active: s.typeFilter == c.type,
-                  onTap: () => widget.vm.setTypeFilter(s.typeFilter == c.type ? '' : c.type))).toList(),
-              s.typeFilter.isNotEmpty, () => widget.vm.setTypeFilter('')),
-          const SizedBox(height: 6),
+          if (!_selectMode) ...[
+            _stats(s),
+            const SizedBox(height: 14),
+            _monthNav(s),
+            const SizedBox(height: 14),
+            _searchBox(s),
+            const SizedBox(height: 8),
+            if (widget.vm.hexChips.isNotEmpty) _chips('卦象', widget.vm.hexChips
+                .map((c) => _chip(label: c.name, count: c.count, active: s.hexFilter == c.no,
+                    onTap: () => widget.vm.setHexFilter(s.hexFilter == c.no ? null : c.no))).toList(),
+                s.hexFilter != null, () => widget.vm.setHexFilter(null)),
+            if (widget.vm.dirChips.isNotEmpty) _chips('方向', widget.vm.dirChips
+                .map((c) => _chip(label: c.dir, count: c.count, active: s.dirFilter == c.dir,
+                    onTap: () => widget.vm.setDirFilter(s.dirFilter == c.dir ? '' : c.dir))).toList(),
+                s.dirFilter.isNotEmpty, () => widget.vm.setDirFilter('')),
+            if (widget.vm.typeChips.isNotEmpty) _chips('占法', widget.vm.typeChips
+                .map((c) => _chip(label: c.label, count: c.count, active: s.typeFilter == c.type,
+                    onTap: () => widget.vm.setTypeFilter(s.typeFilter == c.type ? '' : c.type))).toList(),
+                s.typeFilter.isNotEmpty, () => widget.vm.setTypeFilter('')),
+            const SizedBox(height: 6),
+          ],
           ..._recordList(),
         ],
       ),
     );
   }
+
+  // ---------- AppBar ----------
+  PreferredSizeWidget _normalAppBar() => AppBar(
+    backgroundColor: YiColors.ink,
+    foregroundColor: YiColors.gold,
+    centerTitle: true,
+    title: const Text('历 史 记 录', style: TextStyle(letterSpacing: 6, fontSize: 17)),
+  );
+
+  PreferredSizeWidget _selectAppBar() => AppBar(
+    backgroundColor: YiColors.ink,
+    foregroundColor: YiColors.gold,
+    leading: IconButton(
+      icon: const Icon(Icons.close),
+      onPressed: _exitSelectMode,
+      tooltip: '取消',
+    ),
+    title: Text('已选 ${_selected.length} 条',
+        style: const TextStyle(letterSpacing: 2, fontSize: 16)),
+    actions: [
+      IconButton(
+        icon: Icon(Icons.delete_outline,
+            color: _selected.isEmpty ? YiColors.textMuted : YiColors.cinnabar),
+        onPressed: _selected.isEmpty ? null : _deleteSelected,
+        tooltip: '删除选中',
+      ),
+    ],
+  );
 
   // ---------- 统计卡 ----------
   Widget _stats(HistoryState s) {
@@ -216,13 +289,44 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _recordCard(HistoryRecord r) {
+    final selected = _selected.contains(r);
     return GestureDetector(
-      onTap: r.hexNo == null ? null : () => widget.onOpenRecord?.call(r),
+      onLongPress: () => _enterSelectMode(r),
+      onTap: _selectMode
+          ? () => _toggleSelect(r)
+          : (r.hexNo == null ? null : () => widget.onOpenRecord?.call(r)),
       child: Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: _card(),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF221C15), YiColors.inkCard],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: selected ? YiColors.cinnabar : YiColors.strokeSoft,
+          width: selected ? 1.5 : 1,
+        ),
+      ),
       child: Row(children: [
+        // 多选模式: 勾选圈
+        if (_selectMode) ...[
+          Container(
+            width: 22,
+            height: 22,
+            margin: const EdgeInsets.only(right: 10),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: selected ? YiColors.cinnabar : YiColors.stroke, width: 1.5),
+              color: selected ? YiColors.cinnabar : Colors.transparent,
+            ),
+            child: selected
+                ? const Icon(Icons.check, size: 14, color: Color(0xFFFFF6EC))
+                : null,
+          ),
+        ],
         // 卦形缩略 (非卦类 → 占法徽标)
         SizedBox(
           width: 36,
@@ -280,8 +384,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final now = DateTime.now();
     final hh = r.ts.hour.toString().padLeft(2, '0');
     final mm = r.ts.minute.toString().padLeft(2, '0');
-    final d = now.difference(DateTime(now.year, now.month, now.day)).inDays -
-        r.ts.difference(DateTime(now.year, now.month, now.day)).inDays;
+    final d = DateTime(now.year, now.month, now.day)
+        .difference(DateTime(r.ts.year, r.ts.month, r.ts.day))
+        .inDays;
     if (d == 0) return '今日 $hh:$mm';
     if (d == 1) return '昨日 $hh:$mm';
     return '${r.ts.month}/${r.ts.day} $hh:$mm';

@@ -386,9 +386,9 @@ class _CastScreenState extends State<CastScreen> {
       decoration: _card(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Row(children: [
-          Text('梅花易数 · 数字式', style: TextStyle(fontSize: 14, letterSpacing: 2, color: YiColors.textPrimary)),
+          Text('梅花易数', style: TextStyle(fontSize: 14, letterSpacing: 2, color: YiColors.textPrimary)),
           SizedBox(width: 8),
-          Text('两数起卦', style: TextStyle(fontSize: 10, color: YiColors.textTertiary)),
+          Text('时间 · 数字 · 掷骰', style: TextStyle(fontSize: 10, color: YiColors.textTertiary)),
         ]),
         const SizedBox(height: 10),
         SizedBox(
@@ -441,6 +441,21 @@ class _CastScreenState extends State<CastScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             child: const Text('以数起卦', style: TextStyle(letterSpacing: 4, fontSize: 13)),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: widget.vm.castMeihuaDice,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: YiColors.gold,
+              side: const BorderSide(color: YiColors.goldDark),
+              padding: const EdgeInsets.symmetric(vertical: 11),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            icon: const Icon(Icons.casino, size: 16),
+            label: const Text('掷骰起卦', style: TextStyle(letterSpacing: 4, fontSize: 13)),
           ),
         ),
       ]),
@@ -662,7 +677,7 @@ class _CastScreenState extends State<CastScreen> {
   /// 流年断语列表 (点击大运 chip 展开)
   List<Widget> _liuNianList(DaYunStep st) {
     return [
-      Text('流年 · \${st.gz}运 (\${st.startYear}-\${st.endYear})',
+      Text('流年 · ${st.gz}运 (${st.startYear}-${st.endYear})',
           style: const TextStyle(fontSize: 11, letterSpacing: 2, color: YiColors.gold)),
       const SizedBox(height: 6),
       for (final ln in st.liuNian)
@@ -676,7 +691,7 @@ class _CastScreenState extends State<CastScreen> {
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Text('\${ln.year}年', style: const TextStyle(fontSize: 12, color: YiColors.textPrimary)),
+              Text('${ln.year}年', style: const TextStyle(fontSize: 12, color: YiColors.textPrimary)),
               const SizedBox(width: 6),
               Text(ln.gz, style: const TextStyle(fontSize: 12, color: YiColors.gold)),
               const SizedBox(width: 6),

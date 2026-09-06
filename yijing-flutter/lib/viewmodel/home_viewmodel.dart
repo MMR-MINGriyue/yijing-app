@@ -57,7 +57,7 @@ class HomeViewModel extends ChangeNotifier {
   /// 最近占卜 2 条 (过滤掉缺 name/question 的记录, PWA 行为)
   List<HistoryRecord> get recent => _history
       .load()
-      .where((r) => r.hexNo != null && r.name != null)
+      .where((r) => r.hexNo != null && r.name != null && r.question.isNotEmpty)
       .take(2)
       .toList();
 

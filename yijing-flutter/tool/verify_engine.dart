@@ -253,6 +253,10 @@ void main() {
     check('梅花数字式 3/8 = 火地晋 动五爻',
       mhNum.upper == '离' && mhNum.lower == '坤' && mhNum.movingIdx == 4 && mhNum.hexNo == 35,
       'no=${mhNum.hexNo}');
+  final mhDui = meiHuaByNumbers(2, 2);
+  check('梅花数字式 2/2 = 兑为泽 (兑三爻回归)',
+      mhDui.hexNo == 58 && mhDui.lines[0] && mhDui.lines[1] && !mhDui.lines[2],
+      'no=${mhDui.hexNo} lines=${mhDui.lines}');
 
   print('\n结果: $pass 通过, $fail 失败');
   if (fail > 0) { throw StateError('$fail 项失败'); }

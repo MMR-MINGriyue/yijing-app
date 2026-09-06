@@ -146,5 +146,19 @@ void main() {
       expect(vm.favCount, 3); // 来自 FavoritesRepository
       expect(vm.monthCount, 5);
     });
+
+    test('removeRecords: 删除选中记录后总数减少', () {
+      final before = vm.totalCount;
+      final toDelete = vm.filtered.take(2).toList();
+      expect(toDelete.length, 2);
+      vm.removeRecords(toDelete);
+      expect(vm.totalCount, before - 2);
+      expect(vm.monthCount, 3); // 当月原5条删2条
+    });
+
+    test('removeRecords: 空列表不报错', () {
+      vm.removeRecords([]);
+      expect(vm.totalCount, 7);
+    });
   });
 }

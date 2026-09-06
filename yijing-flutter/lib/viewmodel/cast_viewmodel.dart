@@ -209,7 +209,31 @@ class CastViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 八字排盘 (真实农历 + 分钟级节气; 落历史)
+  /// 梅花易数 · 掷骰式 (两枚1-8骰 + 动爻1-6, 落历史)
+  void castMeihuaDice() {
+    final now = _clock;
+    final res = meiHuaByDice();
+    final hex = _hexRepo.hexByNo(res.hexNo);
+    _history.add(HistoryRecord(
+      hexNo: hex.no,
+      name: hex.name,
+      question: '梅花掷骰 · ${res.source}',
+      direction: _state.direction,
+      directionColor: kDirections
+          .firstWhere((d) => d.dir == _state.direction, orElse: () => kDirections.first)
+          .color,
+      type: 'meihua',
+      ts: now,
+      lines: List.of(res.lines),
+      moving: [res.movingIdx],
+    ));
+    _state = _state.copyWith(
+      phase: CastPhase.done,
+      hex: hex,
+      result: CastResult(lines: res.lines, moving: [res.movingIdx], method: 'meihua'),
+    );
+    notifyListeners();
+  }
   void computeBazi(DateTime birth, String gender) {
     final chart = computeBaZi(birth);
     if (chart == null) return;
@@ -249,7 +273,7 @@ class CastViewModel extends ChangeNotifier {
     _state = _state.copyWith(
       phase: CastPhase.done,
       hex: hex,
-      result: CastResult(lines: res.lines, moving: [res.movingIdx], method: 'numeric'),
+      result: CastResult(lines: res.lines, moving: [res.movingIdx], method: 'meihua'),
     );
     notifyListeners();
   }
