@@ -121,6 +121,20 @@ void main() {
     expect(find.text('重置为示例数据'), findsOneWidget);
   });
 
+  testWidgets('起卦闭环: CTA → 推演动画 → 结果 (iter37 回归)', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: AppShell()));
+    await tester.pumpAndSettle();
+    await goTab(tester, '起卦');
+    // 表单必须有起卦 CTA (iter36 实测缺失)
+    await tester.tap(find.text('起  卦'));
+    await tester.pump(); // 进入 casting
+    expect(find.text('卦 象 推 演 中'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1300)); // 推过 1.1s 动画
+    await tester.pumpAndSettle();
+    expect(find.text('卦 象 已 成'), findsOneWidget);
+    expect(find.text('查看卦辞解析'), findsOneWidget);
+  });
+
   testWidgets('卦库点卦 → 详情; 详情 → 变卦推演路由', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: AppShell()));
     await tester.pumpAndSettle();

@@ -2,7 +2,7 @@
 
 ## 项目定位
 
-- **纯 App 主线 (iter36, v1.33.0)**: yijing-flutter/ 为唯一交付形态 — Flutter MVVM 7 屏全量 + 持久化 + 设置面板数据互通 (PWA 导出格式); 架构见 yijing-flutter/ARCHITECTURE.md
+- **纯 App 主线 (iter37, v1.33.1)** — 已在 Android 模拟器实测 (SDK 从零搭建, 腾讯 gradle 镜像 + kotlin.incremental=false): yijing-flutter/ 为唯一交付形态 — Flutter MVVM 7 屏全量 + 持久化 + 设置面板数据互通 (PWA 导出格式); 架构见 yijing-flutter/ARCHITECTURE.md
 - 国风易经 PWA (仓库根目录) 保留为设计基准与数据源, 单 HTML + 零运行时依赖, 7 屏移动优先
 - 64 卦完整数据层 (HEX_LIBRARY + HEX_EXTRA + YijingEngine 起卦推演)
 - 四大占法: 易经（数字/蓍草/铜钱）、八字（iter34 接通, 分钟级节气起运）、小六壬、梅花易数（时间式+数字式）— 全部接通

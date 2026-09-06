@@ -96,6 +96,23 @@ class _CastScreenState extends State<CastScreen> {
         const SizedBox(height: 14),
         _directionChips(s),
         const SizedBox(height: 16),
+        const SizedBox(height: 18),
+        // 主 CTA: 开始起卦 (iter37 修复: 表单缺起卦入口)
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: widget.vm.startCast,
+            style: FilledButton.styleFrom(
+              backgroundColor: YiColors.cinnabar,
+              foregroundColor: const Color(0xFFFFF6EC),
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+            icon: const Icon(Icons.auto_awesome, size: 20),
+            label: const Text('起  卦', style: TextStyle(letterSpacing: 8, fontSize: 16)),
+          ),
+        ),
+        const SizedBox(height: 14),
         for (final m in CastMethod.values) ...[
           _methodCard(m, s),
           const SizedBox(height: 10),
