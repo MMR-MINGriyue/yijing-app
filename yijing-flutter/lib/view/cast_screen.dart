@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../core/dayun.dart';
 import '../core/xiaoliuren.dart';
 import '../model/hex.dart';
 import '../theme/yijing_theme.dart';
@@ -610,25 +611,78 @@ class _CastScreenState extends State<CastScreen> {
               separatorBuilder: (_, _) => const SizedBox(width: 6),
               itemBuilder: (_, i) {
                 final st = d.steps[i];
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: st.current ? const Color(0x33D04D3E) : const Color(0x22C9A876),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: st.current ? YiColors.cinnabar : YiColors.strokeSoft),
+                final selected = s.selectedDayunStep == i;
+                return InkWell(
+                  onTap: () => widget.vm.selectDayunStep(selected ? null : i),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: selected || st.current
+                          ? const Color(0x33D04D3E)
+                          : const Color(0x22C9A876),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: selected || st.current ? YiColors.cinnabar : YiColors.strokeSoft),
+                    ),
+                    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Text(st.gz, style: TextStyle(fontSize: 13,
+                          color: selected || st.current ? YiColors.cinnabar : YiColors.gold)),
+                      Text('${st.startAge}岁', style: const TextStyle(fontSize: 9, color: YiColors.textMuted)),
+                    ]),
                   ),
-                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Text(st.gz, style: TextStyle(fontSize: 13,
-                        color: st.current ? YiColors.cinnabar : YiColors.gold)),
-                    Text('${st.startAge}岁', style: const TextStyle(fontSize: 9, color: YiColors.textMuted)),
-                  ]),
                 );
               },
             ),
           ),
         ],
+        if (d != null && s.selectedDayunStep != null && s.selectedDayunStep! < d.steps.length) ...[
+          const SizedBox(height: 8),
+          ..._liuNianList(d.steps[s.selectedDayunStep!]),
+        ],
       ]),
     );
+  }
+
+  /// 流年断语列表 (点击大运 chip 展开)
+  List<Widget> _liuNianList(DaYunStep st) {
+    return [
+      Text('流年 · \${st.gz}运 (\${st.startYear}-\${st.endYear})',
+          style: const TextStyle(fontSize: 11, letterSpacing: 2, color: YiColors.gold)),
+      const SizedBox(height: 6),
+      for (final ln in st.liuNian)
+        Container(
+          margin: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: ln.current ? const Color(0x22D04D3E) : const Color(0xFF161209),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: ln.current ? YiColors.cinnabar : YiColors.strokeSoft),
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Text('\${ln.year}年', style: const TextStyle(fontSize: 12, color: YiColors.textPrimary)),
+              const SizedBox(width: 6),
+              Text(ln.gz, style: const TextStyle(fontSize: 12, color: YiColors.gold)),
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                decoration: BoxDecoration(
+                  color: const Color(0x22C9A876),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(ln.god, style: const TextStyle(fontSize: 9, color: YiColors.gold)),
+              ),
+              if (ln.current) ...[
+                const Spacer(),
+                const Text('当前', style: TextStyle(fontSize: 9, color: YiColors.cinnabar)),
+              ],
+            ]),
+            const SizedBox(height: 4),
+            Text(ln.text, style: const TextStyle(fontSize: 10, height: 1.6, color: YiColors.textSecondary)),
+          ]),
+        ),
+    ];
   }
 
   Color _dirColor(String c) => switch (c) {

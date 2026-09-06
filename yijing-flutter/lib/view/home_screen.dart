@@ -13,6 +13,7 @@ class HomeScreen extends StatefulWidget {
   final VoidCallback onGoCast;
   final VoidCallback onGoGrid;
   final VoidCallback onGoHistory;
+  final VoidCallback onOpenSettings;
 
   const HomeScreen({
     super.key,
@@ -21,6 +22,7 @@ class HomeScreen extends StatefulWidget {
     required this.onGoCast,
     required this.onGoGrid,
     required this.onGoHistory,
+    required this.onOpenSettings,
   });
 
   @override
@@ -71,11 +73,18 @@ class _HomeScreenState extends State<HomeScreen> {
         Text(widget.vm.greeting,
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500,
                 letterSpacing: 2, color: YiColors.textPrimary)),
-        IconButton(
-          icon: const Icon(Icons.refresh, size: 22, color: YiColors.textTertiary),
-          onPressed: () => widget.vm.refreshHero(),
-          tooltip: '换一卦',
-        ),
+        Row(mainAxisSize: MainAxisSize.min, children: [
+          IconButton(
+            icon: const Icon(Icons.refresh, size: 22, color: YiColors.textTertiary),
+            onPressed: () => widget.vm.refreshHero(),
+            tooltip: '换一卦',
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, size: 20, color: YiColors.textTertiary),
+            onPressed: widget.onOpenSettings,
+            tooltip: '设置与数据管理',
+          ),
+        ]),
       ]),
       const SizedBox(height: 4),
       Text(widget.vm.dateLine,

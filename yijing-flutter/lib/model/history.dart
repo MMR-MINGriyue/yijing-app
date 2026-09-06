@@ -45,8 +45,12 @@ class HistoryRecord {
         ts: j['ts'] is int
             ? DateTime.fromMillisecondsSinceEpoch(j['ts'] as int)
             : DateTime.now(),
+        // 兼容 PWA 导出格式: 'yang'/'moving' 为阳, 'yin'/'movingYin' 为阴
         lines: j['lines'] is List
-            ? (j['lines'] as List).map((e) => e == 1 || e == true).toList()
+            ? (j['lines'] as List).map((e) {
+                if (e is String) return e == 'yang' || e == 'moving';
+                return e == 1 || e == true;
+              }).toList()
             : null,
         moving: j['moving'] is List
             ? (j['moving'] as List).whereType<int>().toList()

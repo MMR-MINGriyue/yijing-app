@@ -10,6 +10,7 @@ class MeScreen extends StatefulWidget {
   final void Function(int hexNo) onOpenDetail;
   final VoidCallback onGoHistory;
   final VoidCallback onGoGrid;
+  final VoidCallback onOpenSettings;
 
   const MeScreen({
     super.key,
@@ -17,6 +18,7 @@ class MeScreen extends StatefulWidget {
     required this.onOpenDetail,
     required this.onGoHistory,
     required this.onGoGrid,
+    required this.onOpenSettings,
   });
 
   @override
@@ -47,6 +49,13 @@ class _MeScreenState extends State<MeScreen> {
         foregroundColor: YiColors.gold,
         centerTitle: true,
         title: const Text('我 的', style: TextStyle(letterSpacing: 6, fontSize: 17)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, size: 20),
+            onPressed: widget.onOpenSettings,
+            tooltip: '设置与数据管理',
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),

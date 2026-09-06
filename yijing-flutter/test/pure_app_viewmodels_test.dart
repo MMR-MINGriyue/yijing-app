@@ -4,6 +4,7 @@ import 'package:yijing_transform/data/history_repository.dart';
 import 'package:yijing_transform/data/history_store.dart';
 import 'package:yijing_transform/data/hex_repository.dart';
 import 'package:yijing_transform/viewmodel/me_viewmodel.dart';
+import 'package:yijing_transform/viewmodel/settings_viewmodel.dart';
 import 'package:yijing_transform/model/history.dart';
 import 'package:yijing_transform/viewmodel/cast_viewmodel.dart';
 import 'package:yijing_transform/viewmodel/hexgrid_viewmodel.dart';
@@ -309,6 +310,99 @@ void main() {
       final bad = HistoryRecord.fromJson({'ts': 1757148000000});
       expect(bad.question, '');
       expect(bad.type, 'iching');
+    });
+  });
+
+  group('SettingsViewModel — iter35 设置面板', () {
+    test('导出 JSON 为 PWA 兼容格式', () {
+      final hist = newHist(seed: false);
+      hist.add(HistoryRecord(
+        hexNo: 31, name: '咸', question: 'Q', direction: '感情',
+        directionColor: 'pine', ts: DateTime(2026, 9, 6),
+      ));
+      final vm = SettingsViewModel(
+        history: hist,
+        favs: FavoritesRepository(store: MemoryFavoritesStore([1, 2])),
+      );
+      final json = vm.exportJson();
+      expect(json, contains('"app": "yijing-app"'));
+      expect(json, contains('"exportedAt"'));
+      expect(json, contains('"favorites"'));
+      expect(json, contains('咸'));
+    });
+
+    test('导入合并: 去重 + 收藏并集', () {
+      final hist = newHist(seed: false);
+      hist.add(HistoryRecord(
+        hexNo: 31, name: '咸', question: 'Q', direction: '感情',
+        directionColor: 'pine', ts: DateTime(2026, 9, 6),
+      ));
+      final favs = FavoritesRepository(store: MemoryFavoritesStore([5]));
+      final vm = SettingsViewModel(history: hist, favs: favs);
+      // 同 ts 重复 1 条 + 新增 1 条 + 收藏 [5(重复), 8(新)]
+      final incoming = '''
+      {
+        "app": "yijing-app",
+        "history": [
+          {"hexNo": 31, "name": "咸", "question": "Q", "direction": "感情",
+           "directionColor": "pine", "type": "iching",
+           "ts": ${DateTime(2026, 9, 6).millisecondsSinceEpoch}, "lines": [1,0,0,0,0,0]},
+          {"hexNo": 9, "name": "小畜", "question": "新记录", "direction": "事业",
+           "directionColor": "cinnabar", "type": "iching",
+           "ts": ${DateTime(2026, 9, 5).millisecondsSinceEpoch}, "lines": [1,1,0,1,1,1]}
+        ],
+        "favorites": [5, 8]
+      }''';
+      final msg = vm.importJson(incoming);
+      expect(msg, contains('新增 1 条'));
+      expect(msg, contains('1 卦收藏'));
+      expect(hist.load().length, 2);
+      expect(favs.load(), [5, 8]);
+    });
+
+    test('导入兼容 PWA 字符串 lines (yang/yin/moving)', () {
+      final hist = newHist(seed: false);
+      final vm = SettingsViewModel(history: hist, favs: FavoritesRepository(
+        store: MemoryFavoritesStore(),
+      ));
+      vm.importJson('''
+      {
+        "history": [
+          {"hexNo": 1, "name": "乾", "question": "PWA记录", "direction": "事业",
+           "directionColor": "cinnabar", "type": "iching",
+           "ts": ${DateTime(2026, 8, 1).millisecondsSinceEpoch},
+           "lines": ["yang", "yin", "moving", "yin", "yang", "movingYin"]}
+        ]
+      }''');
+      final rec = hist.load().single;
+      expect(rec.lines, [true, false, true, false, true, false]); // moving=阳, movingYin=阴
+      expect(rec.moving, isNull); // PWA 格式动爻在 lines 内联, 不恢复 moving 数组
+    });
+
+    test('清空真实记录 (示例不受影响由 Repository 保证)', () {
+      final hist = newHist(); // seed: true
+      final vm = SettingsViewModel(history: hist, favs: FavoritesRepository(
+        store: MemoryFavoritesStore(),
+      ));
+      expect(vm.recordCount, greaterThanOrEqualTo(9));
+      vm.clearReal();
+      // 真实记录清空, 示例垫底仍在
+      expect(vm.recordCount, greaterThanOrEqualTo(9));
+      // meta 行反映空真实记录
+      expect(vm.metaLine, contains('收藏 0 卦'));
+    });
+
+    test('流年展开选择 (selectDayunStep)', () {
+      final vm = CastViewModel(hexRepo: repo, history: newHist(seed: false));
+      vm.computeBazi(DateTime(1990, 5, 15, 14, 30), 'male');
+      expect(vm.state.selectedDayunStep, isNull);
+      vm.selectDayunStep(0);
+      expect(vm.state.selectedDayunStep, 0);
+      // 再点收起
+      vm.selectDayunStep(0);
+      expect(vm.state.selectedDayunStep, 0); // copyWith 不清除 — 由 View 传 null 收起
+      vm.selectDayunStep(null);
+      expect(vm.state.selectedDayunStep, isNull);
     });
   });
 

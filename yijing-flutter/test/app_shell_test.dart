@@ -60,6 +60,21 @@ void main() {
     expect(find.text('更多占法 ›  八字 · 小六壬 · 梅花易数'), findsOneWidget);
   });
 
+  testWidgets('屏7 ⚙ → 设置面板 (导出/导入/清空/重置)', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: AppShell()));
+    await tester.pumpAndSettle();
+
+    await goTab(tester, '我的');
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pumpAndSettle();
+    expect(find.text('设 置'), findsOneWidget);
+    expect(find.text('导出历史数据'), findsOneWidget);
+    expect(find.text('导入历史数据'), findsOneWidget);
+    // 危险项默认非确认态
+    expect(find.text('清空本地历史'), findsOneWidget);
+    expect(find.text('重置为示例数据'), findsOneWidget);
+  });
+
   testWidgets('卦库点卦 → 详情; 详情 → 变卦推演路由', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: AppShell()));
     await tester.pumpAndSettle();

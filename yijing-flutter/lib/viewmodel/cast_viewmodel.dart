@@ -53,6 +53,7 @@ class CastState {
   final bool morePage; // 更多占法子页
   final BaZiChart? bazi;
   final DaYunChart? dayun;
+  final int? selectedDayunStep; // 流年展开的大运步序
 
   const CastState({
     this.phase = CastPhase.form,
@@ -65,6 +66,7 @@ class CastState {
     this.morePage = false,
     this.bazi,
     this.dayun,
+    this.selectedDayunStep,
   });
 
   CastState copyWith({
@@ -72,7 +74,7 @@ class CastState {
     String? direction, CastResult? result, Hex? hex,
     XiaoLiuRenResult? xlr, bool? morePage, bool clearResult = false,
     bool clearXlr = false, BaZiChart? bazi, DaYunChart? dayun,
-    bool clearBazi = false,
+    bool clearBazi = false, int? selectedDayunStep,
   }) =>
       CastState(
         phase: phase ?? this.phase,
@@ -85,6 +87,7 @@ class CastState {
         morePage: morePage ?? this.morePage,
         bazi: clearBazi ? null : (bazi ?? this.bazi),
         dayun: clearBazi ? null : (dayun ?? this.dayun),
+        selectedDayunStep: selectedDayunStep,
       );
 }
 
@@ -248,6 +251,12 @@ class CastViewModel extends ChangeNotifier {
       hex: hex,
       result: CastResult(lines: res.lines, moving: [res.movingIdx], method: 'numeric'),
     );
+    notifyListeners();
+  }
+
+  /// 展开/收起某步大运的流年列表
+  void selectDayunStep(int? i) {
+    _state = _state.copyWith(selectedDayunStep: i);
     notifyListeners();
   }
 

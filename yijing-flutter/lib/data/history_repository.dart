@@ -61,6 +61,30 @@ class HistoryRepository {
     _store.write(_real);
   }
 
+  /// 合并导入 (PWA 设置面板语义): 按 ts 去重, 无 ts 用 name|question 组合键
+  /// 返回 (新增条数, 跳过条数)
+  ({int added, int skipped}) mergeAll(List<HistoryRecord> incoming) {
+    _ensureLoaded();
+    String key(HistoryRecord r) =>
+        r.ts.millisecondsSinceEpoch > 0 ? 't${r.ts.millisecondsSinceEpoch}' : 'k${r.name}|${r.question}';
+    final seen = <String, bool>{};
+    for (final r in _real) {
+      seen[key(r)] = true;
+    }
+    var added = 0, skipped = 0;
+    for (final r in incoming) {
+      if (seen.containsKey(key(r))) {
+        skipped++;
+      } else {
+        seen[key(r)] = true;
+        _real.add(r);
+        added++;
+      }
+    }
+    if (added > 0) _store.write(_real);
+    return (added: added, skipped: skipped);
+  }
+
   /// 本月跨度: 最早记录月 ~ 最新
   ({int minY, int minM, int maxY, int maxM}) monthRange() {
     final list = load();

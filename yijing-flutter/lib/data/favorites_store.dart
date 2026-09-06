@@ -46,6 +46,23 @@ class FavoritesRepository {
 
   bool isFav(int hexNo) => _store.read().contains(hexNo);
 
+  /// 收藏并集合并 (PWA 导入语义), 返回新增卦数
+  int mergeUnion(List<int> hexNos) {
+    final list = _store.read();
+    var added = 0;
+    for (final n in hexNos) {
+      if (n >= 1 && n <= 64 && !list.contains(n)) {
+        list.add(n);
+        added++;
+      }
+    }
+    if (added > 0) {
+      list.sort();
+      _store.write(list);
+    }
+    return added;
+  }
+
   /// 切换收藏, 返回切换后的状态
   bool toggle(int hexNo) {
     final list = _store.read();
