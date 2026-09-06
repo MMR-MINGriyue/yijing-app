@@ -58,7 +58,7 @@ model/                  Hex / HistoryRecord (JSON 容错序列化) / CastResult
 
 ```
 flutter analyze                 # 0 issue
-flutter test                    # 97 项 (引擎/ViewModel/壳层冒烟)
+flutter test                    # 102 项 (引擎/ViewModel/壳层/动效组件)
 dart run tool/verify_engine.dart  # 78 项 (历法/农历/节气/起卦/八字/大运/梅花/八宫/小六壬)
 flutter build apk --debug       # CI 自动构建
 ```
@@ -73,4 +73,6 @@ flutter build apk --debug       # CI 自动构建
   双击确认, 数据格式与 PWA 导出互通) + 八字大运点击展开流年断语
 - **iter36 (v1.33.0)**: 屏4 分享卡 (PWA 同款 720×1040 卡面: 渐变/金框/卦象/动爻标注/
   卦辞/所问/干支落款, PictureRecorder 渲染 PNG → share_plus 系统分享) + 爻辞弹窗复制
-- 待办: 文件级导入导出 / 通知提醒 / iOS 适配 / 深色动态图标
+- **iter38 (v1.34.0)**: 动效体系 YiMotion (easeOutExpo 曲线/全站按压 0.96/首页四段 stagger/
+  动爻呼吸动画/六爻逐爻点亮推演动画/收藏弹跳/页面转场) + 屏5 长按爻辞弹窗; Android 模拟器实测通过
+- 待办: 卡面渐变逐屏铺开 / 文件级导入导出 / 通知提醒 / iOS 适配

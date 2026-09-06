@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../core/dayun.dart';
 import '../core/xiaoliuren.dart';
+import 'widgets/casting_anim.dart';
+import 'widgets/pressable.dart';
 import '../model/hex.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/cast_viewmodel.dart';
@@ -98,7 +100,8 @@ class _CastScreenState extends State<CastScreen> {
         const SizedBox(height: 16),
         const SizedBox(height: 18),
         // 主 CTA: 开始起卦 (iter37 修复: 表单缺起卦入口)
-        SizedBox(
+        PressableScale(
+          child: SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
             onPressed: widget.vm.startCast,
@@ -110,6 +113,7 @@ class _CastScreenState extends State<CastScreen> {
             ),
             icon: const Icon(Icons.auto_awesome, size: 20),
             label: const Text('起  卦', style: TextStyle(letterSpacing: 8, fontSize: 16)),
+          ),
           ),
         ),
         const SizedBox(height: 14),
@@ -172,9 +176,8 @@ class _CastScreenState extends State<CastScreen> {
 
   Widget _methodCard(CastMethod m, CastState s) {
     final active = s.method == m;
-    return InkWell(
+    return PressableScale(
       onTap: () => widget.vm.setMethod(m),
-      borderRadius: BorderRadius.circular(14),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -214,9 +217,8 @@ class _CastScreenState extends State<CastScreen> {
       };
 
   Widget _moreEntry() {
-    return InkWell(
+    return PressableScale(
       onTap: widget.vm.openMorePage,
-      borderRadius: BorderRadius.circular(14),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -235,19 +237,14 @@ class _CastScreenState extends State<CastScreen> {
     );
   }
 
-  // ---------- 推演动画 ----------
+  // ---------- 推演动画 (iter38: 六爻逐爻点亮) ----------
   Widget _casting() {
     return Center(
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const SizedBox(
-          width: 44, height: 44,
-          child: CircularProgressIndicator(color: YiColors.cinnabar, strokeWidth: 2.5),
-        ),
-        const SizedBox(height: 22),
-        const Text('卦 象 推 演 中', style: TextStyle(
-            fontSize: 14, letterSpacing: 4, color: YiColors.gold)),
-        const SizedBox(height: 8),
-        const Text('乾坤位定，爻象将成', style: TextStyle(fontSize: 11, color: YiColors.textTertiary)),
+        const CastingAnim(),
+        const SizedBox(height: 14),
+        const Text('乾坤位定，爻象将成',
+            style: TextStyle(fontSize: 11, color: YiColors.textTertiary)),
       ]),
     );
   }
@@ -266,7 +263,8 @@ class _CastScreenState extends State<CastScreen> {
             const Text('卦 象 已 成',
                 style: TextStyle(fontSize: 12, letterSpacing: 4, color: YiColors.gold)),
             const SizedBox(height: 16),
-            HexGlyph(lines: hex.yangs, moving: s.result?.moving ?? [], width: 60, lineH: 7, gap: 5),
+            HexGlyph(lines: hex.yangs, moving: s.result?.moving ?? [],
+                width: 60, lineH: 7, gap: 5, animated: true),
             const SizedBox(height: 16),
             Text('${hex.name} 卦',
                 style: const TextStyle(fontSize: 30, letterSpacing: 6, color: YiColors.textPrimary)),

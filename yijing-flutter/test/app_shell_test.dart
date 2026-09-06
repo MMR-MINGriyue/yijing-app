@@ -127,10 +127,11 @@ void main() {
     await goTab(tester, '起卦');
     // 表单必须有起卦 CTA (iter36 实测缺失)
     await tester.tap(find.text('起  卦'));
-    await tester.pump(); // 进入 casting
+    await tester.pump(); // 进入 casting (六爻逐爻点亮动画)
     expect(find.text('卦 象 推 演 中'), findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 1300)); // 推过 1.1s 动画
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 1300)); // 推过 1.1s 动画 → done
+    await tester.pump(const Duration(milliseconds: 100));
+    // 结果页动爻呼吸动画永不静止, 不能 pumpAndSettle — 用定长 pump
     expect(find.text('卦 象 已 成'), findsOneWidget);
     expect(find.text('查看卦辞解析'), findsOneWidget);
   });

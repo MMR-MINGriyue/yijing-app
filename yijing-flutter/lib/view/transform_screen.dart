@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../model/hex.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/transform_viewmodel.dart';
+import 'widgets/yao_sheet.dart';
 
 /// 屏 5 变卦推演 — View 层 (纯 UI, 一切状态来自 ViewModel)
 class TransformScreen extends StatefulWidget {
@@ -78,7 +79,7 @@ class _TransformScreenState extends State<TransformScreen> {
         Text(label, style: TextStyle(fontSize: 11, letterSpacing: 2,
             color: isCurrent ? YiColors.textTertiary : YiColors.cinnabar)),
         const SizedBox(height: 10),
-        _YaoStack(hex: hex, moving: moving, onTap: onTap),
+        _YaoStack(hex: hex, moving: moving, onTap: onTap, sheetContext: context),
         const SizedBox(height: 8),
         Text(hex.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500,
             letterSpacing: 6, color: YiColors.textPrimary)),
@@ -238,8 +239,9 @@ class _YaoStack extends StatelessWidget {
   final Hex hex;
   final List<int> moving;
   final void Function(int i)? onTap; // 点击爻 → 切换动爻 (仅本卦)
+  final BuildContext? sheetContext; // 长按爻 → 爻辞弹窗 (iter38)
 
-  const _YaoStack({required this.hex, required this.moving, this.onTap});
+  const _YaoStack({required this.hex, required this.moving, this.onTap, this.sheetContext});
 
   @override
   Widget build(BuildContext context) {
@@ -250,6 +252,8 @@ class _YaoStack extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 2.5),
             child: InkWell(
               onTap: onTap == null ? null : () => onTap!(i),
+              onLongPress:
+                  sheetContext == null ? null : () => showYaoSheet(sheetContext!, hex, i),
               borderRadius: BorderRadius.circular(2),
               child: _yaoLine(hex.yangs[i], moving.contains(i), hex.yaoName(i)),
             ),

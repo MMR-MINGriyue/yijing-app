@@ -5,6 +5,8 @@ import '../model/history.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/home_viewmodel.dart';
 import 'widgets/hex_glyph.dart';
+import 'widgets/pressable.dart';
+import 'widgets/stagger_in.dart';
 
 /// 屏 1 今日一卦 — 时辰卦 + 干支问候 + 快捷入口 + 最近占卜
 class HomeScreen extends StatefulWidget {
@@ -53,13 +55,13 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           children: [
-            _greeting(),
+            StaggerIn(delay: YiMotion.homeStagger[0], child: _greeting()),
             const SizedBox(height: 14),
-            _hero(h),
+            StaggerIn(delay: YiMotion.homeStagger[1], child: _hero(h)),
             const SizedBox(height: 14),
-            _quickEntries(),
+            StaggerIn(delay: YiMotion.homeStagger[2], child: _quickEntries()),
             const SizedBox(height: 16),
-            _recent(),
+            StaggerIn(delay: YiMotion.homeStagger[3], child: _recent()),
           ],
         ),
       ),
@@ -102,8 +104,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ---------- 今日一卦 hero ----------
   Widget _hero(Hex h) {
-    return GestureDetector(
+    return PressableScale(
       onTap: () => widget.onOpenDetail(h.no),
+      scale: 0.985,
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -146,6 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
   // ---------- 快捷入口 ----------
   Widget _quickEntries() {
     return Row(children: [
@@ -159,9 +163,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _quickItem(String label, String sub, IconData icon, VoidCallback onTap) {
     return Expanded(
-      child: InkWell(
+      child: PressableScale(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           decoration: BoxDecoration(
@@ -179,6 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 
   // ---------- 最近占卜 ----------
   Widget _recent() {
@@ -209,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _recentCard(HistoryRecord r) {
     final hex = r.hexNo != null ? widget.vm.hexByNo(r.hexNo!) : null;
-    return GestureDetector(
+    return PressableScale(
       onTap: () => widget.onOpenDetail(r.hexNo ?? 1, question: r.question),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
@@ -234,6 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 
   String _fmtTime(DateTime ts) =>
       '${ts.month}/${ts.day} ${ts.hour}:${ts.minute.toString().padLeft(2, '0')}';

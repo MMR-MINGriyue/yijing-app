@@ -2,12 +2,12 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../model/hex.dart';
 import 'widgets/share_card.dart';
+import 'widgets/yao_sheet.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/detail_viewmodel.dart';
 
@@ -53,11 +53,9 @@ class _DetailScreenState extends State<DetailScreen> {
             onPressed: _share,
             tooltip: '生成分享卡',
           ),
-          IconButton(
-            icon: Icon(widget.vm.isFav(h.no) ? Icons.star : Icons.star_border,
-                color: widget.vm.isFav(h.no) ? YiColors.cinnabar : YiColors.textTertiary),
-            onPressed: () => widget.vm.toggleFav(h.no),
-            tooltip: '收藏此卦',
+          _FavStar(
+            fav: widget.vm.isFav(h.no),
+            onTap: () => widget.vm.toggleFav(h.no),
           ),
         ],
       ),
@@ -238,57 +236,6 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  // ---------- 爻辞弹窗 (点击爻行, PWA 屏4 行为) ----------
-  void _showYaoSheet(Hex h, int i) {
-    final yao = h.yao[i];
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: YiColors.inkCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-        child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                Text('${yao.n} · ${h.name}卦',
-                    style: const TextStyle(
-                        fontSize: 16, letterSpacing: 2, color: YiColors.gold)),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.copy, size: 18, color: YiColors.textTertiary),
-                  onPressed: () async {
-                    await Clipboard.setData(ClipboardData(
-                        text: '${yao.n} · ${h.name}卦\n${yao.q}\n${yao.d}'));
-                    if (ctx.mounted) {
-                      ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
-                        content:
-                            Text('爻辞已复制', style: TextStyle(color: YiColors.textPrimary)),
-                        backgroundColor: Color(0xFF231A11),
-                        behavior: SnackBarBehavior.floating,
-                        duration: Duration(seconds: 2),
-                      ));
-                    }
-                  },
-                  tooltip: '复制爻辞',
-                ),
-              ]),
-              const SizedBox(height: 8),
-              Text(yao.q,
-                  style: const TextStyle(
-                      fontSize: 15, height: 1.7, color: YiColors.textPrimary)),
-              const SizedBox(height: 8),
-              Text(yao.d,
-                  style: const TextStyle(
-                      fontSize: 13, height: 1.7, color: YiColors.textSecondary)),
-            ]),
-      ),
-    );
-  }
-
   Widget _openTransformBtn(Hex h) {
     return SizedBox(
       width: double.infinity,
@@ -318,7 +265,7 @@ class _DetailScreenState extends State<DetailScreen> {
       const SizedBox(height: 6),
       for (var i = 0; i < 6; i++)
         InkWell(
-          onTap: () => _showYaoSheet(h, i),
+          onTap: () => showYaoSheet(context, h, i),
           borderRadius: BorderRadius.circular(10),
           child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
@@ -365,4 +312,63 @@ Future<void> _shareCardDefault(Hex hex, List<int> moving, String question) async
     files: [XFile(file.path)],
     text: '易道 · ${hex.name}卦 · ${hex.desc}',
   ));
+}
+
+
+/// 收藏星 — 切换时 scale 1→1.34→1 弹跳 (PWA v1.17 pop 反馈)
+class _FavStar extends StatefulWidget {
+  final bool fav;
+  final VoidCallback onTap;
+
+  const _FavStar({required this.fav, required this.onTap});
+
+  @override
+  State<_FavStar> createState() => _FavStarState();
+}
+
+class _FavStarState extends State<_FavStar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
+
+  @override
+  void didUpdateWidget(covariant _FavStar old) {
+    super.didUpdateWidget(old);
+    if (old.fav != widget.fav) _ctrl.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: AnimatedBuilder(
+        animation: _ctrl,
+        builder: (_, _) {
+          final t = _ctrl.value;
+          // 弹跳: 0→0.4 抬到 1.34, 0.4→1 回落; 峰值带 -10° 旋转
+          final phase = t < 0.4 ? Curves.easeOut.transform(t / 0.4)
+              : Curves.easeOutBack.transform((t - 0.4) / 0.6);
+          final scale = 1.0 + 0.34 * (t == 0 ? 0.0 : (1 - phase));
+          final rotate = t == 0 ? 0.0 : -0.17 * (1 - phase);
+          return Transform.rotate(
+            angle: rotate,
+            child: Transform.scale(
+              scale: scale,
+              child: Icon(
+                widget.fav ? Icons.star : Icons.star_border,
+                size: 22,
+                color: widget.fav ? YiColors.cinnabar : YiColors.textTertiary,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
