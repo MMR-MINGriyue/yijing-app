@@ -559,6 +559,15 @@ void main() {
       expect(hist.load().length, 1); // 同 ts 去重
       expect(vm.favCount, 2);
     });
+
+    test('备份字节解码: UTF-8 中文不乱码 (iter41 审查修复)', () {
+      const raw = '{"app":"yijing-app","q":"测一测事业运","hex":"坤为地"}';
+      final decoded = backupJsonFromBytes(utf8.encode(raw));
+      expect(decoded, raw);
+      expect(decoded.contains('事业运'), isTrue);
+      // String.fromCharCodes 的错误路径 (复现审查发现的乱码)
+      expect(String.fromCharCodes(utf8.encode('事业')) == '事业', isFalse);
+    });
   });
 
   group('HistoryViewModel — 收藏数联动', () {

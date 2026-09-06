@@ -2,6 +2,7 @@
 /// 抽象 FilePorter 便于单测; 真机实现 = path_provider + dart:io + file_picker + share_plus
 library;
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -19,6 +20,9 @@ abstract class FilePorter {
   /// 选取一个备份文件并返回其内容 (用户取消 → null)
   Future<String?> pickBackupText();
 }
+
+/// 备份 JSON 字节解码 — 必须 UTF-8 (文件含中文卦名/问题; iter41 审查修复乱码)
+String backupJsonFromBytes(List<int> bytes) => utf8.decode(bytes);
 
 /// 真机实现
 class DeviceFilePorter implements FilePorter {
@@ -50,7 +54,7 @@ class DeviceFilePorter implements FilePorter {
     final f = result.files.single;
     final bytes = f.bytes;
     if (bytes != null) {
-      return String.fromCharCodes(bytes);
+      return backupJsonFromBytes(bytes); // UTF-8 解码, 中文不乱码
     }
     final path = f.path;
     if (path == null) return null;
