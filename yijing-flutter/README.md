@@ -12,7 +12,7 @@
 | 入口 | 屏 | 说明 |
 |---|---|---|
 | 今日 (tab) | 屏1 今日一卦 | 时辰卦 (hour%16) + 干支问候 (十二时辰) + 刷新轮换 64 卦 + 最近占卜 2 条 |
-| 起卦 (tab) | 屏2 起卦 | 问题输入 + 方向 chips + 易经三式 (数字/蓍草/铜钱) + 推演动画 + 落历史; 更多占法子页: 小六壬 (农历真实起课) / 梅花数字式 / 八字 (iter34) |
+| 起卦 (tab) | 屏2 起卦 | 问题输入 + 方向 chips + 易经三式 (数字/蓍草/铜钱) + 推演动画 + 落历史; 更多占法子页: 小六壬 (农历真实起课) / 梅花易数 (时间式+数字式) / 八字排盘 (四柱十神大运, iter34) |
 | 卦库 (tab) | 屏3 六十四卦 | 网格 + 京房八宫筛选 + 搜索 (卦名/拼音/卦序) |
 | push | 屏4 卦辞解析 | 卦辞/爻辞/象传 三 Tab + 收藏 (持久化) + 直达屏5 |
 | push | 屏5 变卦推演 | 本卦/变卦/互卦 + 体用生克 + 点击爻切换动爻 |
@@ -28,7 +28,11 @@ viewmodel/              ChangeNotifier × 7 (状态+意图, 可单测)
 core/                   纯 Dart 引擎 (零 Flutter 依赖, dart run 可验)
   yi_calendar           干支历 (JDN/纪日/纪年/月干支/十二时辰)
   lunar_calendar        农历 1900-2100 (PWA 紧凑表逐位对齐)
+  solar_terms           分钟级节气表 1901-2100 (12 节, 机械提取)
   cast_engine           起卦: 铜钱/蓍草/数字 + 文本定数 (FNV-1a+DJB2, JS 语义仿真)
+  bazi                  八字: 四柱/藏干/十神/五行/日主强弱
+  dayun                 大运流年: 3日折1岁起运 + 8步大运 + 流年断语
+  meihua                梅花易数: 时间式/数字式/掷骰
   palace                京房八宫 (8×8 全覆盖)
   xiaoliuren            小六壬 (农历月日时 + 经典路径法)
 data/                   hex_library (64 卦全数据) + repositories
@@ -54,8 +58,8 @@ model/                  Hex / HistoryRecord (JSON 容错序列化) / CastResult
 
 ```
 flutter analyze                 # 0 issue
-flutter test                    # 68 项 (引擎/ViewModel/壳层冒烟)
-dart run tool/verify_engine.dart  # 59 项 (历法/农历/起卦/八宫/小六壬/数据)
+flutter test                    # 88 项 (引擎/ViewModel/壳层冒烟)
+dart run tool/verify_engine.dart  # 78 项 (历法/农历/节气/起卦/八字/大运/梅花/八宫/小六壬)
 flutter build apk --debug       # CI 自动构建
 ```
 
@@ -63,4 +67,6 @@ flutter build apk --debug       # CI 自动构建
 
 - **iter33 (v1.30.0)**: 纯 App 架构定型 — 7 屏全量接通, 真实持久化 (shared_preferences),
   核心引擎层移植 (干支历/农历/起卦/八宫/小六壬), CI test 步骤 pipefail 修复
-- 待办: 八字引擎 (四柱/大运流年) / 梅花时间式 / 分享卡 / 数据导入导出 / 屏 7 设置面板
+- **iter34 (v1.31.0)**: 八字排盘接通屏2 (四柱/藏干十神/五行/强弱/起运/8步大运,
+  分钟级节气表), 梅花时间式接通; 全引擎与 PWA node 对拍逐位一致
+- 待办: 分享卡 / 数据导入导出 / 设置面板 / 流年 UI 完善

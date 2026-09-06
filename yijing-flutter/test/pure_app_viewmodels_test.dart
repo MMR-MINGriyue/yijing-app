@@ -3,12 +3,12 @@ import 'package:yijing_transform/data/favorites_store.dart';
 import 'package:yijing_transform/data/history_repository.dart';
 import 'package:yijing_transform/data/history_store.dart';
 import 'package:yijing_transform/data/hex_repository.dart';
+import 'package:yijing_transform/viewmodel/me_viewmodel.dart';
 import 'package:yijing_transform/model/history.dart';
 import 'package:yijing_transform/viewmodel/cast_viewmodel.dart';
 import 'package:yijing_transform/viewmodel/hexgrid_viewmodel.dart';
 import 'package:yijing_transform/viewmodel/history_viewmodel.dart';
 import 'package:yijing_transform/viewmodel/home_viewmodel.dart';
-import 'package:yijing_transform/viewmodel/me_viewmodel.dart';
 
 void main() {
   late HexRepository repo;
@@ -135,6 +135,42 @@ void main() {
       final rec = hist.load().single;
       expect(rec.type, 'meihua');
       expect(rec.name, '晋');
+    });
+
+    test('八字排盘落历史 (真实四柱)', () {
+      final hist = newHist(seed: false);
+      final vm = CastViewModel(
+        hexRepo: repo,
+        history: hist,
+        now: () => DateTime(2026, 9, 6),
+      );
+      vm.setDirection('事业');
+      vm.computeBazi(DateTime(1990, 5, 15, 14, 30), 'male');
+      expect(vm.state.bazi, isNotNull);
+      expect(vm.state.dayun, isNotNull);
+      expect(vm.state.bazi!.pillars.map((p) => p.gz).join(' '), '庚午 辛巳 庚辰 癸未');
+      final rec = hist.load().single;
+      expect(rec.type, 'bazi');
+      expect(rec.hexNo, isNull);
+      expect(rec.question, contains('庚午 辛巳 庚辰 癸未'));
+      expect(rec.direction, '事业');
+    });
+
+    test('梅花时间式落历史 (真实农历)', () {
+      final hist = newHist(seed: false);
+      final vm = CastViewModel(
+        hexRepo: repo,
+        history: hist,
+        now: () => DateTime(2026, 9, 6, 10, 30),
+      );
+      vm.castMeihuaTime();
+      expect(vm.state.phase, CastPhase.done);
+      expect(vm.state.hex!.no, 18); // 山风蛊
+      expect(vm.state.result!.moving, [2]);
+      final rec = hist.load().single;
+      expect(rec.type, 'meihua');
+      expect(rec.name, '蛊');
+      expect(rec.question, contains('七月'));
     });
 
     test('更多占法子页开关', () {

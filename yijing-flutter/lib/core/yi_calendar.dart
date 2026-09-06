@@ -2,6 +2,8 @@
 /// 纪日连续可靠 (锚点 JD 2458511 = 甲子日), 纪年/纪月以立春为界
 library;
 
+import 'solar_terms.dart' show bjYear, jieList;
+
 const List<String> kGan = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
 const List<String> kZhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
 
@@ -45,6 +47,31 @@ int jdn(int y, int m, int d) {
       yy ~/ 100 +
       yy ~/ 400 -
       32045;
+}
+
+/// 月干支精确路径: 分钟级节气表 (iter34; 与 PWA 加载 PreciseTerms 后一致)
+/// 表外 (1901 前 / 2100 后) 回退日期级旧表
+String ganzhiMonthPrecise(DateTime dt) {
+  final ts = dt.millisecondsSinceEpoch;
+  final y0 = bjYear(ts);
+  final listY = jieList(y0);
+  if (listY == null) return ganzhiMonth(dt);
+  // 自当年大雪起往前找最新通过的节 (0=小寒..11=大雪)
+  var idx = 11;
+  for (var i = 11; i >= 0; i--) {
+    if (ts >= listY[i].ts) {
+      idx = i;
+      break;
+    }
+  }
+  final mi = (idx + 11) % 12; // 小寒→丑(11), 立春→寅(0)
+  var y = y0;
+  if (ts < listY[1].ts) y -= 1; // 干支年以立春为界
+  final yearGanIdx = (((y - 1984) % 60 + 60) % 60) % 10;
+  const monthGanStart = [2, 4, 6, 8, 0];
+  final ganIdx = (monthGanStart[yearGanIdx % 5] + mi) % 10;
+  final zhiIdx = (2 + mi) % 12; // 寅=2
+  return kGan[ganIdx] + kZhi[zhiIdx];
 }
 
 /// 干支纪日: 60 日一循环, 锚点 JD 2458511 = 甲子日 (PWA: (jdn-11)%60)

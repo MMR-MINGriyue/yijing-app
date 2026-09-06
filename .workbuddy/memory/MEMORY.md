@@ -5,9 +5,9 @@
 - **纯 App 主线 (iter33, v1.30.0)**: yijing-flutter/ 为唯一交付形态 — Flutter MVVM 7 屏全量 + shared_preferences 持久化; 架构见 yijing-flutter/ARCHITECTURE.md
 - 国风易经 PWA (仓库根目录) 保留为设计基准与数据源, 单 HTML + 零运行时依赖, 7 屏移动优先
 - 64 卦完整数据层 (HEX_LIBRARY + HEX_EXTRA + YijingEngine 起卦推演)
-- 四大占法: 易经（数字/蓍草/铜钱）、八字（iter34, 农历表已就绪）、小六壬（已接通）、梅花易数（数字式已接通）
+- 四大占法: 易经（数字/蓍草/铜钱）、八字（iter34 接通, 分钟级节气起运）、小六壬、梅花易数（时间式+数字式）— 全部接通
 - Flutter 架构 (iter33): app_shell(5 Tab IndexedStack) / view ×7 / viewmodel ×7 / core 纯 Dart 引擎 / data 双实现存储
-- core 引擎: yi_calendar(干支历) / lunar_calendar(农历 1900-2100) / cast_engine(起卦三式+JS语义哈希) / palace(京房八宫) / xiaoliuren(小六壬)
+- core 引擎: yi_calendar(干支历) / lunar_calendar(农历) / solar_terms(分钟级节气) / cast_engine(起卦+JS语义哈希) / bazi(四柱十神) / dayun(大运流年) / meihua(梅花三式) / palace(八宫) / xiaoliuren(小六壬); PWA node 对拍法 (stub window+双挂全局) 是移植正确性基座
 
 ## 设计系统要点
 
@@ -61,6 +61,7 @@
 - **JS→Dart 哈希三语义**: `^` Int32 有符号 / `*` double 53 位舍入 / `>>>0` 负数 mod — 直译必错, 见 cast_engine.numbersFromText 注释
 - **CI pipefail**: `flutter test | tail` 吞退出码, workflow 必须 `set -o pipefail` (iter33 修)
 - **Prefs 存储单独文件**: history_store_prefs 若并入核心 data 文件, dart run verify_engine 传递 dart:ui 崩溃
+- **PWA node 对拍法**: stub window + 00-core 历法 stub + eval PWA 源码, 全局双挂 (window.X + bare X); 补丁脚本用 Write 工具写文件, 不用 bash heredoc ($ 转义坑)
 - **IndexedStack 测试**: 离屏子树可被 find 命中; Tab 定位用 find.descendant(BottomNavigationBar, text)
 - 测试教训 (沿用): 跨午夜断言动态推; 注入 MemoryHistoryStore(seedSamples: false) 保确定性; 计数相等的 sort 断言不稳定 (Dart sort 非稳定)
 - PWA: `.pwtest/check-syntax.js` 语法冒烟; `.pwtest/iter*.js` Playwright + Edge (executablePath 显式) 断言; iter17-28 共 248 项回归

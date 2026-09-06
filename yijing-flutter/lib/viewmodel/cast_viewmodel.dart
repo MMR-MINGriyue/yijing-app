@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 
+import '../core/bazi.dart';
 import '../core/cast_engine.dart';
+import '../core/dayun.dart';
+import '../core/meihua.dart';
 import '../core/xiaoliuren.dart';
 import '../data/history_repository.dart';
 import '../data/hex_repository.dart';
@@ -48,6 +51,8 @@ class CastState {
   final Hex? hex;
   final XiaoLiuRenResult? xlr;
   final bool morePage; // 更多占法子页
+  final BaZiChart? bazi;
+  final DaYunChart? dayun;
 
   const CastState({
     this.phase = CastPhase.form,
@@ -58,13 +63,16 @@ class CastState {
     this.hex,
     this.xlr,
     this.morePage = false,
+    this.bazi,
+    this.dayun,
   });
 
   CastState copyWith({
     CastPhase? phase, CastMethod? method, String? question,
     String? direction, CastResult? result, Hex? hex,
     XiaoLiuRenResult? xlr, bool? morePage, bool clearResult = false,
-    bool clearXlr = false,
+    bool clearXlr = false, BaZiChart? bazi, DaYunChart? dayun,
+    bool clearBazi = false,
   }) =>
       CastState(
         phase: phase ?? this.phase,
@@ -75,6 +83,8 @@ class CastState {
         hex: clearResult ? null : (hex ?? this.hex),
         xlr: clearXlr ? null : (xlr ?? this.xlr),
         morePage: morePage ?? this.morePage,
+        bazi: clearBazi ? null : (bazi ?? this.bazi),
+        dayun: clearBazi ? null : (dayun ?? this.dayun),
       );
 }
 
@@ -193,6 +203,51 @@ class CastViewModel extends ChangeNotifier {
       moving: List.of(res.moving),
     ));
     _state = _state.copyWith(phase: CastPhase.done, result: res, hex: hex);
+    notifyListeners();
+  }
+
+  /// 八字排盘 (真实农历 + 分钟级节气; 落历史)
+  void computeBazi(DateTime birth, String gender) {
+    final chart = computeBaZi(birth);
+    if (chart == null) return;
+    final dayun = analyzeDaYun(birth, gender, now: _clock);
+    _history.add(HistoryRecord(
+      question: '八字排盘 · ${chart.pillars.map((p) => p.gz).join(' ')}',
+      direction: _state.direction,
+      directionColor: kDirections
+          .firstWhere((d) => d.dir == _state.direction, orElse: () => kDirections.first)
+          .color,
+      type: 'bazi',
+      ts: _clock,
+    ));
+    _state = _state.copyWith(bazi: chart, dayun: dayun);
+    notifyListeners();
+  }
+
+  /// 梅花易数 · 时间式 (农历真实数据; 落历史, 复用 done 结果视图)
+  void castMeihuaTime() {
+    final now = _clock;
+    final res = meiHuaByTime(now);
+    if (res == null) return;
+    final hex = _hexRepo.hexByNo(res.hexNo);
+    _history.add(HistoryRecord(
+      hexNo: hex.no,
+      name: hex.name,
+      question: '梅花时间式 · ${res.source}',
+      direction: _state.direction,
+      directionColor: kDirections
+          .firstWhere((d) => d.dir == _state.direction, orElse: () => kDirections.first)
+          .color,
+      type: 'meihua',
+      ts: now,
+      lines: List.of(res.lines),
+      moving: [res.movingIdx],
+    ));
+    _state = _state.copyWith(
+      phase: CastPhase.done,
+      hex: hex,
+      result: CastResult(lines: res.lines, moving: [res.movingIdx], method: 'numeric'),
+    );
     notifyListeners();
   }
 
