@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../model/history.dart';
+import '../service/reminder_service.dart';
 import '../theme/yijing_theme.dart';
 import '../view/cast_screen.dart';
 import '../view/detail_screen.dart';
@@ -37,6 +40,35 @@ class _AppShellState extends State<AppShell> {
   late final HistoryViewModel _historyVm = HistoryViewModel();
   late final MeViewModel _meVm = MeViewModel();
   late final SettingsViewModel _settingsVm = SettingsViewModel();
+
+  StreamSubscription<String>? _tapSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // iter41: 点通知直达起卦屏 (前台/后台点击)
+    _tapSub = NotificationTapBus.instance.stream.listen(_onNotificationPayload);
+    _bootFromNotification(); // 冷启动 (通知拉起)
+  }
+
+  @override
+  void dispose() {
+    _tapSub?.cancel();
+    super.dispose();
+  }
+
+  /// 冷启动来源: 由每日提醒通知拉起 → 直接落到起卦屏
+  Future<void> _bootFromNotification() async {
+    try {
+      final payload = await ReminderService().launchPayload();
+      if (!mounted || payload == null) return;
+      _onNotificationPayload(payload);
+    } catch (_) {} // 无通道环境 (测试/桌面) 静默
+  }
+
+  void _onNotificationPayload(String payload) {
+    if (payload == kRemindPayloadCast) _go(1); // 屏2 起卦
+  }
 
   void _openSettings() {
     showSettingsSheet(context, _settingsVm);

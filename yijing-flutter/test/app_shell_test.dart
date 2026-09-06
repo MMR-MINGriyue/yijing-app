@@ -5,7 +5,9 @@ import 'package:yijing_transform/data/hex_repository.dart';
 import 'package:yijing_transform/view/widgets/share_card.dart';
 import 'package:yijing_transform/viewmodel/detail_viewmodel.dart';
 import 'package:yijing_transform/view/detail_screen.dart';
+import 'package:yijing_transform/view/hero_fullscreen.dart';
 import 'package:yijing_transform/data/favorites_store.dart';
+import 'package:yijing_transform/service/reminder_service.dart';
 
 /// App 壳层冒烟: 5 Tab 渲染 + 详情路由 (纯 App 架构 iter33)
 void main() {
@@ -34,15 +36,51 @@ void main() {
     expect(find.byIcon(Icons.person_outline), findsOneWidget);
   });
 
-  testWidgets('今日一卦 hero 点击 → 推入卦辞解析路由', (tester) async {
+  testWidgets('今日一卦 hero 点击 → 全屏详解 → 依此卦起卦落起卦屏', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: AppShell()));
     await tester.pumpAndSettle();
     await tester.tap(find.text('今日一卦 · 依时而定'));
     await tester.pumpAndSettle();
-    expect(find.text('卦 辞 解 析'), findsOneWidget); // 详情页 AppBar
-    await tester.pageBack();
+    // iter38: hero 进全屏详解 (不再是直接推详情页)
+    expect(find.text('本 卦 · 详 解'), findsOneWidget);
+    // 全屏页 ListView 是唯一可滚动体 (壳层 IndexedStack 另有 5 个屏的 Scrollable)
+    final fsScroll = find.descendant(
+      of: find.byType(HeroFullscreen),
+      matching: find.byType(Scrollable),
+    );
+    // 六爻手风琴: 滚到爻区 → 点初爻展开 (ListView 只构建可见 children)
+    await tester.scrollUntilVisible(find.text('点 击 任 意 爻 查 看 爻 辞'), 300, scrollable: fsScroll);
+    expect(find.text('点 击 任 意 爻 查 看 爻 辞'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('初'), 300, scrollable: fsScroll);
+    await tester.tap(find.text('初'));
     await tester.pumpAndSettle();
-    expect(find.text('最 近 占 卜'), findsOneWidget);
+    // 底部「依此卦起卦」→ 关闭全屏 + 切到起卦 Tab
+    await tester.scrollUntilVisible(find.text('依此卦起卦'), 300, scrollable: fsScroll);
+    await tester.tap(find.text('依此卦起卦'));
+    await tester.pumpAndSettle();
+    expect(find.text('本 卦 · 详 解'), findsNothing);
+    expect(tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar)).currentIndex, 1);
+  });
+
+  testWidgets('点通知 → 直达起卦屏 (iter41 每日提醒 payload)', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: AppShell()));
+    await tester.pumpAndSettle();
+    BottomNavigationBar bar() =>
+        tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
+    expect(bar().currentIndex, 0);
+    NotificationTapBus.instance.emit(kRemindPayloadCast);
+    await tester.pumpAndSettle();
+    expect(bar().currentIndex, 1); // 屏2 起卦
+  });
+
+  testWidgets('设置面板: 备份为文件 / 从文件导入 (iter41)', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: AppShell()));
+    await tester.pumpAndSettle();
+    await goTab(tester, '我的');
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pumpAndSettle();
+    expect(find.text('备份为文件'), findsOneWidget);
+    expect(find.text('从文件导入'), findsOneWidget);
   });
 
   testWidgets('Tab 切换: 卦库 64 卦 + 历史 + 我的 + 起卦', (tester) async {

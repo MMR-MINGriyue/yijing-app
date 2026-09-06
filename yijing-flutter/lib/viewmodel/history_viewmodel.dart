@@ -41,7 +41,8 @@ class HistoryViewModel extends ChangeNotifier {
   final HistoryRepository _repo;
   final FavoritesRepository _favs;
   late HistoryState _s;
-  late final ({int minY, int minM, int maxY, int maxM}) _range;
+  // 非 final: 删除记录后需按最新数据刷新月份范围 (iter41 修复 LateInitializationError)
+  late ({int minY, int minM, int maxY, int maxM}) _range;
 
   HistoryViewModel({HistoryRepository? repo, FavoritesRepository? favs})
       : _repo = repo ?? HistoryRepository.instance,

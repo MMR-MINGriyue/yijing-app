@@ -58,10 +58,40 @@ model/                  Hex / HistoryRecord (JSON 容错序列化) / CastResult
 
 ```
 flutter analyze                 # 0 issue
-flutter test                    # 108 项 (引擎/ViewModel/壳层/动效组件/提醒调度)
+flutter test                    # 120 项 (引擎/ViewModel/壳层/动效组件/提醒调度/文件备份)
 dart run tool/verify_engine.dart  # 78 项 (历法/农历/节气/起卦/八字/大运/梅花/八宫/小六壬)
-flutter build apk --debug       # CI 自动构建
+flutter build apk --debug       # CI 自动构建 (Android)
+flutter build ios --no-codesign # CI 在 macos-15 上自动构建 (iter41)
 ```
+
+## 平台交付
+
+### Android (`android/`)
+
+- applicationId `com.yijing.yijing_transform`, 启动期 `LaunchTheme` 锁定墨色 #14100B
+- 通知权限: `POST_NOTIFICATIONS` + `SCHEDULE_EXACT_ALARM` + `RECEIVE_BOOT_COMPLETED`
+- App 名: 「易道」 (manifest `android:label`)
+- 图标: 自适应图标 (墨底 + 暗金坎卦 + 朱砂九二动爻) 与设置面板 HexGlyph 视觉同源
+
+### iOS (`ios/`, iter41 新增)
+
+- Bundle ID `com.yijing.yijingTransform`, Deployment Target iOS 15.0, 竖屏锁定
+- App 名: 「易道」 (`CFBundleDisplayName`)
+- `Info.plist` 已声明: `UIFileSharingEnabled` (Files App 可视备份目录) +
+  `LSSupportsOpeningDocumentsInPlace` + `ITSAppUsesNonExemptEncryption=false`
+- `LaunchScreen.storyboard`: 墨底 #14100B, 无 Flutter logo, 避免冷启动白闪
+- AppIcon (`Assets.xcassets/AppIcon.appiconset`): 与 Android 同源的坎卦九二朱砂动爻图标,
+  `tool/gen_ios_icons.py` 一键生成全部 18 个尺寸 (含 1024×1024 marketing 尺寸)
+- `Podfile`: 标准 Flutter 模板, 与 SwiftPM 共存 (file_picker / share_plus /
+  flutter_local_notifications 仍为 CocoaPods-only)
+- 本地 mac 构建:
+  ```bash
+  cd yijing-flutter
+  flutter pub get
+  cd ios && pod install && cd ..
+  flutter build ios --no-codesign --debug
+  ```
+- CI: `.github/workflows/ios-build.yml` (ubuntu 冒烟 → macos-15 真实构建 + 上传 .app)
 
 ## 迭代状态
 
@@ -80,4 +110,9 @@ flutter build apk --debug       # CI 自动构建
 - **iter39 (v1.35.0)**: 卡面渐变全屏铺开 + 卦库宫筛选网格过渡动画 + 历史筛选 chips 动效 +
   每日占卜提醒 (flutter_local_notifications 定时通知, 设置面板开关/时间, 重启自动恢复,
   模拟器实测 08:00 整点弹出)
-- 待办: 文件级导入导出 / iOS 适配 / 提醒点通知直达起卦屏
+- **iter41 (v1.36.0)**: 文件级导入导出 (file_picker + share_plus: 备份为 .json 文件并系统分享 /
+  从文件选择导入, 数据格式与 PWA 互通) + 通知点击直达起卦屏
+  (NotificationTapBus 单总线 + Darwin/macOS 通知通道 + 冷启动 payload 还原) +
+  iOS 工程脚手架 (Runner / Info.plist 中文化 / Assets.xcassets AppIcon 与 Android 同源
+  生成 / LaunchScreen 墨色 / Podfile) + Android 启动屏全墨化 (避免白闪) + App 名「易道」
+- 待办: APK 真机验证启动屏 / iOS 模拟器实测 / 端到端 (PWA ↔ App) 备份恢复演练

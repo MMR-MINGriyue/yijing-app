@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yijing_transform/data/favorites_store.dart';
 import 'package:yijing_transform/data/history_repository.dart';
@@ -5,6 +7,7 @@ import 'package:yijing_transform/data/history_store.dart';
 import 'package:yijing_transform/data/hex_repository.dart';
 import 'package:yijing_transform/viewmodel/me_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:yijing_transform/service/backup_service.dart';
 import 'package:yijing_transform/service/reminder_service.dart';
 import 'package:yijing_transform/viewmodel/settings_viewmodel.dart';
 import 'package:yijing_transform/model/history.dart';
@@ -478,6 +481,84 @@ void main() {
       expect(vm.remindEnabled, isTrue);
       expect(vm.reminderTimeLabel, '06:40');
     });
+
+    test('launchPayload 透传冷启动来源 (iter41)', () async {
+      final svc = ReminderService(scheduler: fake);
+      expect(await svc.launchPayload(), isNull);
+      fake.launch = kRemindPayloadCast;
+      expect(await svc.launchPayload(), kRemindPayloadCast);
+    });
+
+    test('通知点击总线: payload 广播 (iter41)', () async {
+      final seen = <String>[];
+      final sub = NotificationTapBus.instance.stream.listen(seen.add);
+      NotificationTapBus.instance.emit(kRemindPayloadCast);
+      await Future<void>.delayed(Duration.zero);
+      expect(seen, [kRemindPayloadCast]);
+      await sub.cancel();
+    });
+  });
+
+  group('BackupService — iter41 文件级导入导出', () {
+    test('文件名: yijing-backup-年月日-时分.json', () {
+      final svc = BackupService(porter: FakePorter());
+      expect(svc.fileNameFor(DateTime(2026, 9, 6, 20, 48)),
+          'yijing-backup-20260906-2048.json');
+      expect(svc.fileNameFor(DateTime(2026, 1, 2, 3, 4)),
+          'yijing-backup-20260102-0304.json');
+    });
+
+    test('exportToFile 写入内容并返回路径', () async {
+      final porter = FakePorter();
+      final svc = BackupService(porter: porter);
+      final path = await svc.exportToFile('{"app":"yijing-app"}',
+          now: DateTime(2026, 9, 6, 20, 48));
+      expect(path, '/tmp/yijing-backup-20260906-2048.json');
+      expect(porter.written[path], '{"app":"yijing-app"}');
+    });
+
+    test('shareBackup 写文件 + 调起分享', () async {
+      final porter = FakePorter();
+      final svc = BackupService(porter: porter);
+      await svc.shareBackup('{}', now: DateTime(2026, 9, 6, 20, 48));
+      expect(porter.shared, hasLength(1));
+      expect(porter.shared.single, contains('yijing-backup'));
+    });
+
+    test('pickBackupText: 取消 → null, 选中 → 文本', () async {
+      final porter = FakePorter()..picked = '{"history":[]}';
+      final svc = BackupService(porter: porter);
+      expect(await svc.pickBackupText(), '{"history":[]}');
+      porter.picked = null;
+      expect(await svc.pickBackupText(), isNull);
+    });
+
+    test('VM importFromFile: 取消返回 null / 有效 JSON 合并去重', () async {
+      final porter = FakePorter();
+      final hist = newHist(seed: false);
+      final vm = SettingsViewModel(
+        history: hist,
+        favs: FavoritesRepository(store: MemoryFavoritesStore()),
+        reminder: ReminderService(scheduler: FakeScheduler()),
+        backup: BackupService(porter: porter),
+      );
+      porter.picked = null;
+      expect(await vm.importFromFile(), isNull);
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      porter.picked = jsonEncode({
+        'app': 'yijing-app',
+        'history': [
+          {'ts': now, 'hexNo': 11, 'question': '文件导入测试', 'dir': '事业', 'type': '数字'},
+          {'ts': now, 'hexNo': 11, 'question': '文件导入测试', 'dir': '事业', 'type': '数字'},
+        ],
+        'favorites': [11, 12],
+      });
+      final msg = await vm.importFromFile();
+      expect(msg, contains('新增 1 条记录'));
+      expect(hist.load().length, 1); // 同 ts 去重
+      expect(vm.favCount, 2);
+    });
   });
 
   group('HistoryViewModel — 收藏数联动', () {
@@ -490,11 +571,34 @@ void main() {
 }
 
 
+/// 备份文件端口 Fake (iter41)
+class FakePorter implements FilePorter {
+  final Map<String, String> written = {};
+  final List<String> shared = [];
+  String? picked;
+
+  @override
+  Future<String> writeBackup(String json, {required String fileName}) async {
+    final path = '/tmp/$fileName';
+    written[path] = json;
+    return path;
+  }
+
+  @override
+  Future<void> shareFile(String path, {String? subject, String? text}) async {
+    shared.add(path);
+  }
+
+  @override
+  Future<String?> pickBackupText() async => picked;
+}
+
 /// 提醒调度 Fake (VM/服务单测)
 class FakeScheduler implements ReminderScheduler {
   bool granted = true;
   int schedules = 0;
   int cancels = 0;
+  String? launch; // 冷启动 payload (null = 非通知拉起)
   ({int hour, int minute})? last;
 
   @override
@@ -508,4 +612,7 @@ class FakeScheduler implements ReminderScheduler {
 
   @override
   Future<void> cancel() async => cancels++;
+
+  @override
+  Future<String?> launchPayload() async => launch;
 }

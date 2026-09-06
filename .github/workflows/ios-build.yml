@@ -1,0 +1,101 @@
+name: Build iOS App (yijing-transform)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'yijing-flutter/**'
+      - '.github/workflows/ios-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  # 仅触发 verify_engine 与 flutter test 的 Linux 冒烟
+  # (与 flutter-build.yml 联动, Linux 完成后再上 macOS 构建)
+  smoke:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: yijing-flutter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+          cache: true
+      - name: Verify engine + tests
+        env:
+          TZ: Asia/Shanghai
+          PROGRAMFILES_X86: ${{ matrix.os == 'windows' && 'C:\\Program Files (x86)' || '' }}
+        run: |
+          set -o pipefail
+          dart run tool/verify_engine.dart
+          flutter test --no-pub 2>&1 | tail -60
+
+  ipa:
+    needs: smoke
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: yijing-flutter
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+          cache: true
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Show toolchain
+        run: |
+          flutter --version
+          xcodebuild -version
+          pod --version
+          ruby --version
+
+      - name: Install CocoaPods
+        run: |
+          if ! command -v pod >/dev/null 2>&1; then
+            sudo gem install --no-document cocoapods
+          fi
+          pod --version
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Install iOS Pods
+        working-directory: yijing-flutter/ios
+        # Flutter 3.47 与 CocoaPods-only plugin (file_picker / share_plus / flutter_local_notifications) 共存
+        run: pod install
+
+      - name: Build iOS (no codesign)
+        env:
+          # 跳过代码签名, CI 不上传 App Store
+          CODE_SIGNING_ALLOWED: NO
+          CODE_SIGNING_REQUIRED: NO
+        run: |
+          set -o pipefail
+          flutter build ios --debug --no-codesign 2>&1 | tail -40
+
+      - name: Verify .app bundle
+        working-directory: yijing-flutter/build/ios/iphoneos
+        run: |
+          ls -la Runner.app 2>/dev/null || ls -la
+
+      - name: Upload .app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yijing-flutter-ios-app
+          path: yijing-flutter/build/ios/iphoneos/Runner.app
+          retention-days: 30

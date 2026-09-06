@@ -26,8 +26,8 @@ class HeroFullscreen extends StatefulWidget {
         barrierDismissible: true,
         transitionDuration: const Duration(milliseconds: 380),
         reverseTransitionDuration: const Duration(milliseconds: 280),
-        pageBuilder: (_, __, ___) => HeroFullscreen(hex: hex, onGoCast: onGoCast),
-        transitionsBuilder: (_, anim, __, child) {
+        pageBuilder: (_, _, _) => HeroFullscreen(hex: hex, onGoCast: onGoCast),
+        transitionsBuilder: (_, anim, _, child) {
           final curve = Curves.easeOutCubic.transform(anim.value);
           return FadeTransition(
             opacity: anim,
@@ -310,6 +310,9 @@ class _HeroFullscreenState extends State<HeroFullscreen> {
     final stamp = DateTime.now().millisecondsSinceEpoch;
     final file = File('${dir.path}/yijing_hero_$stamp.png');
     await file.writeAsBytes(byteData!.buffer.asUint8List());
-    await Share.shareXFiles([XFile(file.path)], text: '易道 · 今日一卦 ${hex.name}卦');
+    await SharePlus.instance.share(ShareParams( // share_plus 12: Share.shareXFiles 已弃用
+      files: [XFile(file.path)],
+      text: '易道 · 今日一卦 ${hex.name}卦',
+    ));
   }
 }

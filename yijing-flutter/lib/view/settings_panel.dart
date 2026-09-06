@@ -68,6 +68,31 @@ class _SettingsPanelState extends State<SettingsPanel> {
     _toast('已复制导出 JSON 到剪贴板 (${widget.vm.recordCount} 条记录 · ${widget.vm.favCount} 卦收藏)');
   }
 
+  /// 备份为 .json 文件 → 系统分享 (可存 Files/网盘/微信) (iter41)
+  Future<void> _backupFile() async {
+    try {
+      final path = await widget.vm.shareBackupFile();
+      if (!mounted) return;
+      _toast('已生成备份文件: ${path.split(RegExp(r'[\\/]')).last}');
+    } catch (e) {
+      if (!mounted) return;
+      _toast('备份失败：$e');
+    }
+  }
+
+  /// 从 .json 文件导入 (iter41)
+  Future<void> _importFile() async {
+    try {
+      final msg = await widget.vm.importFromFile();
+      if (!mounted || msg == null) return; // 取消选择
+      _toast(msg);
+      setState(() {});
+    } catch (e) {
+      if (!mounted) return;
+      _toast('导入失败：$e');
+    }
+  }
+
   Future<void> _import() async {
     final controller = TextEditingController();
     final ok = await showDialog<bool>(
@@ -171,10 +196,22 @@ class _SettingsPanelState extends State<SettingsPanel> {
           onTap: _export,
         ),
         _item(
+          icon: Icons.ios_share_outlined,
+          name: '备份为文件',
+          desc: '生成 .json 备份并调起系统分享 (可存网盘/微信)',
+          onTap: _backupFile,
+        ),
+        _item(
           icon: Icons.file_upload_outlined,
           name: '导入历史数据',
           desc: '粘贴导出的 JSON，合并到本地（自动去重）',
           onTap: _import,
+        ),
+        _item(
+          icon: Icons.folder_open_outlined,
+          name: '从文件导入',
+          desc: '选择 .json 备份文件，合并到本地（自动去重）',
+          onTap: _importFile,
         ),
         _item(
           icon: Icons.delete_outline,

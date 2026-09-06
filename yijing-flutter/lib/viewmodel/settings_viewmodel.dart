@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../data/favorites_store.dart';
 import '../data/history_repository.dart';
 import '../model/history.dart';
+import '../service/backup_service.dart';
 import '../service/reminder_service.dart';
 
 /// ViewModel — 设置面板 (导出 / 导入合并 / 清空 / 重置 / 每日提醒)
@@ -13,14 +14,17 @@ class SettingsViewModel extends ChangeNotifier {
   final HistoryRepository _history;
   final FavoritesRepository _favs;
   final ReminderService _reminder;
+  final BackupService _backup;
 
   SettingsViewModel({
     HistoryRepository? history,
     FavoritesRepository? favs,
     ReminderService? reminder,
+    BackupService? backup,
   })  : _history = history ?? HistoryRepository.instance,
         _favs = favs ?? FavoritesRepository.instance,
-        _reminder = reminder ?? ReminderService();
+        _reminder = reminder ?? ReminderService(),
+        _backup = backup ?? BackupService();
 
   bool _remindEnabled = false;
   int _remindHour = 8;
@@ -77,7 +81,22 @@ class SettingsViewModel extends ChangeNotifier {
     return const JsonEncoder.withIndent('  ').convert(payload);
   }
 
-  /// 导入合并: 历史按 ts 去重 + 收藏并集
+  /// 导出为本地文件 → 调起系统分享; 返回文件路径 (iter41)
+  Future<String> shareBackupFile() => _backup.shareBackup(exportJson());
+
+  /// 导出为本地文件 (不分享); 返回文件路径 (iter41)
+  Future<String> exportToFile() => _backup.exportToFile(exportJson());
+
+  /// 选取备份文件并导入; 用户取消 → null (iter41)
+  Future<String?> importFromFile() async {
+    final text = await _backup.pickBackupText();
+    if (text == null) return null;
+    try {
+      return importJson(text);
+    } on FormatException {
+      return '导入失败：不是有效的 JSON';
+    }
+  }
   /// 返回结果文案; 抛 FormatException 表示 JSON 无效
   String importJson(String raw) {
     final data = jsonDecode(raw);

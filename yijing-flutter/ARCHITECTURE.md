@@ -1,4 +1,4 @@
-# 易道 纯 App 架构 (iter33, v1.30.0)
+# 易道 纯 App 架构 (iter41, v1.36.0)
 
 > 目标: 脱离 PWA + Capacitor WebView 混合形态, 以 Flutter 原生 App 作为唯一交付形态。
 > PWA (根目录) 保留为设计基准与数据源; 本目录为纯 App 主线。
@@ -28,7 +28,9 @@
 │            palace        京房八宫 (卦序→宫/世位)           │
 │            xiaoliuren    小六壬 (月日时三数落宫)           │
 ├──────────────────────────────────────────────────────────┤
-│ 服务层     service/reminder_service — 每日提醒 (抽象调度器 + 插件实现)
+│ 服务层     service/
+│            reminder_service  每日提醒 (调度抽象 + 插件 + 通知点击总线 + 冷启动)
+│            backup_service    文件级备份 (FilePorter 抽象 + 真机: 临时目录+file_picker+share_plus)
 │ 数据层     data/                                           │
 │            hex_library          64 卦完整数据库 (卦辞/爻辞) │
 │            hex_repository       卦库访问 + 变卦推演引擎     │
@@ -83,4 +85,8 @@ core 与 data 不 import Flutter (仅 ViewModel 用 foundation.ChangeNotifier)�
   PWA 卡面逐项对齐) + share_plus 系统分享 + 屏4 爻辞弹窗复制; +share_plus/path_provider
 - iter39 (v1.35.0): 卡面渐变全屏 + 筛选/chips 动效 + service/reminder_service
   (flutter_local_notifications + timezone, 调度抽象可测, Manifest 权限/接收器) + desugaring
-- 待办: 文件级导入导出 / iOS 适配 / 点通知直达起卦屏
+- iter41 (v1.36.0): service/backup_service (FilePorter 抽象 + 真机实现, 设置面板增
+  「备份为文件」「从文件导入」, 数据格式与 PWA 互通) + 通知点击直达起卦屏
+  (NotificationTapBus 单总线 + Darwin/macOS 通道 + 冷启动 payload 还原) +
+  iOS 工程脚手架 (Runner/Info.plist 中文化/Podfile/AppIcon 与 Android 同源生成) +
+  Android 启动屏全墨化 (避免白闪) + App 名「易道」
