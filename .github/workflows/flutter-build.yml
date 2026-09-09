@@ -56,6 +56,10 @@ jobs:
           set -o pipefail
           flutter test --no-pub 2>&1 | tail -60
 
+      - name: Use official Gradle distribution on CI
+        # 本地 wrapper 用腾讯镜像 (国内快); CI 在美国, 中国 CDN 间歇超时会挂 Build 步骤 (iter42 修)
+        run: sed -i 's|mirrors.cloud.tencent.com/gradle|services.gradle.org/distributions|' android/gradle/wrapper/gradle-wrapper.properties
+
       - name: Build debug APK
         run: flutter build apk --debug
 
