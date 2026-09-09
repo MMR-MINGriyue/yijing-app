@@ -75,10 +75,16 @@ class _AppShellState extends State<AppShell> {
   }
 
   // ---------- 路由 ----------
-  void _openDetail(int hexNo, {String? question, List<int> moving = const []}) {
+  void _openDetail(int hexNo,
+      {String? question, List<int> moving = const [], String? direction}) {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => DetailScreen(
-        vm: DetailViewModel(hexNo: hexNo, question: question ?? '', moving: moving),
+        vm: DetailViewModel(
+          hexNo: hexNo,
+          question: question ?? '',
+          moving: moving,
+          direction: direction ?? '',
+        ),
         onOpenTransform: (hex) => _openTransform(hex.no, moving),
       ),
     ));
@@ -96,7 +102,8 @@ class _AppShellState extends State<AppShell> {
 
   void _openRecord(HistoryRecord r) {
     if (r.hexNo != null) {
-      _openDetail(r.hexNo!, question: r.question, moving: r.moving ?? const []);
+      _openDetail(r.hexNo!,
+          question: r.question, moving: r.moving ?? const [], direction: r.direction);
     }
   }
 
@@ -116,7 +123,8 @@ class _AppShellState extends State<AppShell> {
         ),
         CastScreen(
           vm: _castVm,
-          onOpenDetail: (hex, {question}) => _openDetail(hex.no, question: question),
+          onOpenDetail: (hex, {question}) => _openDetail(hex.no,
+              question: question, direction: _castVm.state.direction),
         ),
         HexGridScreen(vm: _gridVm, onOpenDetail: _openDetail),
         HistoryScreen(vm: _historyVm, onOpenRecord: _openRecord),

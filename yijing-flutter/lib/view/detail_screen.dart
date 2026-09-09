@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../model/hex.dart';
+import '../data/hex_advice.dart';
 import 'widgets/share_card.dart';
 import 'widgets/yao_sheet.dart';
 import '../theme/yijing_theme.dart';
@@ -184,8 +185,11 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  // ---------- 个性化建议 ----------
+  // ---------- 方向建议 (iter42: 事业/感情/财运 三分栏, per-hex 数据源) ----------
   Widget _advice(Hex h) {
+    final dir = widget.vm.adviceDir;
+    final text = kHexAdvice[h.no]?[dir] ??
+        '按「${h.virtue}」之义行事，守正以待时。';
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -194,7 +198,7 @@ class _DetailScreenState extends State<DetailScreen> {
         border: Border.all(color: const Color(0x55D04D3E)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('个 性 化 建 议', style: const TextStyle(
+        Text('方 向 建 议', style: const TextStyle(
             fontSize: 11, letterSpacing: 3, color: YiColors.cinnabar)),
         const SizedBox(height: 8),
         Text('综 述 · ${h.virtue}', style: const TextStyle(
@@ -202,7 +206,53 @@ class _DetailScreenState extends State<DetailScreen> {
         const SizedBox(height: 6),
         Text(h.intro, style: const TextStyle(
             fontSize: 13, height: 1.7, color: YiColors.textSecondary)),
+        const SizedBox(height: 12),
+        Row(children: [
+          for (final d in kAdviceDirections) ...[
+            Expanded(child: _adviceChip(d)),
+            if (d != kAdviceDirections.last) const SizedBox(width: 8),
+          ],
+        ]),
+        const SizedBox(height: 10),
+        AnimatedSwitcher(
+          duration: YiMotion.base,
+          switchInCurve: YiMotion.easeOutExpo,
+          switchOutCurve: YiMotion.easeOutExpo,
+          child: Text(
+            text,
+            key: ValueKey('advice-${h.no}-$dir'),
+            style: const TextStyle(
+                fontSize: 13, height: 1.7, color: YiColors.gold),
+          ),
+        ),
       ]),
+    );
+  }
+
+  Widget _adviceChip(String d) {
+    final selected = widget.vm.adviceDir == d;
+    final color = switch (d) {
+      '事业' => YiColors.cinnabar,
+      '感情' => YiColors.pine,
+      _ => YiColors.gold,
+    };
+    return InkWell(
+      onTap: () => widget.vm.setAdviceDir(d),
+      borderRadius: BorderRadius.circular(10),
+      child: AnimatedContainer(
+        duration: YiMotion.base,
+        curve: YiMotion.easeOutExpo,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.18) : YiColors.inkCard,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: selected ? color : YiColors.stroke),
+        ),
+        alignment: Alignment.center,
+        child: Text(d, style: TextStyle(
+            fontSize: 12, letterSpacing: 2,
+            color: selected ? color : YiColors.textSecondary)),
+      ),
     );
   }
 
