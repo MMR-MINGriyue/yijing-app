@@ -3,6 +3,8 @@ name: Build Flutter APK (yijing-transform)
 on:
   push:
     branches: [main]
+    # tag 推送也要触发 — release attach 步骤以 refs/tags/ 为条件 (iter42 补)
+    tags: ['v*']
     paths:
       - 'yijing-flutter/**'
       - '.github/workflows/flutter-build.yml'
