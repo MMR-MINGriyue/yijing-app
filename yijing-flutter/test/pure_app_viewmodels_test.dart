@@ -11,6 +11,12 @@ import 'package:yijing_transform/service/backup_service.dart';
 import 'package:yijing_transform/service/reminder_service.dart';
 import 'package:yijing_transform/viewmodel/settings_viewmodel.dart';
 import 'package:yijing_transform/model/history.dart';
+import 'package:yijing_transform/core/bazi.dart';
+import 'package:yijing_transform/core/bazi_extra.dart';
+import 'package:yijing_transform/core/bazi_reading.dart';
+import 'package:yijing_transform/core/yi_calendar.dart';
+import 'package:yijing_transform/data/bazi_store.dart';
+import 'package:yijing_transform/viewmodel/bazi_viewmodel.dart';
 import 'package:yijing_transform/viewmodel/cast_viewmodel.dart';
 import 'package:yijing_transform/viewmodel/hexgrid_viewmodel.dart';
 import 'package:yijing_transform/viewmodel/history_viewmodel.dart';
@@ -143,23 +149,24 @@ void main() {
       expect(rec.name, '晋');
     });
 
-    test('八字排盘落历史 (真实四柱)', () {
+    test('八字排盘落历史 (真实四柱) — iter47 BaziViewModel', () {
       final hist = newHist(seed: false);
-      final vm = CastViewModel(
-        hexRepo: repo,
-        history: hist,
-        now: () => DateTime(2026, 9, 6),
+      final vm = BaziViewModel(
+        store: MemoryBaziBirthStore(),
+        historyRepo: hist,
+        clock: () => DateTime(2026, 9, 6),
       );
-      vm.setDirection('事业');
-      vm.computeBazi(DateTime(1990, 5, 15, 14, 30), 'male');
-      expect(vm.state.bazi, isNotNull);
+      vm.setBirth(DateTime(1990, 5, 15, 14, 30));
+      vm.compute();
+      expect(vm.state.chart, isNotNull);
       expect(vm.state.dayun, isNotNull);
-      expect(vm.state.bazi!.pillars.map((p) => p.gz).join(' '), '庚午 辛巳 庚辰 癸未');
+      expect(vm.state.extra, isNotNull);
+      expect(vm.state.readings, isNotEmpty);
+      expect(vm.state.chart!.pillars.map((p) => p.gz).join(' '), '庚午 辛巳 庚辰 癸未');
       final rec = hist.load().single;
       expect(rec.type, 'bazi');
       expect(rec.hexNo, isNull);
       expect(rec.question, contains('庚午 辛巳 庚辰 癸未'));
-      expect(rec.direction, '事业');
     });
 
     test('梅花时间式落历史 (真实农历)', () {
@@ -395,17 +402,18 @@ void main() {
       expect(vm.metaLine, contains('收藏 0 卦'));
     });
 
-    test('流年展开选择 (selectDayunStep)', () {
-      final vm = CastViewModel(hexRepo: repo, history: newHist(seed: false));
-      vm.computeBazi(DateTime(1990, 5, 15, 14, 30), 'male');
-      expect(vm.state.selectedDayunStep, isNull);
-      vm.selectDayunStep(0);
-      expect(vm.state.selectedDayunStep, 0);
-      // 再点收起
-      vm.selectDayunStep(0);
-      expect(vm.state.selectedDayunStep, 0); // copyWith 不清除 — 由 View 传 null 收起
-      vm.selectDayunStep(null);
-      expect(vm.state.selectedDayunStep, isNull);
+    test('流年展开选择 (selectStep) — iter47 BaziViewModel', () {
+      final vm = BaziViewModel(
+        store: MemoryBaziBirthStore(),
+        historyRepo: newHist(seed: false),
+      );
+      vm.setBirth(DateTime(1990, 5, 15, 14, 30));
+      vm.compute();
+      expect(vm.state.selectedStep, isNull);
+      vm.selectStep(0);
+      expect(vm.state.selectedStep, 0);
+      vm.selectStep(null);
+      expect(vm.state.selectedStep, isNull);
     });
   });
 
@@ -573,6 +581,93 @@ void main() {
       final favs = FavoritesRepository(store: MemoryFavoritesStore([5, 14]));
       final vm = HistoryViewModel(repo: HistoryRepository.instance, favs: favs);
       expect(vm.favCount, 2);
+    });
+  });
+  // ---------- iter47: 八字进阶 (十二长生/旬空/胎元/命宫/解读) ----------
+  group('BaZi 进阶 (iter47)', () {
+    test('十二长生: 甲长生在亥顺行, 乙长生在午逆行', () {
+      expect(changShengOf('甲', '亥'), '长生');
+      expect(changShengOf('甲', '子'), '沐浴');
+      expect(changShengOf('甲', '卯'), '帝旺');
+      expect(changShengOf('乙', '午'), '长生');
+      expect(changShengOf('乙', '巳'), '沐浴'); // 阴干逆行
+      expect(changShengOf('庚', '巳'), '长生');
+      expect(changShengOf('癸', '卯'), '长生');
+      final set = <String>{};
+      for (final z in kZhi) {
+        set.add(changShengOf('甲', z));
+      }
+      expect(set.length, 12);
+    });
+
+    test('旬空: 甲子旬空戌亥 / 庚辰属甲戌旬空申酉 / 甲寅旬空子丑', () {
+      expect(xunKongOf('甲子'), ['戌', '亥']);
+      expect(xunKongOf('庚辰'), ['申', '酉']);
+      expect(xunKongOf('癸未'), ['申', '酉']);
+      expect(xunKongOf('甲寅'), ['子', '丑']);
+      expect(xunKongOf('甲'), isEmpty);
+    });
+
+    test('胎元/命宫', () {
+      expect(taiYuanOf('辛巳'), '壬申');
+      final gong = mingGongOf('庚', '巳', '未');
+      expect(gong.length, 2);
+      expect(kZhi.contains(gong[1]), isTrue);
+    });
+
+    test('baziExtraOf 聚合 (1990-05-15 庚日)', () {
+      final c = computeBaZi(DateTime(1990, 5, 15, 14, 30))!;
+      final ex = baziExtraOf(c);
+      expect(ex.changSheng.length, 4);
+      expect(ex.changSheng[2], changShengOf('庚', '辰')); // 日支自坐
+      expect(ex.xunKong, ['申', '酉']); // 日柱庚辰属甲戌旬
+      expect(ex.mingGong.isNotEmpty, isTrue);
+    });
+
+    test('解读数据完备性', () {
+      expect(kDayMasterTraits.length, 10);
+      for (final g in kGan) {
+        expect(kDayMasterTraits[g]!.length, greaterThan(20));
+      }
+      expect(kTenGodTrait.length, 10);
+      expect(kShenShaMeaning.keys.toSet(),
+          {'天乙贵人', '文昌', '驿马', '桃花', '华盖'});
+    });
+
+    test('baziReadings: 日主+喜用+倾向+神煞卡全出且非空', () {
+      final c = computeBaZi(DateTime(1990, 5, 15, 14, 30))!;
+      final rs = baziReadings(c);
+      expect(rs.length, greaterThanOrEqualTo(3));
+      expect(rs.first.title, contains('日主心性'));
+      final titles = rs.map((r) => r.title).join('|');
+      expect(titles, contains('五行喜用'));
+      expect(titles, contains('天乙贵人'));
+      for (final r in rs) {
+        expect(r.body.trim(), isNotEmpty);
+      }
+    });
+
+    test('五行喜用: 偏弱喜生扶, 偏强喜疏导', () {
+      final weak = computeBaZi(DateTime(2026, 9, 6, 10, 30))!;
+      expect(wuxingAdvice(weak).body, contains('偏弱'));
+      final strong = computeBaZi(DateTime(1990, 5, 15, 14, 30))!;
+      expect(wuxingAdvice(strong).body, contains('偏强'));
+    });
+
+    test('BaziViewModel: 记忆载入 + 排盘 + 大运步选择', () async {
+      final store = MemoryBaziBirthStore();
+      store.write(BaziBirth(dt: DateTime(1990, 5, 15, 14, 30), gender: 'male'));
+      final vm = BaziViewModel(store: store, historyRepo: newHist(seed: false));
+      await Future<void>.delayed(Duration.zero); // 等 _boot 完成
+      expect(vm.state.birth, isNotNull);
+      expect(vm.state.restored, isTrue);
+      expect(vm.state.chart, isNotNull);
+      expect(vm.state.extra, isNotNull);
+      expect(vm.state.readings, isNotEmpty);
+      vm.selectStep(0);
+      expect(vm.state.selectedStep, 0);
+      vm.clearResult();
+      expect(vm.state.chart, isNull);
     });
   });
 }

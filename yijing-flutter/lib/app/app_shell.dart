@@ -6,6 +6,7 @@ import '../model/history.dart';
 import '../service/reminder_service.dart';
 import '../theme/ink_wash.dart';
 import '../theme/yijing_theme.dart';
+import '../view/bazi_screen.dart';
 import '../view/cast_screen.dart';
 import '../view/detail_screen.dart';
 import '../view/hexgrid_screen.dart';
@@ -14,6 +15,7 @@ import '../view/home_screen.dart';
 import '../view/me_screen.dart';
 import '../view/settings_panel.dart';
 import '../view/transform_screen.dart';
+import '../viewmodel/bazi_viewmodel.dart';
 import '../viewmodel/cast_viewmodel.dart';
 import '../viewmodel/detail_viewmodel.dart';
 import '../viewmodel/hexgrid_viewmodel.dart';
@@ -23,7 +25,7 @@ import '../viewmodel/me_viewmodel.dart';
 import '../viewmodel/settings_viewmodel.dart';
 import '../viewmodel/transform_viewmodel.dart';
 
-/// 应用壳层 — 5 Tab Hub (IndexedStack 保留各屏状态)
+/// 应用壳层 — 4 Tab Hub (今日/占卜/八字/我的; IndexedStack 保留各屏状态)
 /// 详情/推演为 push 路由, 由壳层统一接线
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -37,6 +39,7 @@ class _AppShellState extends State<AppShell> {
 
   late final HomeViewModel _homeVm = HomeViewModel();
   late final CastViewModel _castVm = CastViewModel();
+  late final BaziViewModel _baziVm = BaziViewModel();
   late final HexGridViewModel _gridVm = HexGridViewModel();
   late final HistoryViewModel _historyVm = HistoryViewModel();
   late final MeViewModel _meVm = MeViewModel();
@@ -142,6 +145,7 @@ class _AppShellState extends State<AppShell> {
             onOpenDetail: (hex, {question}) => _openDetail(hex.no,
                 question: question, direction: _castVm.state.direction),
           ),
+          BaziScreen(vm: _baziVm),
           MeScreen(
             vm: _meVm,
             onOpenDetail: _openDetail,
@@ -163,6 +167,7 @@ class _AppShellState extends State<AppShell> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.wb_twilight_outlined), label: '今日'),
           BottomNavigationBarItem(icon: Icon(Icons.auto_awesome_outlined), label: '占卜'),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_month_outlined), label: '八字'),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: '我的'),
         ],
       ),

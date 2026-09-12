@@ -6,6 +6,8 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../model/history.dart';
+import 'bazi_store.dart';
+import 'bazi_store_prefs.dart';
 import 'favorites_store.dart';
 import 'history_store.dart';
 
@@ -72,4 +74,5 @@ class PrefsFavoritesStore implements FavoritesStore {
 void installPrefsStores() {
   historyStoreFactory = () => PrefsHistoryStore();
   favoritesStoreFactory = () => PrefsFavoritesStore();
+  baziBirthStoreFactory = () => PrefsBaziBirthStore();
 }

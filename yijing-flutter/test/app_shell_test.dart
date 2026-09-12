@@ -24,16 +24,17 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('壳层 3 Tab 默认今日屏 (问候 + 今日一卦 + 最近占卜)', (tester) async {
+  testWidgets('壳层 4 Tab 默认今日屏 (问候 + 今日一卦 + 最近占卜)', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: AppShell()));
     await tester.pumpAndSettle();
     expect(find.text('最 近 占 卜'), findsOneWidget);
-    // 3 个 tab (grid/history 图标与我的页快捷入口共用, 允许多处)
+    // 4 个 tab (grid/history 图标与我的页快捷入口共用, 允许多处)
     expect(find.byIcon(Icons.wb_twilight_outlined), findsWidgets);
     expect(find.byIcon(Icons.auto_awesome_outlined), findsOneWidget);
     expect(find.byIcon(Icons.grid_view_outlined), findsWidgets);
     expect(find.byIcon(Icons.history), findsWidgets);
     expect(find.byIcon(Icons.person_outline), findsOneWidget);
+    expect(find.byIcon(Icons.calendar_month_outlined), findsOneWidget);
   });
 
   testWidgets('今日一卦 hero 点击 → 全屏详解 → 依此卦起卦落起卦屏', (tester) async {
@@ -115,8 +116,12 @@ void main() {
     }
     expect(find.text('小六壬'), findsOneWidget);
     expect(find.text('梅花易数'), findsOneWidget);
-    expect(find.text('八字排盘'), findsOneWidget);
     expect(find.text('更多占法'), findsNothing);
+
+    // iter47: 八字独立 Tab
+    await goTab(tester, '八字');
+    expect(find.text('八 字'), findsOneWidget);
+    expect(find.text('排 盘 输 入'), findsOneWidget);
   });
 
   testWidgets('分享卡预览渲染 (720×1040 painter 不抛异常)', (tester) async {

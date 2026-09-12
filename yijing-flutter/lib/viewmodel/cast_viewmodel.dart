@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../core/bazi.dart';
 import '../core/cast_engine.dart';
-import '../core/dayun.dart';
 import '../core/meihua.dart';
 import '../core/xiaoliuren.dart';
 import '../data/history_repository.dart';
@@ -50,9 +48,6 @@ class CastState {
   final CastResult? result;
   final Hex? hex;
   final XiaoLiuRenResult? xlr;
-  final BaZiChart? bazi;
-  final DaYunChart? dayun;
-  final int? selectedDayunStep; // 流年展开的大运步序
 
   const CastState({
     this.phase = CastPhase.form,
@@ -62,17 +57,13 @@ class CastState {
     this.result,
     this.hex,
     this.xlr,
-    this.bazi,
-    this.dayun,
-    this.selectedDayunStep,
   });
 
   CastState copyWith({
     CastPhase? phase, CastMethod? method, String? question,
     String? direction, CastResult? result, Hex? hex,
     XiaoLiuRenResult? xlr, bool clearResult = false,
-    bool clearXlr = false, BaZiChart? bazi, DaYunChart? dayun,
-    bool clearBazi = false, int? selectedDayunStep,
+    bool clearXlr = false,
   }) =>
       CastState(
         phase: phase ?? this.phase,
@@ -82,9 +73,6 @@ class CastState {
         result: clearResult ? null : (result ?? this.result),
         hex: clearResult ? null : (hex ?? this.hex),
         xlr: clearXlr ? null : (xlr ?? this.xlr),
-        bazi: clearBazi ? null : (bazi ?? this.bazi),
-        dayun: clearBazi ? null : (dayun ?? this.dayun),
-        selectedDayunStep: selectedDayunStep,
       );
 }
 
@@ -221,23 +209,6 @@ class CastViewModel extends ChangeNotifier {
     );
     notifyListeners();
   }
-  void computeBazi(DateTime birth, String gender) {
-    final chart = computeBaZi(birth);
-    if (chart == null) return;
-    final dayun = analyzeDaYun(birth, gender, now: _clock);
-    _history.add(HistoryRecord(
-      question: '八字排盘 · ${chart.pillars.map((p) => p.gz).join(' ')}',
-      direction: _state.direction,
-      directionColor: kDirections
-          .firstWhere((d) => d.dir == _state.direction, orElse: () => kDirections.first)
-          .color,
-      type: 'bazi',
-      ts: _clock,
-    ));
-    _state = _state.copyWith(bazi: chart, dayun: dayun);
-    notifyListeners();
-  }
-
   /// 梅花易数 · 时间式 (农历真实数据; 落历史, 复用 done 结果视图)
   void castMeihuaTime() {
     final now = _clock;
@@ -266,11 +237,6 @@ class CastViewModel extends ChangeNotifier {
   }
 
   /// 展开/收起某步大运的流年列表
-  void selectDayunStep(int? i) {
-    _state = _state.copyWith(selectedDayunStep: i);
-    notifyListeners();
-  }
-
   /// 重置回表单 (再占一卦)
   void reset() {
     _state = CastState(direction: _state.direction);
