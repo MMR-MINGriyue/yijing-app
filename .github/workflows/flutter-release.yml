@@ -1,0 +1,14 @@
+# tag 推送专用发布流水线 — 调用 flutter-build.yml 可复用工作流
+# (tag push 事件配 paths 过滤器会被跳过, 故 tag 触发独立成工作流, iter42)
+name: Release Flutter APK (tag)
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    uses: ./.github/workflows/flutter-build.yml

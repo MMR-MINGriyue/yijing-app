@@ -3,12 +3,13 @@ name: Build Flutter APK (yijing-transform)
 on:
   push:
     branches: [main]
-    # tag 推送也要触发 — release attach 步骤以 refs/tags/ 为条件 (iter42 补)
-    tags: ['v*']
     paths:
       - 'yijing-flutter/**'
       - '.github/workflows/flutter-build.yml'
   workflow_dispatch:
+  # tag 触发走 flutter-release.yml (workflow_call) — tag push 事件配 paths 过滤器
+  # 会因评估不到变更文件被跳过, 曾致 v1.30+ 从不出 Release (iter42 修)
+  workflow_call:
 
 permissions:
   contents: write
@@ -61,6 +62,12 @@ jobs:
       - name: Use official Gradle distribution on CI
         # 本地 wrapper 用腾讯镜像 (国内快); CI 在美国, 中国 CDN 间歇超时会挂 Build 步骤 (iter42 修)
         run: sed -i 's|mirrors.cloud.tencent.com/gradle|services.gradle.org/distributions|' android/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Right-size Gradle memory for CI
+        # gradle.properties 本地是 -Xmx8G/4G (开发机大内存); 私有仓库标准 runner 内存有限, 防超卖 (iter42)
+        run: |
+          sed -i 's/-Xmx8G/-Xmx3g/; s/MaxMetaspaceSize=4G/MaxMetaspaceSize=1g/' android/gradle.properties
+          grep jvmargs android/gradle.properties
 
       - name: Build debug APK
         run: flutter build apk --debug
