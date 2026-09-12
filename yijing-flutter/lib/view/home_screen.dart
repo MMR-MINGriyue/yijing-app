@@ -122,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: Column(children: [
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            HexGlyph(lines: h.yangs, width: 42, lineH: 5, gap: 4),
+            HexGlyph(lines: h.yangs, width: 42, lineH: 6.5, gap: 5.5),
             const SizedBox(width: 24),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -224,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: _card(),
         child: Row(children: [
           if (hex != null)
-            HexGlyph(lines: hex.yangs, width: 28, lineH: 3, gap: 2.4)
+            HexGlyph(lines: hex.yangs, width: 28, lineH: 4, gap: 3.2)
           else
             const SizedBox(width: 28),
           const SizedBox(width: 12),

@@ -116,7 +116,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
   Widget _miniYaoStack(Hex h) {
     // iter45: 统一走 HexGlyph (金渐变爻身, 与全应用卦爻视觉一致)
-    return HexGlyph(lines: h.yangs, width: 44, lineH: 4, gap: 4);
+    return HexGlyph(lines: h.yangs, width: 44, lineH: 5.5, gap: 5);
   }
 
   // ---------- Tab: 卦辞 / 爻辞 / 象传 ----------

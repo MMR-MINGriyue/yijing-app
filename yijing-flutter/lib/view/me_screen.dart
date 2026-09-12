@@ -139,7 +139,7 @@ class _MeScreenState extends State<MeScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: _card(),
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    HexGlyph(lines: h.yangs, width: 28, lineH: 3, gap: 2.6),
+                    HexGlyph(lines: h.yangs, width: 28, lineH: 4, gap: 3.4),
                     const SizedBox(height: 8),
                     Text(h.name, style: const TextStyle(
                         fontSize: 14, letterSpacing: 2, color: YiColors.textPrimary)),

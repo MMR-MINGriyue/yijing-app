@@ -269,7 +269,7 @@ class _CastScreenState extends State<CastScreen> {
                 style: TextStyle(fontSize: 12, letterSpacing: 4, color: YiColors.gold)),
             const SizedBox(height: 16),
             HexGlyph(lines: hex.yangs, moving: s.result?.moving ?? [],
-                width: 60, lineH: 7, gap: 5, animated: true),
+                width: 60, lineH: 9, gap: 7, animated: true),
             const SizedBox(height: 16),
             Text('${hex.name} 卦',
                 style: const TextStyle(fontSize: 30, letterSpacing: 6, color: YiColors.textPrimary)),

@@ -118,7 +118,7 @@ class _HeroFullscreenState extends State<HeroFullscreen> {
         Text('${h.triU} 上·${h.triUN}   ${h.triD} 下·${h.triDN}',
             style: const TextStyle(fontSize: 12, letterSpacing: 2, color: YiColors.textTertiary)),
         const SizedBox(height: 18),
-        HexGlyph(lines: h.yangs, width: 120, lineH: 9, gap: 8),
+        HexGlyph(lines: h.yangs, width: 120, lineH: 13, gap: 11),
         const SizedBox(height: 20),
         Text('${h.name} 卦',
             style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w500,

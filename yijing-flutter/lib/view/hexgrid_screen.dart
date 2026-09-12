@@ -104,7 +104,7 @@ class _HexGridScreenState extends State<HexGridScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
                   decoration: yiCardDecoration(),
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    HexGlyph(lines: h.yangs, width: 26, lineH: 3, gap: 2.4),
+                    HexGlyph(lines: h.yangs, width: 26, lineH: 4, gap: 3.2),
                     const SizedBox(height: 8),
                     Text(h.name, style: const TextStyle(
                         fontSize: 15, letterSpacing: 2, color: YiColors.textPrimary)),

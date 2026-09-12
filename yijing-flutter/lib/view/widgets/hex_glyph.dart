@@ -46,29 +46,27 @@ class HexGlyph extends StatelessWidget {
   Widget build(BuildContext context) {
     final rows = <Widget>[];
     // 上爻先画 (lines 为初→上, 倒序渲染); step = 距初爻位数 (入场次序)
+    // iter45b: 行距统一 — 每行 (除初爻) 一律留 gap, 修复全阳/连阴时粘连
     for (var i = lines.length - 1; i >= 0; i--) {
       final isMoving = moving.contains(i);
       final step = i; // 初爻 i=0 先入场
-      Widget row;
+      final isLast = i == 0; // 初爻最后渲染, 不留尾距
       if (lines[i]) {
-        row = _lineBody(width, _grad(isMoving));
-        rows.add(_wrap(row, isMoving, step));
+        rows.add(_wrap(_lineBody(width, _grad(isMoving)), isMoving, step, isLast));
       } else {
         final seg = (width - lineH * 1.6) / 2;
         rows.add(_wrap(
-          Padding(
-            padding: EdgeInsets.only(bottom: gap),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _seg(seg, _grad(isMoving)),
-                SizedBox(width: lineH * 1.6),
-                _seg(seg, _grad(isMoving)),
-              ],
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _seg(seg, _grad(isMoving)),
+              SizedBox(width: lineH * 1.6),
+              _seg(seg, _grad(isMoving)),
+            ],
           ),
           isMoving,
           step,
+          isLast,
         ));
       }
     }
@@ -101,9 +99,14 @@ class HexGlyph extends StatelessWidget {
       );
 
   /// 动爻呼吸 + 逐爻入场 (animated 时); 普通静态场景原样
-  Widget _wrap(Widget child, bool isMoving, int step) {
-    if (!animated) return child;
-    Widget w = child;
+  /// [isLast] 初爻不留尾距 (渲染序末行)
+  Widget _wrap(Widget child, bool isMoving, int step, bool isLast) {
+    if (!animated && isLast) return child;
+    Widget w = Padding(
+      padding: EdgeInsets.only(bottom: isLast ? 0 : gap),
+      child: child,
+    );
+    if (!animated) return w;
     if (isMoving) {
       w = _BreathingLine(cycle: YiMotion.breathCycle, child: w);
     }
