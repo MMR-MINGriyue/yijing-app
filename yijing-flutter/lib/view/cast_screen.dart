@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../core/bazi.dart';
+import '../core/cast_engine.dart' show CastResult;
 import '../core/dayun.dart';
+import '../core/meihua.dart';
 import '../core/xiaoliuren.dart';
 import 'widgets/casting_anim.dart';
 import 'widgets/pressable.dart';
@@ -28,6 +31,7 @@ class _CastScreenState extends State<CastScreen> {
   final _mh1Controller = TextEditingController();
   final _mh2Controller = TextEditingController();
   DateTime? _baziBirth;
+  String _xlrAskKind = '谋事'; // 小六壬问事分类 (iter44)
   TimeOfDay _baziTime = const TimeOfDay(hour: 14, minute: 30);
   String _baziGender = 'male'; // male=乾造 female=坤造
 
@@ -282,6 +286,12 @@ class _CastScreenState extends State<CastScreen> {
           ]),
         ),
         const SizedBox(height: 16),
+        // 梅花体用互变断法卡 (iter44: 仅梅花起卦显示)
+        if (s.result?.method == 'meihua' && (s.result?.moving.isNotEmpty ?? false))
+          ...[
+            _meihuaTiyongCard(s.result!),
+            const SizedBox(height: 16),
+          ],
         FilledButton(
           onPressed: () => widget.onOpenDetail(hex, question: s.question),
           style: FilledButton.styleFrom(
@@ -343,10 +353,35 @@ class _CastScreenState extends State<CastScreen> {
               style: TextStyle(fontSize: 10, color: YiColors.textTertiary)),
         ]),
         const SizedBox(height: 10),
+        // 问事分类 (iter44): 断语按问而异
+        Row(children: [
+          for (final kind in kXlrAskKinds) ...[
+            Expanded(child: InkWell(
+              onTap: () => setState(() => _xlrAskKind = kind),
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                decoration: BoxDecoration(
+                  color: _xlrAskKind == kind
+                      ? YiColors.pine.withValues(alpha: 0.18)
+                      : YiColors.inkCard,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                      color: _xlrAskKind == kind ? YiColors.pine : YiColors.strokeSoft),
+                ),
+                child: Text(kind, textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 10,
+                        color: _xlrAskKind == kind ? YiColors.pine : YiColors.textTertiary)),
+              ),
+            )),
+            if (kind != kXlrAskKinds.last) const SizedBox(width: 4),
+          ],
+        ]),
+        const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
           child: FilledButton(
-            onPressed: widget.vm.castXlr,
+            onPressed: () => widget.vm.castXlr(_xlrAskKind),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0x225BA88A),
               foregroundColor: YiColors.pine,
@@ -371,11 +406,45 @@ class _CastScreenState extends State<CastScreen> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(x.summary, style: const TextStyle(fontSize: 12, color: YiColors.pine)),
         const SizedBox(height: 8),
+        // 三宫路径: 月 → 日 → 时 (iter44)
+        Row(children: [
+          for (var i = 0; i < x.path.length; i++) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0x225BA88A),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(x.path[i], style: const TextStyle(fontSize: 11, color: YiColors.pine)),
+            ),
+            if (i < x.path.length - 1)
+              const Padding(padding: EdgeInsets.symmetric(horizontal: 4),
+                  child: Text('→', style: TextStyle(fontSize: 11, color: YiColors.textMuted))),
+          ],
+        ]),
+        const SizedBox(height: 8),
         Text('${x.result.name} · ${x.result.luck} · 宜${x.result.dir}',
             style: const TextStyle(fontSize: 16, letterSpacing: 2, color: YiColors.textPrimary)),
         const SizedBox(height: 6),
         Text(x.result.text,
             style: const TextStyle(fontSize: 11, height: 1.7, color: YiColors.textSecondary)),
+        if (x.askAdvice.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0x145BA88A),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('问 · ${x.askKind}', style: const TextStyle(
+                  fontSize: 10, letterSpacing: 2, color: YiColors.pine)),
+              const SizedBox(height: 3),
+              Text(x.askAdvice, style: const TextStyle(
+                  fontSize: 12, height: 1.6, color: YiColors.textPrimary)),
+            ]),
+          ),
+        ],
       ]),
     );
   }
@@ -474,6 +543,63 @@ class _CastScreenState extends State<CastScreen> {
         hintText: hint,
         hintStyle: const TextStyle(color: YiColors.textMuted, fontSize: 12),
       );
+
+  // ---------- 梅花体用互变 (iter44) ----------
+  Widget _meihuaTiyongCard(CastResult r) {
+    final a = analyzeMeiHua(r.lines, r.moving.first);
+    final verdictColor = switch (a.verdict) {
+      '大吉' || '吉' => YiColors.pine,
+      '凶' => YiColors.cinnabar,
+      _ => YiColors.gold,
+    };
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0x1AC9A876),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0x55C9A876)),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('梅 花 断 法 · 体 用 生 克', style: TextStyle(
+            fontSize: 11, letterSpacing: 3, color: YiColors.gold)),
+        const SizedBox(height: 10),
+        Row(children: [
+          _tiyongPillar('体卦', a.tiName, a.tiWuxing),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: verdictColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: verdictColor),
+            ),
+            child: Text('${a.relation} · ${a.verdict}',
+                style: TextStyle(fontSize: 11, color: verdictColor)),
+          ),
+          _tiyongPillar('用卦', a.yongName, a.yongWuxing),
+        ]),
+        const SizedBox(height: 10),
+        Text(a.verdictText, style: const TextStyle(
+            fontSize: 12, height: 1.7, color: YiColors.textSecondary)),
+        const SizedBox(height: 10),
+        Row(children: [
+          Text('互卦 ', style: const TextStyle(fontSize: 11, color: YiColors.textTertiary)),
+          Text('${a.huName} (第${a.huNo}卦)', style: const TextStyle(fontSize: 11, color: YiColors.gold)),
+          const SizedBox(width: 16),
+          Text('变卦 ', style: const TextStyle(fontSize: 11, color: YiColors.textTertiary)),
+          Text('${a.bianName} (第${a.bianNo}卦)', style: const TextStyle(fontSize: 11, color: YiColors.gold)),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _tiyongPillar(String label, String name, String wx) {
+    return Expanded(child: Column(children: [
+      Text(label, style: const TextStyle(fontSize: 10, color: YiColors.textMuted)),
+      const SizedBox(height: 3),
+      Text(name, style: const TextStyle(fontSize: 20, letterSpacing: 2, color: YiColors.textPrimary)),
+      Text(wx, style: const TextStyle(fontSize: 10, color: YiColors.gold)),
+    ]));
+  }
 
   // ---------- 八字排盘 (iter34: 真实农历 + 分钟级节气) ----------
   Future<void> _pickBaziBirth() async {
@@ -597,7 +723,7 @@ class _CastScreenState extends State<CastScreen> {
         border: Border.all(color: const Color(0x55D04D3E)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // 四柱: 干支 + 天干十神 + 藏干
+        // 四柱: 干支 + 天干十神 + 纳音 + 藏干
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -610,6 +736,10 @@ class _CastScreenState extends State<CastScreen> {
                 const SizedBox(height: 3),
                 Text(p.ganGod, style: TextStyle(fontSize: 10,
                     color: p.ganGod == '日主' ? YiColors.cinnabar : YiColors.gold)),
+                const SizedBox(height: 3),
+                // 纳音 (iter44)
+                Text(nayinOf(p.gz), style: const TextStyle(
+                    fontSize: 9, color: YiColors.textMuted)),
                 const SizedBox(height: 5),
                 Text(p.hidden.map((h) => h.gan).join(' '),
                     style: const TextStyle(fontSize: 10, color: YiColors.textSecondary)),
@@ -619,12 +749,20 @@ class _CastScreenState extends State<CastScreen> {
           ],
         ),
         const SizedBox(height: 10),
-        // 五行 + 强弱
+        // 五行分布条 (iter44)
+        _wuxingBars(b.wuxing),
+        const SizedBox(height: 6),
         Text(b.wuxing.entries.map((e) => '${e.key}${e.value}').join(' · '),
             style: const TextStyle(fontSize: 11, color: YiColors.textSecondary)),
         const SizedBox(height: 3),
         Text('日主 ${b.dayGan}${b.dayElement} · ${b.strength} · ${b.shichen}',
             style: const TextStyle(fontSize: 11, color: YiColors.textSecondary)),
+        // 十神统计 (iter44)
+        const SizedBox(height: 6),
+        Text(tenGodStats(b).entries.map((e) => '${e.key}${e.value}').join(' · '),
+            style: const TextStyle(fontSize: 10, color: YiColors.textTertiary)),
+        // 神煞 chips (iter44)
+        ..._shenShaChips(b),
         if (d?.qiYunInfo != null) ...[
           const SizedBox(height: 3),
           Text('${d!.forward ? '顺排' : '逆排'} · ${d.qiYunInfo!.years}岁${d.qiYunInfo!.months}个月起运 (@${d.qiYunInfo!.termName})',
@@ -672,6 +810,65 @@ class _CastScreenState extends State<CastScreen> {
         ],
       ]),
     );
+  }
+
+  /// 五行分布条形 (iter44: 木绿 火朱 土金? 依五色: 木青 火赤 土黄 金白 水玄, 用主题近似色)
+  Widget _wuxingBars(Map<String, int> wx) {
+    final colors = {
+      '木': YiColors.pine,
+      '火': YiColors.cinnabar,
+      '土': const Color(0xFFC9A876),
+      '金': const Color(0xFFD8D3C8),
+      '水': const Color(0xFF7A9CC6),
+    };
+    final maxV = wx.values.fold(1, (a, b) => a > b ? a : b);
+    return Column(children: [
+      for (final e in wx.entries)
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Row(children: [
+            SizedBox(width: 14, child: Text(e.key,
+                style: const TextStyle(fontSize: 10, color: YiColors.textSecondary))),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Stack(children: [
+                Container(height: 6, decoration: BoxDecoration(
+                    color: const Color(0x22FFFFFF),
+                    borderRadius: BorderRadius.circular(3))),
+                FractionallySizedBox(
+                  widthFactor: e.value / maxV,
+                  child: Container(height: 6, decoration: BoxDecoration(
+                      color: colors[e.key] ?? YiColors.gold,
+                      borderRadius: BorderRadius.circular(3))),
+                ),
+              ]),
+            ),
+            SizedBox(width: 18, child: Text('${e.value}', textAlign: TextAlign.right,
+                style: const TextStyle(fontSize: 10, color: YiColors.textTertiary))),
+          ]),
+        ),
+    ]);
+  }
+
+  /// 神煞 chips (iter44; 无神煞时不渲染)
+  List<Widget> _shenShaChips(BaZiChart b) {
+    final list = shenShaOf(b);
+    if (list.isEmpty) return [];
+    return [
+      const SizedBox(height: 8),
+      Wrap(spacing: 6, runSpacing: 6, children: [
+        for (final name in list)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: YiColors.gold.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: YiColors.goldDark),
+            ),
+            child: Text(name, style: const TextStyle(fontSize: 10, color: YiColors.gold)),
+          ),
+      ]),
+    ];
   }
 
   /// 流年断语列表 (点击大运 chip 展开)

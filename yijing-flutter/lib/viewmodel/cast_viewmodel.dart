@@ -168,10 +168,10 @@ class CastViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 小六壬一键起课 (农历真实数据 + 落历史)
-  void castXlr() {
+  /// 小六壬一键起课 (农历真实数据 + 问事分类断语, 落历史)
+  void castXlr([String askKind = '谋事']) {
     final now = _clock;
-    final res = divineXiaoLiuRen(now);
+    final res = divineXiaoLiuRen(now, askKind: askKind);
     if (res == null) return;
     _history.add(HistoryRecord(
       question: res.summary,

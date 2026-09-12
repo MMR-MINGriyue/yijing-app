@@ -3,6 +3,7 @@ import 'package:yijing_transform/core/bazi.dart';
 import 'package:yijing_transform/core/dayun.dart';
 import 'package:yijing_transform/core/meihua.dart';
 import 'package:yijing_transform/core/solar_terms.dart';
+import 'package:yijing_transform/core/xiaoliuren.dart';
 import 'package:yijing_transform/core/yi_calendar.dart';
 
 /// iter34 — 八字/大运/节气/梅花 测试
@@ -202,6 +203,146 @@ void main() {
       expect(r.upper, '乾'); // 1 + floor(0*8) = 1
       expect(r.lower, '巽'); // 1 + floor(0.5*8) = 5
       expect(r.movingIdx, 5); // 1 + floor(0.99*6) = 6 → idx 5
+    });
+  });
+
+  // ---------- iter44 增强: 纳音 / 神煞 / 十神统计 ----------
+  group('BaZi 纳音 — 六十甲子', () {
+    test('已知向量', () {
+      expect(nayinOf('甲子'), '海中金');
+      expect(nayinOf('乙丑'), '海中金');
+      expect(nayinOf('庚辰'), '白蜡金');
+      expect(nayinOf('戊午'), '天上火');
+      expect(nayinOf('癸卯'), '金箔金');
+      expect(nayinOf('壬戌'), '大海水');
+      expect(nayinOf('癸亥'), '大海水');
+    });
+
+    test('覆盖 60 干支无缺漏', () {
+      final seen = <String>{};
+      for (var i = 0; i < 60; i++) {
+        final gz = '${kGan[i % 10]}${kZhi[i % 12]}';
+        final n = nayinOf(gz);
+        expect(n, isNotEmpty, reason: '$gz 缺纳音');
+        seen.add(gz);
+      }
+      expect(seen.length, 60);
+    });
+
+    test('排盘四柱带纳音 (1990-05-15: 庚午路旁土/辛巳白蜡金/庚辰白蜡金/癸未杨柳木)', () {
+      final c = computeBaZi(DateTime(1990, 5, 15, 14, 30))!;
+      expect(c.pillars.map((p) => nayinOf(p.gz)).join(','),
+          '路旁土,白蜡金,白蜡金,杨柳木');
+    });
+  });
+
+  group('BaZi 神煞 + 十神统计 (iter44)', () {
+    test('1990-05-15 庚日: 天乙贵人(未) + 华盖(日支辰)', () {
+      final c = computeBaZi(DateTime(1990, 5, 15, 14, 30))!; // 庚午 辛巳 庚辰 癸未
+      expect(shenShaOf(c), ['天乙贵人', '华盖']);
+    });
+
+    test('甲日见丑未 → 天乙贵人; 甲日见巳/午 → 文昌', () {
+      // 甲戌 甲戌 甲辰 甲子? 手工无; 直接用 1984-02-02? 构造: 甲辰日年支戌:
+      // 1984-02-04 06:00 → 甲子年 丙寅月 戊辰日? 不猜, 用规则单测:
+      expect(kTianYi['甲'], ['丑', '未']);
+      expect(kWenChang['甲'], '巳');
+      expect(kSanHe['辰'], ['寅', '酉', '辰']); // 申子辰: 马寅 花酉 盖辰
+      expect(kSanHe['午'], ['申', '卯', '戌']); // 寅午戌
+    });
+
+    test('十神统计 (1990-05-15 庚日)', () {
+      final c = computeBaZi(DateTime(1990, 5, 15, 14, 30))!; // 庚午 辛巳 庚辰 癸未
+      final s = tenGodStats(c);
+      // 天干: 年庚=比肩, 月辛=劫财, 时癸=伤官
+      expect(s['比肩'], 1);
+      expect(s['劫财'], 1);
+      expect(s['伤官'], 1);
+      // 藏干本气: 午丁=正官, 巳丙=七杀, 辰戊=偏印, 未己=正印
+      expect(s['正官'], 1);
+      expect(s['七杀'], 1);
+      expect(s['偏印'], 1);
+      expect(s['正印'], 1);
+      expect(s.length, 7);
+    });
+  });
+
+  group('MeiHua 体用互变 (iter44)', () {
+    test('乾为天动初爻: 下卦为用, 比和吉; 变卦天风姤; 互卦乾为天', () {
+      final lines = [true, true, true, true, true, true];
+      final a = analyzeMeiHua(lines, 0);
+      expect(a.tiName, '乾'); // 上卦静为体
+      expect(a.yongName, '乾'); // 下卦动为用
+      expect(a.relation, '比和');
+      expect(a.verdict, '吉');
+      expect(a.huNo, 1); // 互卦仍乾
+      expect(a.bianNo, 44); // 初爻变 → 天风姤
+      expect(a.bianName, '姤');
+    });
+
+    test('地天泰动上爻: 上卦为用 (坤土), 用生体 → 大吉; 互卦雷泽归妹; 变卦山天大畜', () {
+      final lines = [true, true, true, false, false, false]; // 泰 bits 111000
+      final a = analyzeMeiHua(lines, 5);
+      expect(a.tiName, '乾'); // 下卦静
+      expect(a.yongName, '坤'); // 上卦动
+      expect(a.relation, '用生体'); // 土生金
+      expect(a.verdict, '大吉');
+      expect(a.huName, '归妹'); // 二三四=[1,1,0]=兑 下互, 三四五=[1,0,0]=震 上互 → 雷泽归妹
+      expect(a.huNo, 54);
+      expect(a.bianNo, 26); // 上爻变 → 山天大畜
+      expect(a.bianName, '大畜');
+    });
+
+    test('体克用 → 小吉 (天风姤动初爻: 体乾金 克 用巽木)', () {
+      final lines = [false, true, true, true, true, true]; // 姤 bits 011111
+      final a = analyzeMeiHua(lines, 0);
+      expect(a.tiName, '乾'); // 上卦静为体 (金)
+      expect(a.yongName, '巽'); // 下卦动为用 (木)
+      expect(a.relation, '体克用'); // 金克木
+      expect(a.verdict, '小吉');
+    });
+
+    test('用克体 → 凶断语', () {
+      // 火天大有 (111101): 上离下乾, 动上爻(idx5) → 用离火, 体乾金, 火克金
+      final lines = [true, true, true, true, false, true];
+      final a = analyzeMeiHua(lines, 5);
+      expect(a.tiWuxing, '金');
+      expect(a.yongWuxing, '火');
+      expect(a.relation, '用克体');
+      expect(a.verdict, '凶');
+      expect(a.verdictText, contains('阻隔'));
+    });
+  });
+
+  group('XiaoLiuRen 问事断语 (iter44)', () {
+    test('六宫 × 六问 齐全且非空', () {
+      expect(kXlrAskKinds.length, 6);
+      for (final p in kXlrPalaces) {
+        final row = kXlrAdvice[p.name];
+        expect(row, isNotNull, reason: '${p.name} 缺问事断语');
+        expect(row!.keys.toSet(), kXlrAskKinds.toSet(), reason: '${p.name} 问类不齐');
+        for (final t in row.values) {
+          expect(t.trim(), isNotEmpty, reason: '${p.name} 有空断语');
+        }
+      }
+    });
+
+    test('askAdvice: 大安谋事 / 空亡求财', () {
+      final r = divineXiaoLiuRen(DateTime(2026, 9, 12, 10, 30), askKind: '谋事')!;
+      expect(r.askKind, '谋事');
+      expect(r.askAdvice, kXlrAdvice[r.result.name]!['谋事']);
+      final r2 = divineXiaoLiuRen(DateTime(2026, 9, 12, 10, 30), askKind: '求财')!;
+      expect(r2.askAdvice, kXlrAdvice[r2.result.name]!['求财']);
+    });
+
+    test('非法 askKind 回退谋事, 默认参数兼容旧调用', () {
+      final r = divineXiaoLiuRen(DateTime(2026, 9, 12, 10, 30), askKind: ' bogus ')!;
+      expect(r.askKind, '谋事');
+      final r2 = divineXiaoLiuRen(DateTime(2026, 9, 12, 10, 30))!;
+      expect(r2.askKind, '谋事');
+      // 路径算法不变 (回归)
+      expect(r.path.length, 3);
+      expect(r.path, r2.path);
     });
   });
 }

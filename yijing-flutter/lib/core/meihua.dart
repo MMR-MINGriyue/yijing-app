@@ -124,3 +124,129 @@ MeiHuaResult meiHuaByDice({double Function()? rand}) {
 final Random _rng = Random();
 
 double _defaultRand() => _rng.nextDouble();
+
+// ---------- 体用生克断法 (iter44: 梅花断法核心, 超越 PWA 基线) ----------
+
+/// 梅花体用分析结果
+class MeiHuaAnalysis {
+  final String tiName; // 体卦名 (静卦)
+  final String tiWuxing;
+  final String yongName; // 用卦名 (动爻所在卦)
+  final String yongWuxing;
+  final String relation; // 比和/用生体/体生用/体克用/用克体
+  final String verdict; // 吉/凶/小凶/小吉
+  final String verdictText; // 断语
+  final int huNo; // 互卦序
+  final String huName; // 互卦名
+  final int bianNo; // 变卦序
+  final String bianName; // 变卦名
+
+  const MeiHuaAnalysis({
+    required this.tiName,
+    required this.tiWuxing,
+    required this.yongName,
+    required this.yongWuxing,
+    required this.relation,
+    required this.verdict,
+    required this.verdictText,
+    required this.huNo,
+    required this.huName,
+    required this.bianNo,
+    required this.bianName,
+  });
+}
+
+const Map<String, String> _kSheng = {'木': '火', '火': '土', '土': '金', '金': '水', '水': '木'};
+const Map<String, String> _kKe = {'木': '土', '土': '水', '水': '火', '火': '金', '金': '木'};
+
+/// 八卦名 → 五行 (乾兑金 / 离火 / 震巽木 / 坎水 / 艮坤土)
+/// 注: model/hex.dart 的 kTriWuxing 以 ☰ 符号为键, 此处按卦名键
+const Map<String, String> kTriNameWuxing = {
+  '乾': '金', '兑': '金', '离': '火', '震': '木',
+  '巽': '木', '坎': '水', '艮': '土', '坤': '土',
+};
+
+/// 体用生克关系与断语 (梅花心法: 体为主, 用为事应)
+(String, String, String) _tiYongRelation(String ti, String yong) {
+  if (ti == yong) {
+    return ('比和', '吉', '体用比和，同气相求，所谋遂意，百事顺成。');
+  }
+  if (_kSheng[yong] == ti) {
+    return ('用生体', '大吉', '用卦生体卦，外来相生，进益之喜，或得人扶助，事必有成。');
+  }
+  if (_kSheng[ti] == yong) {
+    return ('体生用', '小凶', '体卦生用卦，气机外泄，有耗散之象，谋事费力，宜守不宜进。');
+  }
+  if (_kKe[yong] == ti) {
+    return ('用克体', '凶', '用卦克体卦，外事相迫，主事多阻隔，防小人与损耗，不宜强求。');
+  }
+  if (_kKe[ti] == yong) {
+    return ('体克用', '小吉', '体卦克用卦，我能制事，事可为但需费力，迟缓方得其利。');
+  }
+  return ('?', '?', '');
+}
+
+/// 六爻 (初→上) → 卦名 (本文件内置, 避免依赖 HexRepository)
+String _hexName(List<bool> lines) {
+  final key = lines.map((y) => y ? '1' : '0').join();
+  for (final h in kHexLibrary) {
+    if (h.bits == key) return h.name;
+  }
+  return '';
+}
+
+int _hexNo(List<bool> lines) {
+  final key = lines.map((y) => y ? '1' : '0').join();
+  for (final h in kHexLibrary) {
+    if (h.bits == key) return h.no;
+  }
+  return 1;
+}
+
+/// 梅花体用互变分析:
+/// - 动爻在上卦 (3,4,5) → 上卦为用, 下卦为体; 动爻在下卦 → 下卦为用, 上卦为体
+/// - 互卦: 二三四爻为下互, 三四五爻为上互
+/// - 变卦: 动爻阴阳翻转
+MeiHuaAnalysis analyzeMeiHua(List<bool> lines, int movingIdx) {
+  final lower = lines.sublist(0, 3);
+  final upper = lines.sublist(3, 6);
+  // 三爻 → 八卦名
+  String triNameOf(List<bool> tri) {
+    final key = tri.map((b) => b ? '1' : '0').join();
+    for (final e in kTrigramLines.entries) {
+      if (e.value.join() == key) return e.key;
+    }
+    return '';
+  }
+
+  final movingInUpper = movingIdx >= 3;
+  final tiTri = movingInUpper ? lower : upper;
+  final yongTri = movingInUpper ? upper : lower;
+  final tiName = triNameOf(tiTri);
+  final yongName = triNameOf(yongTri);
+  final tiWx = kTriNameWuxing[tiName] ?? '';
+  final yongWx = kTriNameWuxing[yongName] ?? '';
+  final (relation, verdict, verdictText) = _tiYongRelation(tiWx, yongWx);
+
+  // 互卦: 二三四爻 (idx 1,2,3) 为下互, 三四五爻 (idx 2,3,4) 为上互
+  final huLower = [lines[1], lines[2], lines[3]];
+  final huUpper = [lines[2], lines[3], lines[4]];
+  final huLines = [...huLower, ...huUpper];
+
+  // 变卦: 动爻翻转
+  final bianLines = List.of(lines)..[movingIdx] = !lines[movingIdx];
+
+  return MeiHuaAnalysis(
+    tiName: tiName,
+    tiWuxing: tiWx,
+    yongName: yongName,
+    yongWuxing: yongWx,
+    relation: relation,
+    verdict: verdict,
+    verdictText: verdictText,
+    huNo: _hexNo(huLines),
+    huName: _hexName(huLines),
+    bianNo: _hexNo(bianLines),
+    bianName: _hexName(bianLines),
+  );
+}
