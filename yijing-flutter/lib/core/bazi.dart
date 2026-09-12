@@ -76,6 +76,65 @@ class BaZiPillar {
 }
 
 /// 排盘结果
+/// 流派选项 (iter48) — 存在流派差异的算法点, 由用户选择后随盘计算
+enum DayBoundary {
+  midnight, // 子夜 0 时换日 (夜子时仍属当日, 默认)
+  lateZi, // 夜半 23 时换日 (晚子时算次日)
+}
+
+enum MingGongBase {
+  yinFirst, // 命宫月数自寅起 (寅月=1, 通例, 默认)
+  ziFirst, // 命宫月数自子起 (子月=1)
+}
+
+enum ShenShaAnchor {
+  yearDay, // 神煞以年支、日支并查 (默认)
+  yearOnly, // 神煞仅以年支查
+}
+
+class BaZiOptions {
+  final DayBoundary dayBoundary;
+  final MingGongBase mingGongBase;
+  final ShenShaAnchor shenShaAnchor;
+
+  const BaZiOptions({
+    this.dayBoundary = DayBoundary.midnight,
+    this.mingGongBase = MingGongBase.yinFirst,
+    this.shenShaAnchor = ShenShaAnchor.yearDay,
+  });
+
+  BaZiOptions copyWith({
+    DayBoundary? dayBoundary,
+    MingGongBase? mingGongBase,
+    ShenShaAnchor? shenShaAnchor,
+  }) =>
+      BaZiOptions(
+        dayBoundary: dayBoundary ?? this.dayBoundary,
+        mingGongBase: mingGongBase ?? this.mingGongBase,
+        shenShaAnchor: shenShaAnchor ?? this.shenShaAnchor,
+      );
+
+  Map<String, String> toJson() => {
+        'day': dayBoundary.name,
+        'gong': mingGongBase.name,
+        'sha': shenShaAnchor.name,
+      };
+
+  static BaZiOptions fromJson(Map<String, dynamic> j) => BaZiOptions(
+        dayBoundary: DayBoundary.values
+            .firstWhere((e) => e.name == j['day'], orElse: () => DayBoundary.midnight),
+        mingGongBase: MingGongBase.values
+            .firstWhere((e) => e.name == j['gong'], orElse: () => MingGongBase.yinFirst),
+        shenShaAnchor: ShenShaAnchor.values
+            .firstWhere((e) => e.name == j['sha'], orElse: () => ShenShaAnchor.yearDay),
+      );
+
+  bool get isDefault =>
+      dayBoundary == DayBoundary.midnight &&
+      mingGongBase == MingGongBase.yinFirst &&
+      shenShaAnchor == ShenShaAnchor.yearDay;
+}
+
 class BaZiChart {
   final List<BaZiPillar> pillars; // 年/月/日/时
   final Map<String, int> wuxing; // 4 天干 + 4 地支本气
@@ -84,6 +143,7 @@ class BaZiChart {
   final String strength; // 偏强/中和/偏弱
   final String shichen; // 子时/丑时…
   final LunarDate? lunar;
+  final BaZiOptions options; // 所用流派 (iter48)
 
   const BaZiChart({
     required this.pillars,
@@ -93,6 +153,7 @@ class BaZiChart {
     required this.strength,
     required this.shichen,
     required this.lunar,
+    this.options = const BaZiOptions(),
   });
 }
 
@@ -163,8 +224,11 @@ List<String> shenShaOf(BaZiChart chart) {
     if ((kTianYi[chart.dayGan] ?? const []).contains(z)) add('天乙贵人');
     if (kWenChang[chart.dayGan] == z) add('文昌');
   }
-  // 驿马 / 桃花 / 华盖: 以年支、日支为锚查三合局
-  for (final anchor in {zhis.first, zhis[2]}) {
+  // 驿马 / 桃花 / 华盖: 依流派锚 (年日并查 / 仅年支) — iter48
+  final anchors = chart.options.shenShaAnchor == ShenShaAnchor.yearOnly
+      ? {zhis.first}
+      : {zhis.first, zhis[2]};
+  for (final anchor in anchors) {
     final hit = kSanHe[anchor];
     if (hit == null) continue;
     for (final z in zhis) {
@@ -189,12 +253,16 @@ Map<String, int> tenGodStats(BaZiChart chart) {
 }
 
 /// 排四柱 (PWA BaZi.compute; 月柱走分钟级节气精确路径)
-BaZiChart? computeBaZi(DateTime dt) {
+BaZiChart? computeBaZi(DateTime dt, {BaZiOptions options = const BaZiOptions()}) {
+  // 晚子时换日: 23:00-23:59 归次日 (年月日柱均以次日推算, 时柱仍子时)
+  final calcDt = options.dayBoundary == DayBoundary.lateZi && dt.hour >= 23
+      ? DateTime(dt.year, dt.month, dt.day + 1, dt.hour, dt.minute)
+      : dt;
   final lunar = solarToLunar(dt);
   final scIdx = shichenIndex(dt);
-  final yGz = ganzhiYear(dt);
-  final mGz = ganzhiMonthPrecise(dt);
-  final dGz = ganzhiDay(dt);
+  final yGz = ganzhiYear(calcDt);
+  final mGz = ganzhiMonthPrecise(calcDt);
+  final dGz = ganzhiDay(calcDt);
   final hGz = hourPillar(dGz[0], scIdx);
 
   final gzList = [yGz, mGz, dGz, hGz];
@@ -240,5 +308,6 @@ BaZiChart? computeBaZi(DateTime dt) {
     strength: strength,
     shichen: '${kZhi[scIdx]}时',
     lunar: lunar,
+    options: options,
   );
 }

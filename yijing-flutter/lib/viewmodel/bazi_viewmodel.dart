@@ -21,6 +21,7 @@ class BaziState {
   final List<BaziReading> readings;
   final int? selectedStep; // 展开的大运步
   final bool restored; // 是否来自记忆
+  final BaZiOptions options; // 流派选项 (iter48)
 
   const BaziState({
     this.birth,
@@ -31,6 +32,7 @@ class BaziState {
     this.readings = const [],
     this.selectedStep,
     this.restored = false,
+    this.options = const BaZiOptions(),
   });
 
   bool get hasResult => chart != null;
@@ -43,6 +45,7 @@ class BaziState {
     BaZiExtra? extra,
     List<BaziReading>? readings,
     int? selectedStep,
+    BaZiOptions? options,
     bool clearStep = false,
     bool clearResult = false,
     bool? restored,
@@ -56,6 +59,7 @@ class BaziState {
         readings: clearResult ? const [] : (readings ?? this.readings),
         selectedStep: (clearResult || clearStep) ? null : (selectedStep ?? this.selectedStep),
         restored: restored ?? this.restored,
+        options: options ?? this.options,
       );
 }
 
@@ -84,7 +88,8 @@ class BaziViewModel extends ChangeNotifier {
       await _store.warmUp();
       final saved = _store.read();
       if (saved == null) return;
-      _state = _state.copyWith(birth: saved.dt, gender: saved.gender, restored: true);
+      _state = _state.copyWith(
+          birth: saved.dt, gender: saved.gender, options: saved.options, restored: true);
       compute();
     } catch (_) {} // 无存储环境静默
   }
@@ -103,7 +108,7 @@ class BaziViewModel extends ChangeNotifier {
   void compute() {
     final birth = _state.birth;
     if (birth == null) return;
-    final chart = computeBaZi(birth);
+    final chart = computeBaZi(birth, options: _state.options);
     if (chart == null) return;
     final dayun = analyzeDaYun(birth, _state.gender, now: _clock());
     _state = _state.copyWith(
@@ -113,7 +118,8 @@ class BaziViewModel extends ChangeNotifier {
       readings: baziReadings(chart),
       selectedStep: null,
     );
-    _store.write(BaziBirth(dt: birth, gender: _state.gender));
+    _store.write(BaziBirth(
+        dt: birth, gender: _state.gender, options: _state.options));
     // 落历史 (与旧 CastVM 行为一致)
     final repo = _history ?? HistoryRepository.instance;
     repo.add(HistoryRecord(
@@ -124,6 +130,16 @@ class BaziViewModel extends ChangeNotifier {
       ts: _clock(),
     ));
     notifyListeners();
+  }
+
+  /// 切换流派选项: 若已有命盘则按新流派重排 (iter48)
+  void setOptions(BaZiOptions options) {
+    _state = _state.copyWith(options: options, restored: false);
+    if (_state.birth != null) {
+      compute();
+    } else {
+      notifyListeners();
+    }
   }
 
   void selectStep(int? i) {

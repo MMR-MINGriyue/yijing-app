@@ -147,6 +147,8 @@ class _BaziScreenState extends State<BaziScreen> {
           ],
         ]),
         const SizedBox(height: 10),
+        _schoolSection(s, vm),
+        const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
           child: FilledButton(
@@ -163,6 +165,78 @@ class _BaziScreenState extends State<BaziScreen> {
         ),
       ]),
     );
+  }
+
+  // ---------- 流派选项 (iter48) ----------
+  Widget _schoolSection(BaziState s, BaziViewModel vm) {
+    final o = s.options;
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: const Color(0x14000000),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: YiColors.strokeSoft),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          const Text('流 派', style: TextStyle(fontSize: 10, letterSpacing: 2, color: YiColors.textTertiary)),
+          const Spacer(),
+          if (!o.isDefault)
+            GestureDetector(
+              onTap: () => vm.setOptions(const BaZiOptions()),
+              child: const Text('恢复通例', style: TextStyle(fontSize: 9, color: YiColors.gold)),
+            ),
+        ]),
+        const SizedBox(height: 6),
+        _schoolRow('换日线', [
+          ('子夜0时', o.dayBoundary == DayBoundary.midnight,
+              () => vm.setOptions(o.copyWith(dayBoundary: DayBoundary.midnight))),
+          ('夜半23时', o.dayBoundary == DayBoundary.lateZi,
+              () => vm.setOptions(o.copyWith(dayBoundary: DayBoundary.lateZi))),
+        ]),
+        const SizedBox(height: 4),
+        _schoolRow('命宫起法', [
+          ('寅首(通例)', o.mingGongBase == MingGongBase.yinFirst,
+              () => vm.setOptions(o.copyWith(mingGongBase: MingGongBase.yinFirst))),
+          ('子首', o.mingGongBase == MingGongBase.ziFirst,
+              () => vm.setOptions(o.copyWith(mingGongBase: MingGongBase.ziFirst))),
+        ]),
+        const SizedBox(height: 4),
+        _schoolRow('神煞取支', [
+          ('年日并查', o.shenShaAnchor == ShenShaAnchor.yearDay,
+              () => vm.setOptions(o.copyWith(shenShaAnchor: ShenShaAnchor.yearDay))),
+          ('仅年支', o.shenShaAnchor == ShenShaAnchor.yearOnly,
+              () => vm.setOptions(o.copyWith(shenShaAnchor: ShenShaAnchor.yearOnly))),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _schoolRow(String label, List<(String, bool, VoidCallback)> items) {
+    return Row(children: [
+      SizedBox(width: 52, child: Text(label,
+          style: const TextStyle(fontSize: 9, color: YiColors.textMuted))),
+      for (final it in items) ...[
+        Expanded(
+          child: InkWell(
+            onTap: it.$3,
+            borderRadius: BorderRadius.circular(6),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              decoration: BoxDecoration(
+                color: it.$2 ? YiColors.gold.withValues(alpha: 0.16) : const Color(0x11000000),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: it.$2 ? YiColors.goldDark : YiColors.strokeSoft),
+              ),
+              child: Text(it.$1, textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 9,
+                      color: it.$2 ? YiColors.gold : YiColors.textTertiary)),
+            ),
+          ),
+        ),
+        if (it != items.last) const SizedBox(width: 5),
+      ],
+    ]);
   }
 
   // ---------- 命盘 ----------
@@ -291,8 +365,15 @@ class _BaziScreenState extends State<BaziScreen> {
             _metaItem('命宫', ex.mingGong.isEmpty ? '—' : ex.mingGong),
             _metaItem('时辰', s.chart?.shichen ?? '—'),
           ]),
+        const SizedBox(height: 8),
+        Text(
+          '流派：${s.options.dayBoundary == DayBoundary.midnight ? '子夜0时换日' : '夜半23时换日'}'
+          ' · ${s.options.mingGongBase == MingGongBase.yinFirst ? '命宫寅首' : '命宫子首'}'
+          ' · ${s.options.shenShaAnchor == ShenShaAnchor.yearDay ? '神煞年日并查' : '神煞仅年支'}',
+          style: const TextStyle(fontSize: 9, color: YiColors.textMuted),
+        ),
         if (d?.qiYunInfo != null) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           Text(
             '${d!.forward ? '顺排' : '逆排'} · ${d.qiYunInfo!.years}岁${d.qiYunInfo!.months}个月起运'
             ' (@${d.qiYunInfo!.termName})',

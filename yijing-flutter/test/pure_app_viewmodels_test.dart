@@ -584,6 +584,88 @@ void main() {
     });
   });
   // ---------- iter47: 八字进阶 (十二长生/旬空/胎元/命宫/解读) ----------
+  // ---------- iter48: 流派选项 (换日线/命宫起法/神煞取支) ----------
+  group('BaZi 流派选项 (iter48)', () {
+    test('换日线: 夜半23时换日 → 日柱取次日, 时柱随次日日干', () {
+      final mid = computeBaZi(DateTime(1985, 12, 3, 23, 10))!; // 默认 0 时换日
+      final late = computeBaZi(DateTime(1985, 12, 3, 23, 10),
+          options: const BaZiOptions(dayBoundary: DayBoundary.lateZi))!;
+      expect(mid.pillars[2].gz, '丙子'); // 通例: 仍属当日
+      final nextDay = ganzhiDay(DateTime(1985, 12, 4));
+      expect(late.pillars[2].gz, nextDay); // 夜半换日: 归次日
+      expect(late.pillars[2].gz, isNot(mid.pillars[2].gz));
+      // 时柱随换日后的日干五鼠遁
+      expect(late.pillars[3].gz, hourPillar(nextDay[0], 0));
+      // 非子时段不受影响
+      final a = computeBaZi(DateTime(1985, 12, 3, 10, 30))!;
+      final b = computeBaZi(DateTime(1985, 12, 3, 10, 30),
+          options: const BaZiOptions(dayBoundary: DayBoundary.lateZi))!;
+      expect(a.pillars.map((p) => p.gz), b.pillars.map((p) => p.gz));
+    });
+
+    test('命宫起法: 寅首与子首结果不同且各落 12 支', () {
+      final yin = mingGongOf('庚', '巳', '未');
+      final zi = mingGongOf('庚', '巳', '未', base: MingGongBase.ziFirst);
+      expect(yin.length, 2);
+      expect(zi.length, 2);
+      expect(yin, isNot(zi));
+      expect(kZhi.contains(yin[1]), isTrue);
+      expect(kZhi.contains(zi[1]), isTrue);
+      final c1 = computeBaZi(DateTime(1990, 5, 15, 14, 30))!;
+      final c2 = computeBaZi(DateTime(1990, 5, 15, 14, 30),
+          options: const BaZiOptions(mingGongBase: MingGongBase.ziFirst))!;
+      expect(baziExtraOf(c1).mingGong, isNot(baziExtraOf(c2).mingGong));
+    });
+
+    test('神煞取支: 仅年支时 1990-05-15 华盖(日支查得)消失', () {
+      final both = computeBaZi(DateTime(1990, 5, 15, 14, 30))!;
+      expect(shenShaOf(both), ['天乙贵人', '华盖']);
+      final yearOnly = computeBaZi(DateTime(1990, 5, 15, 14, 30),
+          options: const BaZiOptions(shenShaAnchor: ShenShaAnchor.yearOnly))!;
+      expect(shenShaOf(yearOnly), ['天乙贵人']);
+    });
+
+    test('BaZiOptions 序列化往返 + isDefault + 脏数据回退', () {
+      const o = BaZiOptions(
+          dayBoundary: DayBoundary.lateZi,
+          mingGongBase: MingGongBase.ziFirst,
+          shenShaAnchor: ShenShaAnchor.yearOnly);
+      final back = BaZiOptions.fromJson(o.toJson());
+      expect(back.dayBoundary, DayBoundary.lateZi);
+      expect(back.mingGongBase, MingGongBase.ziFirst);
+      expect(back.shenShaAnchor, ShenShaAnchor.yearOnly);
+      expect(o.isDefault, isFalse);
+      expect(const BaZiOptions().isDefault, isTrue);
+      expect(BaZiOptions.fromJson({'day': 'bogus'}).dayBoundary,
+          DayBoundary.midnight);
+    });
+
+    test('BaziBirth 存储往返带流派', () {
+      final store = MemoryBaziBirthStore();
+      store.write(BaziBirth(
+          dt: DateTime(1990, 5, 15, 14, 30),
+          gender: 'male',
+          options: const BaZiOptions(dayBoundary: DayBoundary.lateZi)));
+      final back = BaziBirth.fromJson(store.read()!.toJson())!;
+      expect(back.options.dayBoundary, DayBoundary.lateZi);
+      expect(back.gender, 'male');
+    });
+
+    test('BaziViewModel.setOptions: 有盘则按新流派重排并落盘', () {
+      final store = MemoryBaziBirthStore();
+      final vm = BaziViewModel(store: store, historyRepo: newHist(seed: false));
+      vm.setBirth(DateTime(1985, 12, 3, 23, 10));
+      vm.compute();
+      expect(vm.state.chart!.pillars[2].gz, '丙子');
+      vm.setOptions(vm.state.options.copyWith(dayBoundary: DayBoundary.lateZi));
+      expect(vm.state.options.dayBoundary, DayBoundary.lateZi);
+      expect(vm.state.chart!.pillars[2].gz, ganzhiDay(DateTime(1985, 12, 4)));
+      expect(store.read()!.options.dayBoundary, DayBoundary.lateZi);
+      vm.setOptions(const BaZiOptions());
+      expect(vm.state.chart!.pillars[2].gz, '丙子');
+    });
+  });
+
   group('BaZi 进阶 (iter47)', () {
     test('十二长生: 甲长生在亥顺行, 乙长生在午逆行', () {
       expect(changShengOf('甲', '亥'), '长生');

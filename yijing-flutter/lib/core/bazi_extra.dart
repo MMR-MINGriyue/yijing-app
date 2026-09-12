@@ -68,27 +68,32 @@ String taiYuanOf(String monthGz) {
   return kGan[(gi + 1) % 10] + kZhi[(zi + 3) % 12];
 }
 
-/// 命宫 (通例: 月支 + 时支 相加, 不足14者以14减, 过14者以26减, 得数自寅顺数).
-/// 命宫天干按年干五虎遁 (寅月起干) 推得. 各派口诀略有出入, 作参考项展示.
-String mingGongOf(String yearGan, String monthZhi, String hourZhi) {
+/// 命宫 (月支 + 时支 合数, 不足14者以14减, 过14者以26减, 得数顺数至命宫支).
+/// [base] 起数法: yinFirst = 月数自寅起 (寅月=1, 通例, 默认);
+/// ziFirst = 月数自子起 (子月=1). 命宫天干按年干五虎遁推得.
+String mingGongOf(String yearGan, String monthZhi, String hourZhi,
+    {MingGongBase base = MingGongBase.yinFirst}) {
   final mIdx = kZhi.indexOf(monthZhi);
   final hIdx = kZhi.indexOf(hourZhi);
   if (mIdx < 0 || hIdx < 0) return '';
-  // 月数: 寅=1 … 丑=12
-  final mv = ((mIdx - 2 + 12) % 12) + 1;
-  // 时数: 子=1 … 亥=12
+  // 月数 / 时数 (时数恒自子起: 子=1 … 亥=12)
+  final mv = base == MingGongBase.ziFirst
+      ? mIdx + 1 // 子月=1
+      : ((mIdx - 2 + 12) % 12) + 1; // 寅月=1
   final hv = hIdx + 1;
-  var sum = mv + hv;
-  final k = sum <= 14 ? 14 - sum : 26 - sum;
-  if (k <= 0) return '';
-  // k 自寅顺数: 寅=k1 → 子索引 = (2 + k - 1) % 12
-  final gongZhiIdx = (2 + k - 1) % 12;
+  final sum = mv + hv;
+  var k = sum <= 14 ? 14 - sum : 26 - sum;
+  if (k <= 0) k += 12; // 合数恰为 14/26 时循环取 12 (避免空值)
+  // 自起点顺数 k 位: 寅首 → (2 + k - 1); 子首 → (0 + k - 1)
+  final baseIdx = base == MingGongBase.ziFirst ? 0 : 2;
+  final gongZhiIdx = (baseIdx + k - 1) % 12;
   final gongZhi = kZhi[gongZhiIdx];
   // 五虎遁: 年干甲己起丙寅, 乙庚起戊寅, 丙辛起庚寅, 丁壬起壬寅, 戊癸起甲寅
   final yIdx = kGan.indexOf(yearGan);
   if (yIdx < 0) return gongZhi;
   const yinGanStart = [2, 4, 6, 8, 0]; // 丙戊庚壬甲
   final startGan = yinGanStart[yIdx % 5];
+  // 自寅起算命宫地支距寅的位数 (天干恒自寅起五虎遁)
   final monthsFromYin = (gongZhiIdx - 2 + 12) % 12;
   final gongGan = kGan[(startGan + monthsFromYin) % 10];
   return gongGan + gongZhi;
@@ -115,6 +120,7 @@ BaZiExtra baziExtraOf(BaZiChart c) {
     changSheng: c.pillars.map((p) => changShengOf(dayGan, p.zhi)).toList(),
     xunKong: xunKongOf(c.pillars[2].gz),
     taiYuan: taiYuanOf(c.pillars[1].gz),
-    mingGong: mingGongOf(c.pillars[0].gan, c.pillars[1].zhi, c.pillars[3].zhi),
+    mingGong: mingGongOf(c.pillars[0].gan, c.pillars[1].zhi, c.pillars[3].zhi,
+        base: c.options.mingGongBase),
   );
 }

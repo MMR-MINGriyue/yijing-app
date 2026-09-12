@@ -2,23 +2,35 @@
 /// 抽象 + 内存实现 (测试/桌面); 真机 Prefs 实现见 bazi_store_prefs.dart
 library;
 
-/// 出生信息 (公历时刻 + 乾坤造)
+import '../core/bazi.dart';
+
+/// 出生信息 (公历时刻 + 乾坤造 + 流派选项)
 class BaziBirth {
   final DateTime dt;
   final String gender; // male=乾造 female=坤造
+  final BaZiOptions options; // 流派选项 (iter48)
 
-  const BaziBirth({required this.dt, required this.gender});
+  const BaziBirth({
+    required this.dt,
+    required this.gender,
+    this.options = const BaZiOptions(),
+  });
 
   Map<String, dynamic> toJson() => {
         'ts': dt.millisecondsSinceEpoch,
         'gender': gender,
+        'opts': options.toJson(),
       };
 
   static BaziBirth? fromJson(Map<String, dynamic> j) {
     final ts = j['ts'];
     if (ts is! int) return null;
     final g = j['gender'] is String ? j['gender'] as String : 'male';
-    return BaziBirth(dt: DateTime.fromMillisecondsSinceEpoch(ts), gender: g);
+    final opts = j['opts'] is Map<String, dynamic>
+        ? BaZiOptions.fromJson(j['opts'] as Map<String, dynamic>)
+        : const BaZiOptions();
+    return BaziBirth(
+        dt: DateTime.fromMillisecondsSinceEpoch(ts), gender: g, options: opts);
   }
 }
 
