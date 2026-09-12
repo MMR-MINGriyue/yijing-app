@@ -83,7 +83,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     final s = widget.vm.state;
     return Scaffold(
-      backgroundColor: YiColors.ink,
+      backgroundColor: Colors.transparent,
       appBar: _selectMode ? _selectAppBar() : _normalAppBar(),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
@@ -117,14 +117,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   // ---------- AppBar ----------
   PreferredSizeWidget _normalAppBar() => AppBar(
-    backgroundColor: YiColors.ink,
+    backgroundColor: Colors.transparent,
     foregroundColor: YiColors.gold,
     centerTitle: true,
     title: const Text('历 史 记 录', style: TextStyle(letterSpacing: 6, fontSize: 17)),
   );
 
   PreferredSizeWidget _selectAppBar() => AppBar(
-    backgroundColor: YiColors.ink,
+    backgroundColor: Colors.transparent,
     foregroundColor: YiColors.gold,
     leading: IconButton(
       icon: const Icon(Icons.close),

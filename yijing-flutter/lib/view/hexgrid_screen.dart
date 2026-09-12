@@ -38,9 +38,9 @@ class _HexGridScreenState extends State<HexGridScreen> {
   Widget build(BuildContext context) {
     final list = widget.vm.filtered;
     return Scaffold(
-      backgroundColor: YiColors.ink,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: YiColors.ink,
+        backgroundColor: Colors.transparent,
         foregroundColor: YiColors.gold,
         centerTitle: true,
         title: const Text('六 十 四 卦',

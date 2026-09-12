@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../model/history.dart';
 import '../service/reminder_service.dart';
+import '../theme/ink_wash.dart';
 import '../theme/yijing_theme.dart';
 import '../view/cast_screen.dart';
 import '../view/detail_screen.dart';
@@ -111,33 +112,35 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: YiColors.ink,
-      body: IndexedStack(index: _tab, children: [
-        HomeScreen(
-          vm: _homeVm,
-          onOpenDetail: (no, {question}) => _openDetail(no, question: question),
-          onGoCast: () => _go(1),
-          onGoGrid: () => _go(2),
-          onGoHistory: () => _go(3),
-          onOpenSettings: _openSettings,
-        ),
-        CastScreen(
-          vm: _castVm,
-          onOpenDetail: (hex, {question}) => _openDetail(hex.no,
-              question: question, direction: _castVm.state.direction),
-        ),
-        HexGridScreen(vm: _gridVm, onOpenDetail: _openDetail),
-        HistoryScreen(vm: _historyVm, onOpenRecord: _openRecord),
-        MeScreen(
-          vm: _meVm,
-          onOpenDetail: _openDetail,
-          onGoHistory: () => _go(3),
-          onGoGrid: () => _go(2),
-          onOpenSettings: _openSettings,
-        ),
-      ]),
+      backgroundColor: Colors.transparent,
+      body: YiInkWash(
+        child: IndexedStack(index: _tab, children: [
+          HomeScreen(
+            vm: _homeVm,
+            onOpenDetail: (no, {question}) => _openDetail(no, question: question),
+            onGoCast: () => _go(1),
+            onGoGrid: () => _go(2),
+            onGoHistory: () => _go(3),
+            onOpenSettings: _openSettings,
+          ),
+          CastScreen(
+            vm: _castVm,
+            onOpenDetail: (hex, {question}) => _openDetail(hex.no,
+                question: question, direction: _castVm.state.direction),
+          ),
+          HexGridScreen(vm: _gridVm, onOpenDetail: _openDetail),
+          HistoryScreen(vm: _historyVm, onOpenRecord: _openRecord),
+          MeScreen(
+            vm: _meVm,
+            onOpenDetail: _openDetail,
+            onGoHistory: () => _go(3),
+            onGoGrid: () => _go(2),
+            onOpenSettings: _openSettings,
+          ),
+        ]),
+      ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: YiColors.ink,
+        backgroundColor: Colors.transparent,
         selectedItemColor: YiColors.cinnabar,
         unselectedItemColor: YiColors.textTertiary,
         type: BottomNavigationBarType.fixed,

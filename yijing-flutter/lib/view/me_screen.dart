@@ -43,9 +43,9 @@ class _MeScreenState extends State<MeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: YiColors.ink,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: YiColors.ink,
+        backgroundColor: Colors.transparent,
         foregroundColor: YiColors.gold,
         centerTitle: true,
         title: const Text('我 的', style: TextStyle(letterSpacing: 6, fontSize: 17)),

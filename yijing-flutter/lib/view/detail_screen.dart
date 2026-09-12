@@ -9,6 +9,7 @@ import '../model/hex.dart';
 import '../data/hex_advice.dart';
 import 'widgets/share_card.dart';
 import 'widgets/yao_sheet.dart';
+import '../theme/ink_wash.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/detail_viewmodel.dart';
 
@@ -45,9 +46,9 @@ class _DetailScreenState extends State<DetailScreen> {
   Widget build(BuildContext context) {
     final h = widget.vm.hex;
     return Scaffold(
-      backgroundColor: YiColors.ink,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: YiColors.ink,
+        backgroundColor: Colors.transparent,
         foregroundColor: YiColors.gold,
         title: const Text('卦 辞 解 析', style: TextStyle(letterSpacing: 6, fontSize: 17)),
         actions: [
@@ -62,7 +63,7 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
         ],
       ),
-      body: ListView(
+      body: YiInkWash(child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
         children: [
           _hero(h),
@@ -79,6 +80,7 @@ class _DetailScreenState extends State<DetailScreen> {
           const SizedBox(height: 16),
           _yaoList(h),
         ],
+      ),
       ),
     );
   }

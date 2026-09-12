@@ -10,6 +10,7 @@ import '../core/xiaoliuren.dart';
 import 'widgets/casting_anim.dart';
 import 'widgets/pressable.dart';
 import '../model/hex.dart';
+import '../theme/ink_wash.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/cast_viewmodel.dart';
 import 'widgets/hex_glyph.dart';
@@ -67,9 +68,9 @@ class _CastScreenState extends State<CastScreen> {
   Widget build(BuildContext context) {
     final s = widget.vm.state;
     return Scaffold(
-      backgroundColor: YiColors.ink,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: YiColors.ink,
+        backgroundColor: Colors.transparent,
         foregroundColor: YiColors.gold,
         centerTitle: true,
         title: Text(s.morePage ? '更 多 占 法' : '起 卦',
@@ -81,7 +82,7 @@ class _CastScreenState extends State<CastScreen> {
               )
             : null,
       ),
-      body: s.morePage ? _morePage(s) : _mainPage(s),
+      body: YiInkWash(child: s.morePage ? _morePage(s) : _mainPage(s)),
     );
   }
 
