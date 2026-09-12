@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../model/hex.dart';
 import '../data/hex_advice.dart';
+import 'widgets/hex_glyph.dart';
 import 'widgets/share_card.dart';
 import 'widgets/yao_sheet.dart';
 import '../theme/ink_wash.dart';
@@ -114,14 +115,8 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   Widget _miniYaoStack(Hex h) {
-    return Column(mainAxisSize: MainAxisSize.min, children: [
-      for (var i = 5; i >= 0; i--)
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Container(width: h.yangs[i] ? 44 : 20, height: 4,
-              decoration: BoxDecoration(color: YiColors.gold, borderRadius: BorderRadius.circular(2))),
-        ),
-    ]);
+    // iter45: 统一走 HexGlyph (金渐变爻身, 与全应用卦爻视觉一致)
+    return HexGlyph(lines: h.yangs, width: 44, lineH: 4, gap: 4);
   }
 
   // ---------- Tab: 卦辞 / 爻辞 / 象传 ----------
