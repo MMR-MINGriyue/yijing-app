@@ -108,6 +108,20 @@ class _AppShellState extends State<AppShell> {
     }
   }
 
+  /// 卦库 / 历史 — iter46 起转为推入路由 (导航瘦身: 今日/占卜/我的)
+  /// VM 挂在壳层, 推入/退出状态不丢
+  void _openGrid() {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => HexGridScreen(vm: _gridVm, onOpenDetail: _openDetail),
+    ));
+  }
+
+  void _openHistory() {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => HistoryScreen(vm: _historyVm, onOpenRecord: _openRecord),
+    ));
+  }
+
   // ---------- 构建 ----------
   @override
   Widget build(BuildContext context) {
@@ -119,8 +133,8 @@ class _AppShellState extends State<AppShell> {
             vm: _homeVm,
             onOpenDetail: (no, {question}) => _openDetail(no, question: question),
             onGoCast: () => _go(1),
-            onGoGrid: () => _go(2),
-            onGoHistory: () => _go(3),
+            onGoGrid: _openGrid,
+            onGoHistory: _openHistory,
             onOpenSettings: _openSettings,
           ),
           CastScreen(
@@ -128,13 +142,11 @@ class _AppShellState extends State<AppShell> {
             onOpenDetail: (hex, {question}) => _openDetail(hex.no,
                 question: question, direction: _castVm.state.direction),
           ),
-          HexGridScreen(vm: _gridVm, onOpenDetail: _openDetail),
-          HistoryScreen(vm: _historyVm, onOpenRecord: _openRecord),
           MeScreen(
             vm: _meVm,
             onOpenDetail: _openDetail,
-            onGoHistory: () => _go(3),
-            onGoGrid: () => _go(2),
+            onGoHistory: _openHistory,
+            onGoGrid: _openGrid,
             onOpenSettings: _openSettings,
           ),
         ]),
@@ -150,9 +162,7 @@ class _AppShellState extends State<AppShell> {
         onTap: (i) => _go(i),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.wb_twilight_outlined), label: '今日'),
-          BottomNavigationBarItem(icon: Icon(Icons.auto_awesome_outlined), label: '起卦'),
-          BottomNavigationBarItem(icon: Icon(Icons.grid_view_outlined), label: '卦库'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: '历史'),
+          BottomNavigationBarItem(icon: Icon(Icons.auto_awesome_outlined), label: '占卜'),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: '我的'),
         ],
       ),

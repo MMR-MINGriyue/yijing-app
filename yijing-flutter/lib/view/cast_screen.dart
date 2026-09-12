@@ -8,6 +8,7 @@ import '../core/dayun.dart';
 import '../core/meihua.dart';
 import '../core/xiaoliuren.dart';
 import 'widgets/casting_anim.dart';
+import 'widgets/coin_toss_anim.dart';
 import 'widgets/pressable.dart';
 import '../model/hex.dart';
 import '../theme/ink_wash.dart';
@@ -73,16 +74,10 @@ class _CastScreenState extends State<CastScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: YiColors.gold,
         centerTitle: true,
-        title: Text(s.morePage ? '更 多 占 法' : '起 卦',
-            style: const TextStyle(letterSpacing: 6, fontSize: 17)),
-        leading: s.morePage
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: widget.vm.backToMain,
-              )
-            : null,
+        title: const Text('占  卜',
+            style: TextStyle(letterSpacing: 6, fontSize: 17)),
       ),
-      body: YiInkWash(child: s.morePage ? _morePage(s) : _mainPage(s)),
+      body: YiInkWash(child: _mainPage(s)),
     );
   }
 
@@ -126,7 +121,12 @@ class _CastScreenState extends State<CastScreen> {
           _methodCard(m, s),
           const SizedBox(height: 10),
         ],
-        _moreEntry(),
+        const SizedBox(height: 12),
+        _xlrCard(s),
+        const SizedBox(height: 12),
+        _meihuaCard(s),
+        const SizedBox(height: 12),
+        _baziCard(s),
       ],
     );
   }
@@ -221,35 +221,21 @@ class _CastScreenState extends State<CastScreen> {
         CastMethod.coin => '钱',
       };
 
-  Widget _moreEntry() {
-    return PressableScale(
-      onTap: widget.vm.openMorePage,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [Color(0x33D04D3E), Color(0x22C9A876)]),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: YiColors.stroke),
-        ),
-        child: const Row(children: [
-          Expanded(
-            child: Text('更多占法 ›  八字 · 小六壬 · 梅花易数',
-                style: TextStyle(fontSize: 13, letterSpacing: 1, color: YiColors.textPrimary)),
-          ),
-          Icon(Icons.chevron_right, size: 18, color: YiColors.gold),
-        ]),
-      ),
-    );
-  }
-
   // ---------- 推演动画 (iter38: 六爻逐爻点亮) ----------
   Widget _casting() {
+    // 铜钱法: 三枚铜钱翻掷 + 下方爻象点亮; 其他法保持爻象点亮 (iter46)
+    final isCoin = widget.vm.state.method == CastMethod.coin;
     return Center(
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const CastingAnim(),
+        if (isCoin) ...[
+          const CoinTossAnim(),
+          const SizedBox(height: 22),
+          const CastingAnim(size: 130),
+        ] else
+          const CastingAnim(),
         const SizedBox(height: 14),
-        const Text('乾坤位定，爻象将成',
-            style: TextStyle(fontSize: 11, color: YiColors.textTertiary)),
+        Text(isCoin ? '观三枚之背字，成六爻之象' : '乾坤位定，爻象将成',
+            style: const TextStyle(fontSize: 11, color: YiColors.textTertiary)),
       ]),
     );
   }
@@ -321,27 +307,6 @@ class _CastScreenState extends State<CastScreen> {
     );
   }
 
-  // ================= 更多占法子页 =================
-  Widget _morePage(CastState s) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-      children: [
-        _directionChips(s),
-        const SizedBox(height: 14),
-        _xlrCard(s),
-        const SizedBox(height: 12),
-        _meihuaCard(s),
-        const SizedBox(height: 12),
-        _baziCard(s),
-        const SizedBox(height: 12),
-        if (s.xlr != null) ...[
-          _xlrResult(s.xlr!),
-          const SizedBox(height: 12),
-        ],
-      ],
-    );
-  }
-
   Widget _xlrCard(CastState s) {
     return Container(
       padding: const EdgeInsets.all(14),
@@ -392,6 +357,10 @@ class _CastScreenState extends State<CastScreen> {
             child: const Text('即时起课', style: TextStyle(letterSpacing: 4, fontSize: 13)),
           ),
         ),
+        if (s.xlr != null) ...[
+          const SizedBox(height: 12),
+          _xlrResult(s.xlr!),
+        ],
       ]),
     );
   }

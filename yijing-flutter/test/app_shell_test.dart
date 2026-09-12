@@ -24,11 +24,11 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('壳层 5 Tab 默认今日屏 (问候 + 今日一卦 + 最近占卜)', (tester) async {
+  testWidgets('壳层 3 Tab 默认今日屏 (问候 + 今日一卦 + 最近占卜)', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: AppShell()));
     await tester.pumpAndSettle();
     expect(find.text('最 近 占 卜'), findsOneWidget);
-    // 5 个 tab 图标 (grid/history 与首页快捷入口共用图标, 允许多处)
+    // 3 个 tab (grid/history 图标与我的页快捷入口共用, 允许多处)
     expect(find.byIcon(Icons.wb_twilight_outlined), findsWidgets);
     expect(find.byIcon(Icons.auto_awesome_outlined), findsOneWidget);
     expect(find.byIcon(Icons.grid_view_outlined), findsWidgets);
@@ -83,23 +83,40 @@ void main() {
     expect(find.text('从文件导入'), findsOneWidget);
   });
 
-  testWidgets('Tab 切换: 卦库 64 卦 + 历史 + 我的 + 起卦', (tester) async {
+  testWidgets('Tab 切换: 我的 → 卦库/历史推入; 占卜页占法内联 (iter46)', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: AppShell()));
     await tester.pumpAndSettle();
 
-    await goTab(tester, '卦库');
-    expect(find.text('六 十 四 卦'), findsOneWidget);
-    expect(find.text('共 64 卦'), findsOneWidget);
-
-    await goTab(tester, '历史');
-    expect(find.byIcon(Icons.chevron_left), findsOneWidget); // 月份导航
-
+    // 我的 → 六十四卦 (推入路由)
     await goTab(tester, '我的');
     expect(find.text('占 卜 概 览'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('六十四卦'), 250);
+    await tester.tap(find.text('六十四卦'));
+    await tester.pumpAndSettle();
+    expect(find.text('六 十 四 卦'), findsOneWidget);
+    expect(find.text('共 64 卦'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
 
-    await goTab(tester, '起卦');
-    expect(find.text('起 卦'), findsOneWidget);
-    expect(find.text('更多占法 ›  八字 · 小六壬 · 梅花易数'), findsOneWidget);
+    // 我的 → 历史记录 (推入路由)
+    await tester.tap(find.text('历史记录'));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.chevron_left), findsOneWidget); // 月份导航
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    // 占卜页: 三式 + 小六壬/梅花/八字 内联 (iter46 不再折叠)
+    await goTab(tester, '占卜');
+    expect(find.text('占  卜'), findsOneWidget);
+    // 三占法卡在 ListView 折叠线下: 直接拖拽列表滚到底
+    for (var i = 0; i < 8 && find.text('八字排盘').evaluate().isEmpty; i++) {
+      await tester.drag(find.byType(ListView), const Offset(0, -260));
+      await tester.pumpAndSettle();
+    }
+    expect(find.text('小六壬'), findsOneWidget);
+    expect(find.text('梅花易数'), findsOneWidget);
+    expect(find.text('八字排盘'), findsOneWidget);
+    expect(find.text('更多占法'), findsNothing);
   });
 
   testWidgets('分享卡预览渲染 (720×1040 painter 不抛异常)', (tester) async {
@@ -165,7 +182,7 @@ void main() {
   testWidgets('起卦闭环: CTA → 推演动画 → 结果 (iter37 回归)', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: AppShell()));
     await tester.pumpAndSettle();
-    await goTab(tester, '起卦');
+    await goTab(tester, '占卜');
     // 表单必须有起卦 CTA (iter36 实测缺失)
     await tester.tap(find.text('起  卦'));
     await tester.pump(); // 进入 casting (六爻逐爻点亮动画)
@@ -181,7 +198,10 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: AppShell()));
     await tester.pumpAndSettle();
 
-    await goTab(tester, '卦库');
+    await goTab(tester, '我的');
+    await tester.scrollUntilVisible(find.text('六十四卦'), 250);
+    await tester.tap(find.text('六十四卦'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('乾').first);
     await tester.pumpAndSettle();
     expect(find.text('卦 辞 解 析'), findsOneWidget);

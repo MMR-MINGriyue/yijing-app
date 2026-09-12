@@ -179,12 +179,10 @@ void main() {
       expect(rec.question, contains('七月'));
     });
 
-    test('更多占法子页开关', () {
+    test('方向切换保留', () {
       final vm = CastViewModel(hexRepo: repo, history: newHist());
-      vm.openMorePage();
-      expect(vm.state.morePage, isTrue);
-      vm.backToMain();
-      expect(vm.state.morePage, isFalse);
+      vm.setDirection('感情');
+      expect(vm.state.direction, '感情');
     });
   });
 

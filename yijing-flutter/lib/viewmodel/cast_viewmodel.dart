@@ -50,7 +50,6 @@ class CastState {
   final CastResult? result;
   final Hex? hex;
   final XiaoLiuRenResult? xlr;
-  final bool morePage; // 更多占法子页
   final BaZiChart? bazi;
   final DaYunChart? dayun;
   final int? selectedDayunStep; // 流年展开的大运步序
@@ -63,7 +62,6 @@ class CastState {
     this.result,
     this.hex,
     this.xlr,
-    this.morePage = false,
     this.bazi,
     this.dayun,
     this.selectedDayunStep,
@@ -72,7 +70,7 @@ class CastState {
   CastState copyWith({
     CastPhase? phase, CastMethod? method, String? question,
     String? direction, CastResult? result, Hex? hex,
-    XiaoLiuRenResult? xlr, bool? morePage, bool clearResult = false,
+    XiaoLiuRenResult? xlr, bool clearResult = false,
     bool clearXlr = false, BaZiChart? bazi, DaYunChart? dayun,
     bool clearBazi = false, int? selectedDayunStep,
   }) =>
@@ -84,7 +82,6 @@ class CastState {
         result: clearResult ? null : (result ?? this.result),
         hex: clearResult ? null : (hex ?? this.hex),
         xlr: clearXlr ? null : (xlr ?? this.xlr),
-        morePage: morePage ?? this.morePage,
         bazi: clearBazi ? null : (bazi ?? this.bazi),
         dayun: clearBazi ? null : (dayun ?? this.dayun),
         selectedDayunStep: selectedDayunStep,
@@ -123,16 +120,6 @@ class CastViewModel extends ChangeNotifier {
 
   void setDirection(String d) {
     _state = _state.copyWith(direction: d);
-    notifyListeners();
-  }
-
-  void openMorePage() {
-    _state = _state.copyWith(morePage: true, clearResult: true, clearXlr: true);
-    notifyListeners();
-  }
-
-  void backToMain() {
-    _state = _state.copyWith(morePage: false);
     notifyListeners();
   }
 
