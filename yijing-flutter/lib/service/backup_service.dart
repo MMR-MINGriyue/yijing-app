@@ -45,20 +45,14 @@ class DeviceFilePorter implements FilePorter {
 
   @override
   Future<String?> pickBackupText() async {
-    final result = await FilePicker.pickFiles( // file_picker 11: 静态 API (无 .platform)
+    // file_picker 12: 联邦插件化 + 单文件便捷 API; withData 已废弃, 字节走 readAsBytes
+    final f = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: const ['json', 'txt'],
-      withData: true, // 优先走 bytes (iOS/Android 沙箱无直读权限时更稳)
     );
-    if (result == null || result.files.isEmpty) return null;
-    final f = result.files.single;
-    final bytes = f.bytes;
-    if (bytes != null) {
-      return backupJsonFromBytes(bytes); // UTF-8 解码, 中文不乱码
-    }
-    final path = f.path;
-    if (path == null) return null;
-    return File(path).readAsString();
+    if (f == null) return null; // 用户取消
+    final bytes = await f.readAsBytes();
+    return backupJsonFromBytes(bytes); // UTF-8 解码, 中文不乱码
   }
 }
 
