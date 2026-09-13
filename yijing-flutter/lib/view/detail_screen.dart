@@ -11,6 +11,7 @@ import 'widgets/hex_glyph.dart';
 import 'widgets/share_card.dart';
 import 'widgets/yao_sheet.dart';
 import '../theme/ink_wash.dart';
+import '../theme/yi_transitions.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/detail_viewmodel.dart';
 
@@ -64,7 +65,11 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
         ],
       ),
-      body: YiInkWash(child: ListView(
+      body: YiInkWash(
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onHorizontalDragEnd: _onHorizontalDragEnd,
+          child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
         children: [
           _hero(h),
@@ -81,6 +86,7 @@ class _DetailScreenState extends State<DetailScreen> {
           const SizedBox(height: 16),
           _yaoList(h),
         ],
+      ),
       ),
       ),
     );
@@ -112,6 +118,24 @@ class _DetailScreenState extends State<DetailScreen> {
             style: const TextStyle(fontSize: 13, height: 1.6, color: YiColors.textPrimary)),
       ]),
     );
+  }
+
+  /// 左右滑动切换卦象 (iter49): 左滑下一卦, 右滑上一卦, 1↔64 环绕
+  void _onHorizontalDragEnd(DragEndDetails d) {
+    final v = d.primaryVelocity ?? 0;
+    if (v.abs() < 450) return;
+    final delta = v < 0 ? 1 : -1; // 左滑 → 下一卦
+    final next = ((widget.vm.hex.no - 1 + delta) % 64 + 64) % 64 + 1;
+    if (next == widget.vm.hex.no) return;
+    Navigator.of(context).pushReplacement(yiFadeRoute(DetailScreen(
+      vm: DetailViewModel(
+        hexNo: next,
+        question: widget.vm.question,
+        direction: widget.vm.direction,
+      ),
+      onOpenTransform: widget.onOpenTransform,
+      onShare: widget.onShare,
+    )));
   }
 
   Widget _miniYaoStack(Hex h) {

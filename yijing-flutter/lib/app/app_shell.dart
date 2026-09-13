@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../model/history.dart';
 import '../service/reminder_service.dart';
 import '../theme/ink_wash.dart';
+import '../theme/yi_transitions.dart';
 import '../theme/yijing_theme.dart';
 import '../view/bazi_screen.dart';
 import '../view/cast_screen.dart';
@@ -81,17 +82,15 @@ class _AppShellState extends State<AppShell> {
   // ---------- 路由 ----------
   void _openDetail(int hexNo,
       {String? question, List<int> moving = const [], String? direction}) {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => DetailScreen(
-        vm: DetailViewModel(
-          hexNo: hexNo,
-          question: question ?? '',
-          moving: moving,
-          direction: direction ?? '',
-        ),
-        onOpenTransform: (hex) => _openTransform(hex.no, moving),
+    Navigator.of(context).push(yiFadeRoute(DetailScreen(
+      vm: DetailViewModel(
+        hexNo: hexNo,
+        question: question ?? '',
+        moving: moving,
+        direction: direction ?? '',
       ),
-    ));
+      onOpenTransform: (hex) => _openTransform(hex.no, moving),
+    )));
   }
 
   void _openTransform(int hexNo, List<int> moving) {
@@ -99,9 +98,7 @@ class _AppShellState extends State<AppShell> {
     for (final i in moving) {
       vm.toggleMoving(i);
     }
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => TransformScreen(vm: vm),
-    ));
+    Navigator.of(context).push(yiFadeRoute(TransformScreen(vm: vm)));
   }
 
   void _openRecord(HistoryRecord r) {
@@ -114,16 +111,22 @@ class _AppShellState extends State<AppShell> {
   /// 卦库 / 历史 — iter46 起转为推入路由 (导航瘦身: 今日/占卜/我的)
   /// VM 挂在壳层, 推入/退出状态不丢
   void _openGrid() {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => HexGridScreen(vm: _gridVm, onOpenDetail: _openDetail),
-    ));
+    Navigator.of(context).push(yiFadeRoute(
+        HexGridScreen(vm: _gridVm, onOpenDetail: _openDetail)));
   }
 
   void _openHistory() {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => HistoryScreen(vm: _historyVm, onOpenRecord: _openRecord),
-    ));
+    Navigator.of(context).push(yiFadeRoute(
+        HistoryScreen(vm: _historyVm, onOpenRecord: _openRecord)));
   }
+
+  /// Tab 淡入包装 (非当前 Tab 透明, 切换时交叉淡入; IndexedStack 状态保留)
+  Widget _fadeTab(int i, Widget child) => AnimatedOpacity(
+        opacity: i == _tab ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOut,
+        child: child,
+      );
 
   // ---------- 构建 ----------
   @override
@@ -131,31 +134,40 @@ class _AppShellState extends State<AppShell> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: YiInkWash(
-        child: IndexedStack(index: _tab, children: [
-          HomeScreen(
+        // iter49: Tab 切换交叉淡入 (IndexedStack 保状态, 每子树淡入)
+        child: IndexedStack(
+          index: _tab,
+          children: [
+            _fadeTab(0, HomeScreen(
             vm: _homeVm,
             onOpenDetail: (no, {question}) => _openDetail(no, question: question),
             onGoCast: () => _go(1),
             onGoGrid: _openGrid,
             onGoHistory: _openHistory,
             onOpenSettings: _openSettings,
-          ),
-          CastScreen(
+          )),
+            _fadeTab(1, CastScreen(
             vm: _castVm,
             onOpenDetail: (hex, {question}) => _openDetail(hex.no,
                 question: question, direction: _castVm.state.direction),
-          ),
-          BaziScreen(vm: _baziVm),
-          MeScreen(
+          )),
+            _fadeTab(2, BaziScreen(vm: _baziVm)),
+            _fadeTab(3, MeScreen(
             vm: _meVm,
             onOpenDetail: _openDetail,
             onGoHistory: _openHistory,
             onGoGrid: _openGrid,
             onOpenSettings: _openSettings,
-          ),
-        ]),
+          )),
+          ]),
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: DecoratedBox(
+        // iter49: 顶部金色发丝线, 与墨韵一体
+        decoration: BoxDecoration(
+          border: Border(
+              top: BorderSide(color: YiColors.gold.withValues(alpha: 0.14))),
+        ),
+        child: BottomNavigationBar(
         backgroundColor: Colors.transparent,
         selectedItemColor: YiColors.cinnabar,
         unselectedItemColor: YiColors.textTertiary,
@@ -170,6 +182,7 @@ class _AppShellState extends State<AppShell> {
           BottomNavigationBarItem(icon: Icon(Icons.calendar_month_outlined), label: '八字'),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: '我的'),
         ],
+      ),
       ),
     );
   }

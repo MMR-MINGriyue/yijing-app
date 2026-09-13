@@ -166,6 +166,25 @@ void main() {
     expect(find.byIcon(Icons.copy), findsOneWidget);
   });
 
+  testWidgets('详情左右滑动切换卦象: 乾→坤→乾 (iter49)', (tester) async {
+    HexRepository.instance.init();
+    await tester.pumpWidget(MaterialApp(
+      home: DetailScreen(
+        vm: DetailViewModel(hexNo: 1, favs: FavoritesRepository(store: MemoryFavoritesStore())),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('乾 卦'), findsOneWidget);
+    // 左滑 → 下一卦 (坤)
+    await tester.fling(find.byType(ListView), const Offset(-300, 0), 900);
+    await tester.pumpAndSettle();
+    expect(find.text('坤 卦'), findsOneWidget);
+    // 右滑 → 上一卦 (乾)
+    await tester.fling(find.byType(ListView), const Offset(300, 0), 900);
+    await tester.pumpAndSettle();
+    expect(find.text('乾 卦'), findsOneWidget);
+  });
+
   testWidgets('屏7 ⚙ → 设置面板 (导出/导入/清空/重置)', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: AppShell()));
     await tester.pumpAndSettle();
