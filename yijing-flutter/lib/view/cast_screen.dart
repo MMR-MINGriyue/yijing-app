@@ -50,9 +50,12 @@ class _CastScreenState extends State<CastScreen> {
 
   void _onVm() {
     final phase = widget.vm.state.phase;
-    // 推演动画: ~1s 后落真实卦象
+    // 推演动画: 铜钱法六掷 (~2.8s), 余法 ~1s; 结束后落真实卦象
     if (phase == CastPhase.casting && _timer == null) {
-      _timer = Timer(const Duration(milliseconds: 1100), () {
+      final coin = widget.vm.state.method == CastMethod.coin;
+      _timer = Timer(
+          Duration(milliseconds: coin ? CoinTossAnim.realDuration.inMilliseconds : 1100),
+          () {
         _timer = null;
         widget.vm.finishCast();
       });
@@ -215,20 +218,72 @@ class _CastScreenState extends State<CastScreen> {
       };
 
   // ---------- 推演动画 (iter38: 六爻逐爻点亮) ----------
+  /// 掷币记录带 (iter50): 六爻三币组合, ●背 ○字; 动爻朱砂框
+  Widget _coinStrip(CastResult r) {
+    final tosses = r.tosses!;
+    const names = ['初', '二', '三', '四', '五', '上'];
+    return Column(children: [
+      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        for (var yao = 0; yao < 6; yao++) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+            decoration: BoxDecoration(
+              color: r.moving.contains(yao)
+                  ? const Color(0x22D04D3E)
+                  : const Color(0x22C9A876),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                  color: r.moving.contains(yao)
+                      ? YiColors.cinnabar
+                      : YiColors.strokeSoft),
+            ),
+            child: Column(children: [
+              Text(names[yao],
+                  style: const TextStyle(fontSize: 8, color: YiColors.textMuted)),
+              const SizedBox(height: 3),
+              Row(children: [
+                for (final c in tosses[yao])
+                  Container(
+                    width: 9,
+                    height: 9,
+                    margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: c == 1 ? YiColors.gold : Colors.transparent,
+                      border: Border.all(
+                          color: YiColors.gold.withValues(alpha: 0.9),
+                          width: 1),
+                    ),
+                  ),
+              ]),
+            ]),
+          ),
+          if (yao < 5) const SizedBox(width: 6),
+        ],
+      ]),
+      const SizedBox(height: 5),
+      const Text('● 背　○ 字 · 朱砂框为动爻',
+          style: TextStyle(fontSize: 8, color: YiColors.textMuted)),
+    ]);
+  }
+
   Widget _casting() {
     // 铜钱法: 三枚铜钱翻掷 + 下方爻象点亮; 其他法保持爻象点亮 (iter46)
     final isCoin = widget.vm.state.method == CastMethod.coin;
     return Center(
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         if (isCoin) ...[
-          const CoinTossAnim(),
-          const SizedBox(height: 22),
-          const CastingAnim(size: 130),
-        ] else
+          // iter50: 六爻逐次真实掷币 (字背来自引擎明细), 爻象逐根点亮
+          CoinTossAnim(tosses: widget.vm.pendingTosses),
+          const SizedBox(height: 12),
+          const Text('六爻逐掷 · 三背为老阳 三字为老阴',
+              style: TextStyle(fontSize: 10, color: YiColors.textTertiary)),
+        ] else ...[
           const CastingAnim(),
-        const SizedBox(height: 14),
-        Text(isCoin ? '观三枚之背字，成六爻之象' : '乾坤位定，爻象将成',
-            style: const TextStyle(fontSize: 11, color: YiColors.textTertiary)),
+          const SizedBox(height: 14),
+          const Text('乾坤位定，爻象将成',
+              style: TextStyle(fontSize: 11, color: YiColors.textTertiary)),
+        ],
       ]),
     );
   }
@@ -247,6 +302,10 @@ class _CastScreenState extends State<CastScreen> {
             const Text('卦 象 已 成',
                 style: TextStyle(fontSize: 12, letterSpacing: 4, color: YiColors.gold)),
             const SizedBox(height: 16),
+            if (s.result?.tosses != null) ...[
+              _coinStrip(s.result!),
+              const SizedBox(height: 14),
+            ],
             HexGlyph(lines: hex.yangs, moving: s.result?.moving ?? [],
                 width: 60, lineH: 9, gap: 7, animated: true),
             const SizedBox(height: 16),

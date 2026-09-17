@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yijing_transform/data/favorites_store.dart';
@@ -585,6 +586,45 @@ void main() {
   });
   // ---------- iter47: 八字进阶 (十二长生/旬空/胎元/命宫/解读) ----------
   // ---------- iter48: 流派选项 (换日线/命宫起法/神煞取支) ----------
+  group('铜钱预计算 (iter50)', () {
+    test('startCast 预计算掷币明细, finishCast 落同一卦象', () {
+      final rng = Random(7);
+      final vm = CastViewModel(
+        hexRepo: repo,
+        history: newHist(seed: false),
+        rand: rng.nextDouble,
+      );
+      vm.setMethod(CastMethod.coin);
+      vm.startCast();
+      final tosses = vm.pendingTosses;
+      expect(tosses, isNotNull);
+      expect(tosses!.length, 6);
+      for (final t in tosses) {
+        expect(t.length, 3);
+      }
+      vm.finishCast();
+      final res = vm.state.result!;
+      // 明细与卦象一致: 背数 {1,3} → 阳爻, {0,2} → 阴爻
+      for (var yao = 0; yao < 6; yao++) {
+        final backs = tosses[yao].fold(0, (a, b) => a + b);
+        expect(res.lines[yao], backs == 1 || backs == 3, reason: '爻$yao');
+        expect(res.moving.contains(yao), backs == 0 || backs == 3,
+            reason: '爻$yao 动');
+      }
+      // 落盘后明细清空
+      expect(vm.pendingTosses, isNull);
+    });
+
+    test('非铜钱法 pendingTosses 为 null', () {
+      final vm = CastViewModel(hexRepo: repo, history: newHist(seed: false));
+      vm.setMethod(CastMethod.numeric);
+      vm.startCast();
+      expect(vm.pendingTosses, isNull);
+      vm.finishCast();
+      expect(vm.state.result, isNotNull);
+    });
+  });
+
   group('BaZi 流派选项 (iter48)', () {
     test('换日线: 夜半23时换日 → 日柱取次日, 时柱随次日日干', () {
       final mid = computeBaZi(DateTime(1985, 12, 3, 23, 10))!; // 默认 0 时换日

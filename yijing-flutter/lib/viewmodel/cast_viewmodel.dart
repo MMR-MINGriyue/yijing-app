@@ -114,17 +114,33 @@ class CastViewModel extends ChangeNotifier {
   DateTime get _clock => _now?.call() ?? DateTime.now();
 
   /// 起卦主流程: form → casting → done (真实结果 + 落历史)
+  CastResult? _pendingRes; // 预计算结果 (铜钱动画需真实掷币明细, iter50)
+  Hex? _pendingHex;
+
+  /// 铜钱法动画用的真实掷币明细 (6×3, 1=背 0=字); 非铜钱法为 null
+  List<List<int>>? get pendingTosses =>
+      _state.method == CastMethod.coin ? _pendingRes?.tosses : null;
+
   void startCast() {
+    // 预计算: 动画期即可驱动真实字背 (iter50)
+    final res = cast(_state.method.id, _state.question, rand: _rand);
+    final hexNo = _hexRepo.hexByBits(res.lines.map((y) => y ? '1' : '0').join()).no;
+    _pendingRes = res;
+    _pendingHex = _hexRepo.hexByNo(hexNo);
     _state = _state.copyWith(phase: CastPhase.casting, clearResult: true, clearXlr: true);
     notifyListeners();
   }
 
-  /// 推演动画结束后调用: 生成真实卦象 + 写入历史
+  /// 推演动画结束后调用: 落盘预计算卦象 + 写入历史
   void finishCast() {
     final now = _clock;
-    final res = cast(_state.method.id, _state.question, rand: _rand);
-    final hexNo = _hexRepo.hexByBits(res.lines.map((y) => y ? '1' : '0').join()).no;
-    final hex = _hexRepo.hexByNo(hexNo);
+    final res = _pendingRes ??
+        cast(_state.method.id, _state.question, rand: _rand); // 兜底
+    final hex = _pendingHex ??
+        _hexRepo.hexByNo(
+            _hexRepo.hexByBits(res.lines.map((y) => y ? '1' : '0').join()).no);
+    _pendingRes = null;
+    _pendingHex = null;
     final rec = HistoryRecord(
       hexNo: hex.no,
       name: hex.name,
