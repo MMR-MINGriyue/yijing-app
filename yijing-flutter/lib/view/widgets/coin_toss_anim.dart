@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../../theme/yijing_theme.dart';
 
-/// 铜钱投掷动画 (iter50 重构) — 六爻逐次真实掷币.
+/// 铜钱投掷动画 (iter50 重构 / iter51 道家化) — 六爻逐次真实掷币.
+/// 币面取山鬼花钱式: 正面方孔 + 「山鬼」二字, 背面太极居中八卦环绕.
 ///
 /// [tosses] 传入引擎结果 (6×3, 1=背 0=字) 时: 每爻一掷 (~430ms), 铜钱抛起
 /// 翻转落定显示真实字背, 落定瞬间朱砂涟漪 + 地面阴影随高度缩放, 爻象自初爻
@@ -260,19 +261,17 @@ class _CoinTossAnimState extends State<CoinTossAnim>
           ),
         ),
         if (isBack)
-          // 背面: 满文双弧 (抽象)
+          // 背面: 太极居中 + 八卦环绕 (山鬼花钱式, 无方孔)
           SizedBox(
             width: d,
             height: d,
-            child: CustomPaint(painter: _ManwenPainter()),
+            child: CustomPaint(painter: _BaguaPainter()),
           )
         else
-          // 字面: 乾隆通宝 (直读: 上乾 下隆 右通 左宝)
+          // 正面: 「山鬼」二字分列方孔左右 (道家辟邪钱)
           ...[
-            _char('乾', d, 0, -d * 0.30),
-            _char('隆', d, 0, d * 0.30),
-            _char('通', d, d * 0.30, 0),
-            _char('宝', d, -d * 0.30, 0),
+            _char('山', d, -d * 0.30, 0),
+            _char('鬼', d, d * 0.30, 0),
           ],
       ]),
     );
@@ -284,7 +283,7 @@ class _CoinTossAnimState extends State<CoinTossAnim>
       offset: Offset(dx, dy),
       child: Text(ch,
           style: TextStyle(
-              fontSize: d * 0.17,
+              fontSize: d * 0.21,
               height: 1.0,
               color: const Color(0xFF52391F))),
     );
@@ -314,22 +313,84 @@ class _CoinTossAnimState extends State<CoinTossAnim>
   }
 }
 
-/// 背面满文双弧
-class _ManwenPainter extends CustomPainter {
+/// 背面: 太极居中 + 八卦环绕 (山鬼花钱背式)
+class _BaguaPainter extends CustomPainter {
+  // 八卦三画 (自下而上, 1=阳): 乾兑离震巽坎艮坤
+  static const List<List<int>> _trigrams = [
+    [1, 1, 1], [1, 1, 0], [1, 0, 1], [1, 0, 0],
+    [0, 1, 1], [0, 1, 0], [0, 0, 1], [0, 0, 0],
+  ];
+
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF5E4526)
+    final d = size.width;
+    final c = Offset(d / 2, d / 2);
+    final ink = Paint()
+      ..color = const Color(0xFF52391F)
+      ..style = PaintingStyle.fill;
+
+    // 太极图 (径 0.17d): 阳鱼米金 / 阴鱼墨
+    final tr = d * 0.17;
+    canvas.drawCircle(c, tr, Paint()..color = const Color(0xFFF2DDB0));
+    // 阴半 (右半旋转 90°: 以竖直径分割, S 弧)
+    final sPath = Path()
+      ..moveTo(c.dx, c.dy - tr)
+      ..arcTo(Rect.fromCircle(center: c, radius: tr), -pi / 2, pi, false)
+      ..arcTo(
+          Rect.fromCircle(
+              center: Offset(c.dx, c.dy + tr / 2), radius: tr / 2),
+          0,
+          pi,
+          false)
+      ..arcTo(
+          Rect.fromCircle(
+              center: Offset(c.dx, c.dy - tr / 2), radius: tr / 2),
+          pi,
+          pi,
+          false)
+      ..close();
+    canvas.drawPath(sPath, Paint()..color = const Color(0xFF3A2E1E));
+    canvas.drawCircle(Offset(c.dx, c.dy - tr / 2), tr * 0.13,
+        Paint()..color = const Color(0xFF3A2E1E));
+    canvas.drawCircle(Offset(c.dx, c.dy + tr / 2), tr * 0.13,
+        Paint()..color = const Color(0xFFF2DDB0));
+    // 太极外郭
+    canvas.drawCircle(c, tr, Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.035
-      ..strokeCap = StrokeCap.round;
-    final c = Offset(size.width / 2, size.height / 2);
-    final r = size.width * 0.26;
-    canvas.drawArc(
-        Rect.fromCircle(center: c, radius: r), -0.9, 1.5, false, paint);
-    canvas.drawArc(
-        Rect.fromCircle(center: c, radius: r * 0.8), pi - 0.6, 1.3, false,
-        paint);
+      ..strokeWidth = 1
+      ..color = const Color(0xFF8F6F42));
+
+    // 八卦符环绕 (半径 0.33d, 每卦 3 画横排)
+    final rOrbit = d * 0.33;
+    for (var k = 0; k < 8; k++) {
+      final a = -pi / 2 + k * pi / 4; // 自顶部顺时针
+      final cx = c.dx + cos(a) * rOrbit;
+      final cy = c.dy + sin(a) * rOrbit;
+      final tri = _trigrams[k];
+      final bw = d * 0.075, bh = d * 0.016, bg = d * 0.012;
+      for (var line = 0; line < 3; line++) {
+        final ly = cy - bh - bg + line * (bh + bg);
+        if (tri[line] == 1) {
+          canvas.drawRRect(
+              RRect.fromRectAndRadius(
+                  Rect.fromLTWH(cx - bw / 2, ly, bw, bh),
+                  Radius.circular(bh / 2)),
+              ink);
+        } else {
+          final seg = (bw - bh * 1.4) / 2;
+          canvas.drawRRect(
+              RRect.fromRectAndRadius(
+                  Rect.fromLTWH(cx - bw / 2, ly, seg, bh),
+                  Radius.circular(bh / 2)),
+              ink);
+          canvas.drawRRect(
+              RRect.fromRectAndRadius(
+                  Rect.fromLTWH(cx + bh * 1.4 / 2, ly, seg, bh),
+                  Radius.circular(bh / 2)),
+              ink);
+        }
+      }
+    }
   }
 
   @override
