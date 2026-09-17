@@ -106,17 +106,28 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
 
-    // 占卜页: 三式 + 小六壬/梅花/八字 内联 (iter46 不再折叠)
+    // 占卜页: 分段器布局 (iter52) — 六爻卦默认, 小六壬/梅花易数分段切换
     await goTab(tester, '占卜');
     expect(find.text('占  卜'), findsOneWidget);
-    // 三占法卡在 ListView 折叠线下: 直接拖拽列表滚到底
-    for (var i = 0; i < 8 && find.text('八字排盘').evaluate().isEmpty; i++) {
-      await tester.drag(find.byType(ListView), const Offset(0, -260));
-      await tester.pumpAndSettle();
-    }
+    expect(find.text('六爻卦'), findsOneWidget);
     expect(find.text('小六壬'), findsOneWidget);
     expect(find.text('梅花易数'), findsOneWidget);
     expect(find.text('更多占法'), findsNothing);
+    // 默认六爻卦段: 方法瓷片 + 问题 + CTA
+    expect(find.text('铜钱'), findsOneWidget);
+    expect(find.text('起  卦'), findsOneWidget);
+    // 切小六壬段: 问事分类 + 即时起课
+    await tester.tap(find.text('小六壬'));
+    await tester.pumpAndSettle();
+    expect(find.text('即时起课'), findsOneWidget);
+    // 切梅花段: 时辰起卦
+    await tester.tap(find.text('梅花易数'));
+    await tester.pumpAndSettle();
+    expect(find.text('今日时辰起卦'), findsOneWidget);
+    // 回六爻卦段
+    await tester.tap(find.text('六爻卦'));
+    await tester.pumpAndSettle();
+    expect(find.text('起  卦'), findsOneWidget);
 
     // iter47: 八字独立 Tab
     await goTab(tester, '八字');

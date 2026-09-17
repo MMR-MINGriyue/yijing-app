@@ -120,13 +120,22 @@ class _AppShellState extends State<AppShell> {
         HistoryScreen(vm: _historyVm, onOpenRecord: _openRecord)));
   }
 
-  /// Tab 淡入包装 (非当前 Tab 透明, 切换时交叉淡入; IndexedStack 状态保留)
-  Widget _fadeTab(int i, Widget child) => AnimatedOpacity(
-        opacity: i == _tab ? 1.0 : 0.0,
+  /// Tab 切换过渡 (iter52): 交叉淡入 + 方向感知滑动 —
+  /// 切向右侧 Tab 时新页自右滑入, 向左反之; IndexedStack 状态保留
+  Widget _fadeTab(int i, Widget child) {
+    final dir = (i - _tab).sign.toDouble();
+    return AnimatedOpacity(
+      opacity: i == _tab ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOut,
+      child: AnimatedSlide(
+        offset: Offset(dir * 0.035, 0),
         duration: const Duration(milliseconds: 260),
         curve: Curves.easeOut,
         child: child,
-      );
+      ),
+    );
+  }
 
   // ---------- 构建 ----------
   @override

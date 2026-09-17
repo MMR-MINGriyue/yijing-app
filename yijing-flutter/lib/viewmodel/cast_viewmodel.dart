@@ -25,6 +25,13 @@ extension CastMethodX on CastMethod {
         CastMethod.yarrow => '蓍草起卦',
         CastMethod.coin => '铜钱起卦',
       };
+
+  /// 瓷片短名 (iter52 分段布局)
+  String get short => switch (this) {
+        CastMethod.numeric => '数字',
+        CastMethod.yarrow => '蓍草',
+        CastMethod.coin => '铜钱',
+      };
   String get sub => switch (this) {
         CastMethod.numeric => '心念取数 · 梅花先天',
         CastMethod.yarrow => '大衍之数 · 古法蓍草',

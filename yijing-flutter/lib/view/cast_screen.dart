@@ -27,6 +27,7 @@ class CastScreen extends StatefulWidget {
 
 class _CastScreenState extends State<CastScreen> {
   Timer? _timer;
+  int _segment = 0; // 占卜页分段: 0=六爻卦 1=小六壬 2=梅花易数 (iter52)
   final _qController = TextEditingController();
   final _mh1Controller = TextEditingController();
   final _mh2Controller = TextEditingController();
@@ -89,41 +90,156 @@ class _CastScreenState extends State<CastScreen> {
   }
 
   Widget _form(CastState s) {
+    // iter52: 分段器布局 — 六爻卦 / 小六壬 / 梅花易数
+    return Column(children: [
+      _segmentBar(),
+      Expanded(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 220),
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, anim) => FadeTransition(
+            opacity: anim,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.02),
+                end: Offset.zero,
+              ).animate(anim),
+              child: child,
+            ),
+          ),
+          child: KeyedSubtree(
+            key: ValueKey(_segment),
+            child: switch (_segment) {
+              1 => _xlrPanel(s),
+              2 => _meihuaPanel(s),
+              _ => _liuyaoForm(s),
+            },
+          ),
+        ),
+      ),
+    ]);
+  }
+
+  /// 分段器 (六爻卦 / 小六壬 / 梅花易数)
+  Widget _segmentBar() {
+    const labels = ['六爻卦', '小六壬', '梅花易数'];
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 6, 20, 0),
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: const Color(0x22C9A876),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: YiColors.strokeSoft),
+      ),
+      child: Row(children: [
+        for (var i = 0; i < labels.length; i++)
+          Expanded(
+            child: InkWell(
+              onTap: () => setState(() => _segment = i),
+              borderRadius: BorderRadius.circular(9),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 9),
+                decoration: BoxDecoration(
+                  color: _segment == i
+                      ? YiColors.gold.withValues(alpha: 0.18)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(9),
+                  border: _segment == i
+                      ? Border.all(color: YiColors.goldDark)
+                      : null,
+                ),
+                child: Text(labels[i],
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 12,
+                        letterSpacing: 2,
+                        color: _segment == i
+                            ? YiColors.gold
+                            : YiColors.textTertiary)),
+              ),
+            ),
+          ),
+      ]),
+    );
+  }
+
+  /// 六爻卦段: 方法瓷片 → 问题 → 方向 → CTA
+  Widget _liuyaoForm(CastState s) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      key: const ValueKey('liuyao'),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
       children: [
+        _methodRow(s),
+        const SizedBox(height: 14),
         _questionInput(s),
         const SizedBox(height: 14),
         _directionChips(s),
-        const SizedBox(height: 16),
         const SizedBox(height: 18),
-        // 主 CTA: 开始起卦 (iter37 修复: 表单缺起卦入口)
         PressableScale(
           child: SizedBox(
-          width: double.infinity,
-          child: FilledButton.icon(
-            onPressed: widget.vm.startCast,
-            style: FilledButton.styleFrom(
-              backgroundColor: YiColors.cinnabar,
-              foregroundColor: const Color(0xFFFFF6EC),
-              padding: const EdgeInsets.symmetric(vertical: 15),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: widget.vm.startCast,
+              style: FilledButton.styleFrom(
+                backgroundColor: YiColors.cinnabar,
+                foregroundColor: const Color(0xFFFFF6EC),
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              icon: const Icon(Icons.auto_awesome, size: 20),
+              label: const Text('起  卦', style: TextStyle(letterSpacing: 8, fontSize: 16)),
             ),
-            icon: const Icon(Icons.auto_awesome, size: 20),
-            label: const Text('起  卦', style: TextStyle(letterSpacing: 8, fontSize: 16)),
-          ),
           ),
         ),
-        const SizedBox(height: 14),
-        for (final m in CastMethod.values) ...[
-          _methodCard(m, s),
-          const SizedBox(height: 10),
-        ],
-        const SizedBox(height: 12),
-        _xlrCard(s),
-        const SizedBox(height: 12),
-        _meihuaCard(s),
       ],
+    );
+  }
+
+  /// 方法选择: 一行三枚瓷片 (iter52 替代三张高卡)
+  Widget _methodRow(CastState s) {
+    return Row(children: [
+      for (final m in CastMethod.values) ...[
+        Expanded(child: _methodTile(m, s)),
+        if (m != CastMethod.values.last) const SizedBox(width: 8),
+      ],
+    ]);
+  }
+
+  Widget _methodTile(CastMethod m, CastState s) {
+    final active = s.method == m;
+    return InkWell(
+      onTap: () => widget.vm.setMethod(m),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: active
+              ? YiColors.cinnabar.withValues(alpha: 0.14)
+              : YiColors.inkCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: active ? YiColors.cinnabar : YiColors.strokeSoft),
+        ),
+        child: Column(children: [
+          Container(
+            width: 34, height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: active
+                  ? const Color(0x33D04D3E)
+                  : const Color(0x22C9A876),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Text(_methodGlyph(m),
+                style: TextStyle(fontSize: 16,
+                    color: active ? YiColors.cinnabar : YiColors.gold)),
+          ),
+          const SizedBox(height: 6),
+          Text(m.short, style: TextStyle(
+              fontSize: 12, letterSpacing: 2,
+              color: active ? YiColors.textPrimary : YiColors.textTertiary)),
+        ]),
+      ),
     );
   }
 
@@ -173,42 +289,6 @@ class _CastScreenState extends State<CastScreen> {
         if (d != kDirections.last) const SizedBox(width: 8),
       ],
     ]);
-  }
-
-  Widget _methodCard(CastMethod m, CastState s) {
-    final active = s.method == m;
-    return PressableScale(
-      onTap: () => widget.vm.setMethod(m),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: YiColors.inkCard,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: active ? YiColors.cinnabar : YiColors.strokeSoft),
-        ),
-        child: Row(children: [
-          Container(
-            width: 40, height: 40,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: const Color(0x22C9A876),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(_methodGlyph(m),
-                style: const TextStyle(fontSize: 18, color: YiColors.gold)),
-          ),
-          const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(m.label, style: const TextStyle(
-                fontSize: 14, letterSpacing: 2, color: YiColors.textPrimary)),
-            const SizedBox(height: 3),
-            Text(m.sub, style: const TextStyle(fontSize: 11, color: YiColors.textTertiary)),
-          ])),
-          Icon(active ? Icons.check_circle : Icons.radio_button_unchecked,
-              size: 20, color: active ? YiColors.cinnabar : YiColors.textMuted),
-        ]),
-      ),
-    );
   }
 
   String _methodGlyph(CastMethod m) => switch (m) {
@@ -359,7 +439,7 @@ class _CastScreenState extends State<CastScreen> {
     );
   }
 
-  Widget _xlrCard(CastState s) {
+  Widget _xlrPanel(CastState s) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: _card(),
@@ -471,7 +551,7 @@ class _CastScreenState extends State<CastScreen> {
     );
   }
 
-  Widget _meihuaCard(CastState s) {
+  Widget _meihuaPanel(CastState s) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: _card(),
