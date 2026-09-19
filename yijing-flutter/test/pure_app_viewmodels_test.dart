@@ -13,6 +13,8 @@ import 'package:yijing_transform/service/reminder_service.dart';
 import 'package:yijing_transform/viewmodel/settings_viewmodel.dart';
 import 'package:yijing_transform/model/history.dart';
 import 'package:yijing_transform/core/bazi.dart';
+import 'package:yijing_transform/core/yi_almanac.dart';
+import 'package:yijing_transform/core/yi_calendar.dart';
 import 'package:yijing_transform/core/bazi_extra.dart';
 import 'package:yijing_transform/core/bazi_reading.dart';
 import 'package:yijing_transform/core/yi_calendar.dart';
@@ -622,6 +624,35 @@ void main() {
       expect(vm.pendingTosses, isNull);
       vm.finishCast();
       expect(vm.state.result, isNotNull);
+    });
+  });
+
+  group('主页新内容 (iter54)', () {
+    test('almanacOf: 节气进度/宜忌/四柱自洽', () {
+      final now = DateTime(2026, 9, 19, 10, 30);
+      final a = almanacOf(now);
+      expect(a.yearGz, ganzhiYear(now));
+      expect(a.monthGz, ganzhiMonthPrecise(now));
+      expect(a.dayGz, ganzhiDay(now));
+      expect(a.termDayIndex, inInclusiveRange(1, 40));
+      expect(a.daysToNext, inInclusiveRange(1, 40));
+      expect(a.yi.length, 2);
+      expect(a.ji.length, 2);
+      expect(kGanWuxing[a.dayGz[0]], a.dayElement);
+    });
+
+    test('HomeViewModel.quoteHex: 同日同卦且落 1..64', () {
+      final fixed = DateTime(2026, 9, 19, 10, 30);
+      final vm1 = HomeViewModel(hexRepo: repo, history: newHist(seed: false), now: () => fixed);
+      final vm2 = HomeViewModel(hexRepo: repo, history: newHist(seed: false), now: () => fixed);
+      final q1 = vm1.quoteHex;
+      final q2 = vm2.quoteHex;
+      expect(q1.no, q2.no);
+      expect(q1.no, inInclusiveRange(1, 64));
+      expect(q1.daxiang, isNotEmpty);
+      final vm3 = HomeViewModel(
+          hexRepo: repo, history: newHist(seed: false), now: () => fixed.add(const Duration(days: 1)));
+      expect(vm3.quoteHex.no, isNot(q1.no));
     });
   });
 

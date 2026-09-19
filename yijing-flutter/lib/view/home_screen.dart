@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/yi_almanac.dart';
+
 import '../model/hex.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/home_viewmodel.dart';
@@ -60,6 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
             StaggerIn(delay: YiMotion.homeStagger[1], child: _hero(h)),
             const SizedBox(height: 14),
             StaggerIn(delay: YiMotion.homeStagger[2], child: _quickEntries()),
+            const SizedBox(height: 14),
+            StaggerIn(delay: YiMotion.homeStagger[3], child: _almanacRow()),
+            const SizedBox(height: 12),
+            StaggerIn(delay: YiMotion.homeStagger[3], child: _quoteBanner()),
           ],
         ),
       ),
@@ -183,5 +189,78 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
+  // ---------- 节气宜忌 + 今日四柱 (iter54) ----------
+  Widget _almanacRow() {
+    final a = almanacOf(DateTime.now());
+    return Row(children: [
+      Expanded(
+        flex: 3,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: _homeCard(),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('${a.termName} · 第${a.termDayIndex}日',
+                style: const TextStyle(fontSize: 11, letterSpacing: 2, color: YiColors.gold)),
+            const SizedBox(height: 5),
+            Text('距${a.nextTermName} ${a.daysToNext} 天',
+                style: const TextStyle(fontSize: 12, color: YiColors.textPrimary)),
+            const SizedBox(height: 6),
+            Text('宜 ${a.yi.join(' · ')}',
+                style: const TextStyle(fontSize: 10, color: YiColors.pine)),
+            const SizedBox(height: 2),
+            Text('忌 ${a.ji.join(' · ')}',
+                style: const TextStyle(fontSize: 10, color: YiColors.cinnabar)),
+          ]),
+        ),
+      ),
+      const SizedBox(width: 10),
+      Expanded(
+        flex: 2,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: _homeCard(),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('今日四柱',
+                style: TextStyle(fontSize: 11, letterSpacing: 2, color: YiColors.gold)),
+            const SizedBox(height: 6),
+            Text('${a.yearGz} 年', style: const TextStyle(fontSize: 12, color: YiColors.textPrimary)),
+            Text('${a.dayGz} 日', style: const TextStyle(fontSize: 12, color: YiColors.textPrimary)),
+            Text('${a.hourGz} 时', style: const TextStyle(fontSize: 12, color: YiColors.textSecondary)),
+          ]),
+        ),
+      ),
+    ]);
+  }
+
+  // ---------- 今日卦语 (iter54) ----------
+  Widget _quoteBanner() {
+    final hex = widget.vm.quoteHex;
+    return PressableScale(
+      onTap: () => widget.onOpenDetail(hex.no),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: _homeCard(),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('今日卦语 · ${hex.name}卦',
+              style: const TextStyle(fontSize: 11, letterSpacing: 2, color: YiColors.gold)),
+          const SizedBox(height: 5),
+          Text('「${hex.daxiang}」',
+              maxLines: 2, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, height: 1.6, color: YiColors.textPrimary)),
+          const SizedBox(height: 3),
+          const Text('点击查看卦辞解析 ›',
+              style: TextStyle(fontSize: 9, color: YiColors.textMuted)),
+        ]),
+      ),
+    );
+  }
+
+  BoxDecoration _homeCard() => BoxDecoration(
+        color: const Color(0x14FFFFFF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0x33C9A876)),
+      );
 
 }

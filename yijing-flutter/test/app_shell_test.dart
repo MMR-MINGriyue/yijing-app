@@ -31,6 +31,11 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: AppShell()));
     await tester.pumpAndSettle();
     expect(find.text('最 近 占 卜'), findsNothing); // iter53 移除
+    // iter54: 节气宜忌 / 今日四柱 / 今日卦语
+    expect(find.text('今日四柱'), findsOneWidget);
+    // 卦语横幅在折叠线下: 滚动至可见 (ListView 惰性构建)
+    await tester.scrollUntilVisible(find.textContaining('今日卦语'), 200);
+    expect(find.textContaining('今日卦语'), findsWidgets);
     // 4 个 tab (grid/history 图标与我的页快捷入口共用, 允许多处)
     expect(find.byIcon(Icons.wb_twilight_outlined), findsWidgets);
     expect(find.byIcon(Icons.auto_awesome_outlined), findsOneWidget);

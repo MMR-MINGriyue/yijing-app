@@ -26,6 +26,16 @@ class HomeViewModel extends ChangeNotifier {
 
   DateTime get _now => _nowFn();
 
+  Hex? _quoteHex; // 当日卦语 (日期确定性抽取, iter54)
+  Hex get quoteHex => _quoteHex ??= _computeQuote();
+
+  /// 同日同卦: 日期哈希 → 64 卦之一
+  Hex _computeQuote() {
+    final n = _now;
+    final idx = (n.year * 367 + n.month * 31 + n.day) % 64;
+    return _hexRepo.hexByNo(idx + 1);
+  }
+
   /// 今日一卦 (时辰卦 / 刷新轮换)
   Hex get todayHex => _refreshed
       ? _hexRepo.hexByNo(refreshHex(_refreshCount).no)
