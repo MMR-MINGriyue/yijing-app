@@ -86,6 +86,7 @@ class BaziViewModel extends ChangeNotifier {
   Future<void> _boot() async {
     try {
       await _store.warmUp();
+      _profiles.addAll(_store.readProfiles());
       final saved = _store.read();
       if (saved == null) return;
       _state = _state.copyWith(
@@ -116,7 +117,8 @@ class BaziViewModel extends ChangeNotifier {
       dayun: dayun,
       extra: baziExtraOf(chart),
       readings: baziReadings(chart),
-      selectedStep: null,
+      // iter55: 自动展开当前所行大运 (-1 = 无当前步, 视图按 null 处理)
+      selectedStep: dayun?.steps.indexWhere((st) => st.current) ?? -1,
     );
     _store.write(BaziBirth(
         dt: birth, gender: _state.gender, options: _state.options));
@@ -129,6 +131,37 @@ class BaziViewModel extends ChangeNotifier {
       type: 'bazi',
       ts: _clock(),
     ));
+    notifyListeners();
+  }
+
+  // ---------- 命盘册 (iter55) ----------
+  final Map<String, BaziBirth> _profiles = {};
+  Map<String, BaziBirth> get profiles => Map.unmodifiable(_profiles);
+
+  /// 存当前盘 (同名覆盖)
+  void saveProfile(String name) {
+    final n = name.trim();
+    final birth = _state.birth;
+    if (n.isEmpty || birth == null) return;
+    _profiles[n] = BaziBirth(
+        dt: birth, gender: _state.gender, options: _state.options);
+    _store.writeProfiles(_profiles);
+    notifyListeners();
+  }
+
+  /// 载入命盘并重排
+  void loadProfile(String name) {
+    final b = _profiles[name];
+    if (b == null) return;
+    _state = _state.copyWith(
+        birth: b.dt, gender: b.gender, options: b.options, restored: true);
+    compute();
+  }
+
+  /// 删除命盘
+  void deleteProfile(String name) {
+    if (_profiles.remove(name) == null) return;
+    _store.writeProfiles(_profiles);
     notifyListeners();
   }
 

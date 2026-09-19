@@ -151,6 +151,8 @@ class _BaziScreenState extends State<BaziScreen> {
         const SizedBox(height: 10),
         _schoolSection(s, vm),
         const SizedBox(height: 10),
+        _profilesRow(s, vm),
+        const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
           child: FilledButton(
@@ -167,6 +169,128 @@ class _BaziScreenState extends State<BaziScreen> {
         ),
       ]),
     );
+  }
+
+  // ---------- 命盘册 (iter55) ----------
+  Widget _profilesRow(BaziState s, BaziViewModel vm) {
+    final profiles = vm.profiles;
+    return SizedBox(
+      height: 40,
+      child: Row(children: [
+        Expanded(
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: profiles.length + 1,
+            separatorBuilder: (_, _) => const SizedBox(width: 6),
+            itemBuilder: (_, i) {
+              if (i == profiles.length) {
+                // 存当前盘
+                return InkWell(
+                  onTap: () => _saveProfileDialog(vm),
+                  borderRadius: BorderRadius.circular(9),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: YiColors.gold.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(9),
+                      border: Border.all(
+                          color: YiColors.goldDark,
+                          style: BorderStyle.solid),
+                    ),
+                    child: Text(s.birth == null ? '选时间后可存' : '＋ 存当前盘',
+                        style: const TextStyle(fontSize: 10,
+                            color: YiColors.gold)),
+                  ),
+                );
+              }
+              final name = profiles.keys.elementAt(i);
+              final b = profiles[name]!;
+              final active =
+                  s.birth == b.dt && s.gender == b.gender;
+              return InkWell(
+                onTap: () => vm.loadProfile(name),
+                onLongPress: () => _deleteProfileDialog(name, vm),
+                borderRadius: BorderRadius.circular(9),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: active
+                        ? YiColors.gold.withValues(alpha: 0.16)
+                        : const Color(0x11000000),
+                    borderRadius: BorderRadius.circular(9),
+                    border: Border.all(
+                        color:
+                            active ? YiColors.goldDark : YiColors.strokeSoft),
+                  ),
+                  child: Column(mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(name, style: TextStyle(fontSize: 11,
+                        color: active ? YiColors.gold : YiColors.textPrimary)),
+                    Text(
+                        '${b.dt.year}.${b.dt.month}.${b.dt.day} ${b.gender == 'male' ? '乾' : '坤'}',
+                        style: const TextStyle(fontSize: 8,
+                            color: YiColors.textMuted)),
+                  ]),
+                ),
+              );
+            },
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Future<void> _saveProfileDialog(BaziViewModel vm) async {
+    final ctrl = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: YiColors.inkCard,
+        title: const Text('存为命盘',
+            style: TextStyle(fontSize: 15, color: YiColors.textPrimary)),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          maxLength: 8,
+          style: const TextStyle(color: YiColors.textPrimary),
+          decoration: const InputDecoration(
+              hintText: '如：本人 / 母亲 / 朋友甲',
+              hintStyle: TextStyle(fontSize: 12, color: YiColors.textMuted)),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('取消')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+              child: const Text('保存', style: TextStyle(color: YiColors.gold))),
+        ],
+      ),
+    );
+    if (name != null && name.isNotEmpty) vm.saveProfile(name);
+  }
+
+  Future<void> _deleteProfileDialog(String name, BaziViewModel vm) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: YiColors.inkCard,
+        title: Text('删除「$name」?',
+            style: const TextStyle(fontSize: 15, color: YiColors.textPrimary)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('取消')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('删除',
+                  style: TextStyle(color: YiColors.cinnabar))),
+        ],
+      ),
+    );
+    if (ok == true) vm.deleteProfile(name);
   }
 
   // ---------- 流派选项 (iter48) ----------
@@ -360,6 +484,44 @@ class _BaziScreenState extends State<BaziScreen> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text('命 元', style: TextStyle(fontSize: 13, letterSpacing: 3, color: YiColors.textPrimary)),
         const SizedBox(height: 10),
+        if (s.chart != null)
+          Builder(builder: (_) {
+            final f = strengthFactors(s.chart!);
+            Color chipColor(bool on) =>
+                on ? YiColors.pine : YiColors.textMuted;
+            return Row(children: [
+              for (final e in [
+                ('得令', f.deLing),
+                ('得地', f.deDi),
+                ('得势', f.deShi),
+              ])
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: e.$2
+                          ? YiColors.pine.withValues(alpha: 0.14)
+                          : const Color(0x11000000),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                          color: e.$2
+                              ? YiColors.pine
+                              : YiColors.strokeSoft),
+                    ),
+                    child: Text(e.$1,
+                        style: TextStyle(
+                            fontSize: 10, color: chipColor(e.$2))),
+                  ),
+                ),
+              const SizedBox(width: 6),
+              Text(f.text,
+                  style: const TextStyle(
+                      fontSize: 9, color: YiColors.textMuted)),
+            ]);
+          }),
+        const SizedBox(height: 10),
         if (ex != null)
           Wrap(spacing: 18, runSpacing: 8, children: [
             _metaItem('旬空', ex.xunKong.isEmpty ? '—' : ex.xunKong.join(' ')),
@@ -435,7 +597,9 @@ class _BaziScreenState extends State<BaziScreen> {
             },
           ),
         ),
-        if (s.selectedStep != null && s.selectedStep! < d.steps.length) ...[
+        if (s.selectedStep != null &&
+            s.selectedStep! >= 0 &&
+            s.selectedStep! < d.steps.length) ...[
           const SizedBox(height: 10),
           ..._liuNianList(d.steps[s.selectedStep!]),
         ] else

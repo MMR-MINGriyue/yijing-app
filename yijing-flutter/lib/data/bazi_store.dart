@@ -38,16 +38,28 @@ abstract class BaziBirthStore {
   BaziBirth? read();
   void write(BaziBirth birth);
   Future<void> warmUp();
+
+  /// 命盘册 (iter55): 名称 → 出生信息, 多人/多盘切换
+  Map<String, BaziBirth> readProfiles();
+  void writeProfiles(Map<String, BaziBirth> profiles);
 }
 
 class MemoryBaziBirthStore implements BaziBirthStore {
   BaziBirth? _cache;
+  final Map<String, BaziBirth> _profiles = {};
 
   @override
   BaziBirth? read() => _cache;
 
   @override
   void write(BaziBirth birth) => _cache = birth;
+
+  @override
+  Map<String, BaziBirth> readProfiles() => Map.of(_profiles);
+
+  @override
+  void writeProfiles(Map<String, BaziBirth> profiles) =>
+      _profiles..clear()..addAll(profiles);
 
   @override
   Future<void> warmUp() async {}

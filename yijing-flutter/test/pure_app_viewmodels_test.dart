@@ -17,7 +17,6 @@ import 'package:yijing_transform/core/yi_almanac.dart';
 import 'package:yijing_transform/core/yi_calendar.dart';
 import 'package:yijing_transform/core/bazi_extra.dart';
 import 'package:yijing_transform/core/bazi_reading.dart';
-import 'package:yijing_transform/core/yi_calendar.dart';
 import 'package:yijing_transform/data/bazi_store.dart';
 import 'package:yijing_transform/viewmodel/bazi_viewmodel.dart';
 import 'package:yijing_transform/viewmodel/cast_viewmodel.dart';
@@ -412,7 +411,7 @@ void main() {
       );
       vm.setBirth(DateTime(1990, 5, 15, 14, 30));
       vm.compute();
-      expect(vm.state.selectedStep, isNull);
+      // iter55: compute 自动展开当前大运 (可能为 -1 无当前步)
       vm.selectStep(0);
       expect(vm.state.selectedStep, 0);
       vm.selectStep(null);
@@ -624,6 +623,51 @@ void main() {
       expect(vm.pendingTosses, isNull);
       vm.finishCast();
       expect(vm.state.result, isNotNull);
+    });
+  });
+
+  group('八字打磨 (iter55)', () {
+    test('strengthFactors: 1990-05-15 庚日 得地+得势 失令', () {
+      final c = computeBaZi(DateTime(1990, 5, 15, 14, 30))!;
+      final f = strengthFactors(c);
+      expect(f.deLing, isFalse); // 月支巳本气丙火, 金之同党=金土
+      expect(f.deDi, isTrue); // 日支辰本气戊土
+      expect(f.deShi, isTrue); // 同党 5 (庚辛庚三金 + 辰未二土)
+      expect(f.tongCount, 5);
+      expect(f.score, 2);
+      expect(f.text, contains('得地'));
+      expect(f.text, contains('失令'));
+    });
+
+    test('compute 自动展开当前大运', () {
+      final vm = BaziViewModel(
+          store: MemoryBaziBirthStore(), historyRepo: newHist(seed: false));
+      vm.setBirth(DateTime(1990, 5, 15, 14, 30));
+      vm.compute();
+      final curIdx = vm.state.dayun!.steps.indexWhere((st) => st.current);
+      expect(vm.state.selectedStep, curIdx);
+    });
+
+    test('命盘册: 存/载/删 + 持久化', () async {
+      final store = MemoryBaziBirthStore();
+      final vm = BaziViewModel(
+          store: store, historyRepo: newHist(seed: false));
+      vm.setBirth(DateTime(1990, 5, 15, 14, 30));
+      vm.saveProfile('本人');
+      expect(vm.profiles.keys, contains('本人'));
+      // 换一个时间再载回
+      vm.setBirth(DateTime(2000, 1, 1, 6, 0));
+      vm.loadProfile('本人');
+      expect(vm.state.birth, DateTime(1990, 5, 15, 14, 30));
+      // 持久化: 新 VM 从同一 store 载入命盘册
+      final vm2 = BaziViewModel(
+          store: store, historyRepo: newHist(seed: false));
+      await Future<void>.delayed(Duration.zero); // 等 _boot 载入命盘册
+      expect(vm2.profiles.keys, contains('本人'));
+      // 删除
+      vm2.deleteProfile('本人');
+      expect(vm2.profiles.containsKey('本人'), isFalse);
+      expect(store.readProfiles().containsKey('本人'), isFalse);
     });
   });
 

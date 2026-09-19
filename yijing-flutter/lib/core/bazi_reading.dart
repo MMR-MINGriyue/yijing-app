@@ -134,6 +134,40 @@ List<BaziReading> tenGodReadings(BaZiChart c) {
   return reads;
 }
 
+// ---------- 日主强弱三维 (iter55) ----------
+
+/// 三维因子: 得令 (月令本气生扶) / 得地 (日支本气生扶) / 得势 (同党过半)
+class StrengthFactors {
+  final bool deLing;
+  final bool deDi;
+  final bool deShi;
+  final int tongCount; // 同党计数 (同我+生我, 8 字内)
+
+  const StrengthFactors({
+    required this.deLing,
+    required this.deDi,
+    required this.deShi,
+    required this.tongCount,
+  });
+
+  /// 满足项数 (0-3)
+  int get score => (deLing ? 1 : 0) + (deDi ? 1 : 0) + (deShi ? 1 : 0);
+
+  String get text =>
+      '${deLing ? '得令' : '失令'} · ${deDi ? '得地' : '失地'} · ${deShi ? '得势' : '失势'}';
+}
+
+/// 得令/得地/得势: 通例三分法, 与 strength 计数口径一致 (同党≥4 为得势)
+StrengthFactors strengthFactors(BaZiChart c) {
+  final el = c.dayElement;
+  final same = {el, kShengIn[el]}.nonNulls.toSet();
+  final deLing = same.contains(kZhiWuxing[c.pillars[1].zhi]);
+  final deDi = same.contains(kZhiWuxing[c.pillars[2].zhi]);
+  final tong = c.wuxing[el]! + (c.wuxing[kShengIn[el]] ?? 0);
+  return StrengthFactors(
+      deLing: deLing, deDi: deDi, deShi: tong >= 4, tongCount: tong);
+}
+
 // ---------- 组装 ----------
 
 /// 全部解读卡 (日主心性 + 喜用 + 十神倾向 + 神煞释义)
