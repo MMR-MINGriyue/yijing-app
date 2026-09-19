@@ -68,6 +68,7 @@ class _DetailScreenState extends State<DetailScreen> {
       body: YiInkWash(
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
+          onHorizontalDragDown: _onHexDragDown,
           onHorizontalDragEnd: _onHorizontalDragEnd,
           child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
@@ -120,10 +121,19 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  /// 左右滑动切换卦象 (iter49): 左滑下一卦, 右滑上一卦, 1↔64 环绕
+  double _hexDragStartX = -1;
+
+  /// 左右滑动切换卦象 (iter49 / iter56 规范): 左滑下一卦, 右滑上一卦,
+  /// 1↔64 环绕; 起手在左右边缘区 (<26px) 时不触发 — 边缘让给系统返回手势
+  /// down 瞬间的原始位置 (DragStart 已含 touchSlop 位移, 边缘判定会漏 — iter56)
+  void _onHexDragDown(DragDownDetails d) => _hexDragStartX = d.localPosition.dx;
+
   void _onHorizontalDragEnd(DragEndDetails d) {
     final v = d.primaryVelocity ?? 0;
     if (v.abs() < 450) return;
+    final w = MediaQuery.of(context).size.width;
+    if (_hexDragStartX >= 0 && _hexDragStartX < 26) return; // 左缘
+    if (_hexDragStartX > w - 26) return; // 右缘
     final delta = v < 0 ? 1 : -1; // 左滑 → 下一卦
     final next = ((widget.vm.hex.no - 1 + delta) % 64 + 64) % 64 + 1;
     if (next == widget.vm.hex.no) return;

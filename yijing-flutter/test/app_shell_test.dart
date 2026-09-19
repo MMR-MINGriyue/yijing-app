@@ -202,6 +202,10 @@ void main() {
     await tester.fling(find.byType(ListView), const Offset(300, 0), 900);
     await tester.pumpAndSettle();
     expect(find.text('乾 卦'), findsOneWidget);
+    // iter56 规范: 边缘起手横滑不切卦 (让给系统返回手势)
+    await tester.flingFrom(const Offset(8, 400), const Offset(420, 0), 1100);
+    await tester.pumpAndSettle();
+    expect(find.text('乾 卦'), findsOneWidget);
   });
 
   testWidgets('推入页横滑返回: 卦库右滑回壳层 (iter53 SwipeBackPage)', (tester) async {
@@ -229,8 +233,12 @@ void main() {
     await tester.tap(find.text('OPEN_GRID'));
     await tester.pumpAndSettle();
     expect(find.text('共 64 卦'), findsOneWidget);
-    // 全屏右滑 → 返回壳层
+    // iter56 规范: 屏中央横滑不触发返回 (避让内容手势)
     await tester.fling(find.text('共 64 卦'), const Offset(420, 0), 1100);
+    await tester.pumpAndSettle();
+    expect(find.text('共 64 卦'), findsOneWidget);
+    // 左边缘起手右滑 → 返回壳层
+    await tester.flingFrom(const Offset(8, 400), const Offset(420, 0), 1100);
     await tester.pumpAndSettle();
     expect(find.text('OPEN_GRID'), findsOneWidget);
   });

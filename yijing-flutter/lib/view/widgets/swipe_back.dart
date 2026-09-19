@@ -18,20 +18,40 @@ class SwipeBackPage extends StatefulWidget {
 class _SwipeBackPageState extends State<SwipeBackPage> {
   double _dx = 0;
   bool _dragging = false;
+  bool _fromEdge = false; // 起手是否落在边缘区 (iter56 规范: 仅边缘触发)
 
   static const double _thresholdRatio = 0.28; // 拖过屏宽 28% 即返回
   static const double _velocityThreshold = 800; // 或快速轻扫
+  static const double _edgeWidth = 26; // 左右边缘触发区 (逻辑px, 对齐系统手势)
+
+  bool _inEdge(double x) {
+    final w = MediaQuery.of(context).size.width;
+    return x <= _edgeWidth || x >= w - _edgeWidth;
+  }
+
+  /// down 瞬间判定边缘 (DragStart 已含 touchSlop 位移, 快扫会漏 — iter56)
+  void _onDragDown(DragDownDetails d) {
+    _fromEdge = _inEdge(d.localPosition.dx);
+    _dragging = _fromEdge;
+  }
+
+  void _onDragUpdateReal(DragUpdateDetails d) {
+    if (!_dragging) return;
+    setState(() => _dx = max(0, _dx + d.delta.dx));
+  }
 
   void _onDragEnd(DragEndDetails d) {
     final w = MediaQuery.of(context).size.width;
     final fast = (d.primaryVelocity ?? 0) > _velocityThreshold;
-    final passed = _dx > w * _thresholdRatio || (fast && _dx > w * 0.06);
+    final passed = _fromEdge &&
+        (_dx > w * _thresholdRatio || (fast && _dx > w * 0.06));
     if (passed && mounted) {
       Navigator.of(context).maybePop();
     }
     setState(() {
       _dx = 0;
       _dragging = false;
+      _fromEdge = false;
     });
   }
 
@@ -47,13 +67,13 @@ class _SwipeBackPageState extends State<SwipeBackPage> {
         curve: Curves.easeOutCubic,
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
-          onHorizontalDragStart: (_) => setState(() => _dragging = true),
-          onHorizontalDragUpdate: (d) =>
-              setState(() => _dx = max(0, _dx + d.delta.dx)),
+          onHorizontalDragDown: _onDragDown,
+          onHorizontalDragUpdate: _onDragUpdateReal,
           onHorizontalDragEnd: _onDragEnd,
           onHorizontalDragCancel: () => setState(() {
             _dx = 0;
             _dragging = false;
+            _fromEdge = false;
           }),
           child: widget.child,
         ),
@@ -77,3 +97,5 @@ class _SwipeBackPageState extends State<SwipeBackPage> {
     ]);
   }
 }
+
+
