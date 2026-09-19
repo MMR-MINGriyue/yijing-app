@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/hexgrid_viewmodel.dart';
 import 'widgets/hex_glyph.dart';
+import 'widgets/swipe_back.dart';
 import 'widgets/pressable.dart';
 
 /// 屏 3 六十四卦 — 网格浏览 + 八宫筛选 + 搜索
@@ -46,7 +47,7 @@ class _HexGridScreenState extends State<HexGridScreen> {
         title: const Text('六 十 四 卦',
             style: TextStyle(letterSpacing: 6, fontSize: 17)),
       ),
-      body: Column(children: [
+      body: SwipeBackPage(child: Column(children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
           child: _searchBox(),
@@ -117,7 +118,7 @@ class _HexGridScreenState extends State<HexGridScreen> {
           ),
           ),
         ),
-      ]),
+      ])),
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../model/hex.dart';
 import '../theme/ink_wash.dart';
+import 'widgets/swipe_back.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/transform_viewmodel.dart';
 import 'widgets/yao_sheet.dart';
@@ -40,7 +41,7 @@ class _TransformScreenState extends State<TransformScreen> {
         centerTitle: true,
         title: const Text('变 卦 推 演', style: TextStyle(letterSpacing: 6, color: YiColors.textPrimary, fontSize: 17)),
       ),
-      body: YiInkWash(child: ListView(
+      body: YiInkWash(child: SwipeBackPage(child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           _hexPairCard(context, s),
@@ -53,7 +54,7 @@ class _TransformScreenState extends State<TransformScreen> {
           const SizedBox(height: 20),
           _hexPicker(context),
         ],
-      )),
+      ))),
     );
   }
 

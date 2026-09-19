@@ -10,8 +10,13 @@ import 'widgets/coin_toss_anim.dart';
 import 'widgets/pressable.dart';
 import '../model/hex.dart';
 import '../theme/ink_wash.dart';
+import '../theme/yi_transitions.dart';
 import '../theme/yijing_theme.dart';
+import 'detail_screen.dart';
+import 'transform_screen.dart';
 import '../viewmodel/cast_viewmodel.dart';
+import '../viewmodel/detail_viewmodel.dart';
+import '../viewmodel/transform_viewmodel.dart';
 import 'widgets/hex_glyph.dart';
 
 /// 屏 2 赐卦 — 三种起卦方式 + 推演动画 + 结果 + 更多占法子页 (小六壬/梅花)
@@ -49,6 +54,8 @@ class _CastScreenState extends State<CastScreen> {
     super.dispose();
   }
 
+  bool _autoOpened = false; // 完成后是否已自动进入卦辞解析 (iter53)
+
   void _onVm() {
     final phase = widget.vm.state.phase;
     // 推演动画: 铜钱法六掷 (~2.8s), 余法 ~1s; 结束后落真实卦象
@@ -59,6 +66,29 @@ class _CastScreenState extends State<CastScreen> {
           () {
         _timer = null;
         widget.vm.finishCast();
+      });
+    }
+    // iter53: 推演完成自动展示卦辞解析 (返回仍可见结果页)
+    if (phase == CastPhase.form) _autoOpened = false;
+    if (phase == CastPhase.done &&
+        widget.vm.state.hex != null &&
+        !_autoOpened) {
+      _autoOpened = true;
+      final s = widget.vm.state;
+      final moving = s.result?.moving ?? const <int>[];
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Navigator.of(context).push(yiFadeRoute(DetailScreen(
+          vm: DetailViewModel(
+            hexNo: s.hex!.no,
+            question: s.question,
+            moving: moving,
+            direction: s.direction,
+          ),
+          onOpenTransform: (hex) => Navigator.of(context).push(yiFadeRoute(
+              TransformScreen(
+                  vm: TransformViewModel()..selectHex(hex.no)))),
+        )));
       });
     }
     setState(() {});

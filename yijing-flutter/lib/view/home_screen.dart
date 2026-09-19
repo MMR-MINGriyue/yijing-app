@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../model/hex.dart';
-import '../model/history.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/home_viewmodel.dart';
 import 'hero_fullscreen.dart';
@@ -9,7 +8,7 @@ import 'widgets/hex_glyph.dart';
 import 'widgets/pressable.dart';
 import 'widgets/stagger_in.dart';
 
-/// 屏 1 今日一卦 — 时辰卦 + 干支问候 + 快捷入口 + 最近占卜
+/// 屏 1 今日一卦 — 时辰卦 + 干支问候 + 快捷入口 (iter53: 移除最近占卜)
 class HomeScreen extends StatefulWidget {
   final HomeViewModel vm;
   final void Function(int hexNo, {String? question}) onOpenDetail;
@@ -61,8 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
             StaggerIn(delay: YiMotion.homeStagger[1], child: _hero(h)),
             const SizedBox(height: 14),
             StaggerIn(delay: YiMotion.homeStagger[2], child: _quickEntries()),
-            const SizedBox(height: 16),
-            StaggerIn(delay: YiMotion.homeStagger[3], child: _recent()),
           ],
         ),
       ),
@@ -187,64 +184,4 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
-  // ---------- 最近占卜 ----------
-  Widget _recent() {
-    final list = widget.vm.recent;
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        const Text('最 近 占 卜',
-            style: TextStyle(fontSize: 12, letterSpacing: 3, color: YiColors.textTertiary)),
-        InkWell(
-          onTap: widget.onGoHistory,
-          child: const Padding(padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Text('查看全部 ›',
-                  style: TextStyle(fontSize: 11, color: YiColors.cinnabar))),
-        ),
-      ]),
-      const SizedBox(height: 10),
-      if (list.isEmpty)
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: _card(),
-          child: const Text('暂无占卜记录，心诚则灵',
-              style: TextStyle(fontSize: 12, color: YiColors.textTertiary)),
-        )
-      else
-        ...list.map(_recentCard),
-    ]);
-  }
-
-  Widget _recentCard(HistoryRecord r) {
-    final hex = r.hexNo != null ? widget.vm.hexByNo(r.hexNo!) : null;
-    return PressableScale(
-      onTap: () => widget.onOpenDetail(r.hexNo ?? 1, question: r.question),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: _card(),
-        child: Row(children: [
-          if (hex != null)
-            HexGlyph(lines: hex.yangs, width: 28, lineH: 4, gap: 3.2)
-          else
-            const SizedBox(width: 28),
-          const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('${r.name ?? ''} · ${r.direction}',
-                style: const TextStyle(fontSize: 13, color: YiColors.textPrimary)),
-            const SizedBox(height: 3),
-            Text(r.question, maxLines: 1, overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 11, color: YiColors.textSecondary)),
-          ])),
-          Text(_fmtTime(r.ts),
-              style: const TextStyle(fontSize: 10, color: YiColors.textMuted)),
-        ]),
-      ),
-    );
-  }
-
-
-  String _fmtTime(DateTime ts) =>
-      '${ts.month}/${ts.day} ${ts.hour}:${ts.minute.toString().padLeft(2, '0')}';
-
-  Decoration _card() => yiCardDecoration();
 }

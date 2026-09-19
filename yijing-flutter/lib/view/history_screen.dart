@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../model/history.dart';
 import '../theme/yijing_theme.dart';
+import 'widgets/swipe_back.dart';
 import '../viewmodel/history_viewmodel.dart';
 import 'widgets/pressable.dart';
 
@@ -85,7 +86,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: _selectMode ? _selectAppBar() : _normalAppBar(),
-      body: ListView(
+      body: SwipeBackPage(child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
         children: [
           if (!_selectMode) ...[
@@ -111,7 +112,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ],
           ..._recordList(),
         ],
-      ),
+      )),
     );
   }
 

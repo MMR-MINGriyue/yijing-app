@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yijing_transform/app/app_shell.dart';
+import 'package:yijing_transform/theme/yi_transitions.dart';
+import 'package:yijing_transform/view/hexgrid_screen.dart';
+import 'package:yijing_transform/viewmodel/hexgrid_viewmodel.dart';
 import 'package:yijing_transform/data/hex_repository.dart';
 import 'package:yijing_transform/view/widgets/share_card.dart';
 import 'package:yijing_transform/viewmodel/detail_viewmodel.dart';
@@ -27,7 +30,7 @@ void main() {
   testWidgets('壳层 4 Tab 默认今日屏 (问候 + 今日一卦 + 最近占卜)', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: AppShell()));
     await tester.pumpAndSettle();
-    expect(find.text('最 近 占 卜'), findsOneWidget);
+    expect(find.text('最 近 占 卜'), findsNothing); // iter53 移除
     // 4 个 tab (grid/history 图标与我的页快捷入口共用, 允许多处)
     expect(find.byIcon(Icons.wb_twilight_outlined), findsWidgets);
     expect(find.byIcon(Icons.auto_awesome_outlined), findsOneWidget);
@@ -196,6 +199,37 @@ void main() {
     expect(find.text('乾 卦'), findsOneWidget);
   });
 
+  testWidgets('推入页横滑返回: 卦库右滑回壳层 (iter53 SwipeBackPage)', (tester) async {
+    HexRepository.instance.init();
+    late BuildContext ctx0;
+    await tester.pumpWidget(MaterialApp(
+      home: Builder(
+        builder: (ctx) {
+          ctx0 = ctx;
+          return Scaffold(
+            body: Center(
+              child: FilledButton(
+                onPressed: () => Navigator.of(ctx0).push(yiFadeRoute(
+                    HexGridScreen(
+                        vm: HexGridViewModel(repo: HexRepository.instance),
+                        onOpenDetail: (_) {}))),
+                child: const Text('OPEN_GRID'),
+              ),
+            ),
+          );
+        },
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OPEN_GRID'));
+    await tester.pumpAndSettle();
+    expect(find.text('共 64 卦'), findsOneWidget);
+    // 全屏右滑 → 返回壳层
+    await tester.fling(find.text('共 64 卦'), const Offset(420, 0), 1100);
+    await tester.pumpAndSettle();
+    expect(find.text('OPEN_GRID'), findsOneWidget);
+  });
+
   testWidgets('屏7 ⚙ → 设置面板 (导出/导入/清空/重置)', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: AppShell()));
     await tester.pumpAndSettle();
@@ -223,10 +257,15 @@ void main() {
     await tester.pump(); // 进入 casting (六爻逐爻点亮动画)
     expect(find.text('卦 象 推 演 中'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 1300)); // 推过 1.1s 动画 → done
+    await tester.pump(const Duration(milliseconds: 60));
+    await tester.pump(const Duration(milliseconds: 60));
+    // iter53: 完成后自动展示卦辞解析
+    expect(find.byType(DetailScreen), findsOneWidget);
+    // 返回 → 结果页仍在
+    await tester.pageBack();
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 100));
-    // 结果页动爻呼吸动画永不静止, 不能 pumpAndSettle — 用定长 pump
     expect(find.text('卦 象 已 成'), findsOneWidget);
-    expect(find.text('查看卦辞解析'), findsOneWidget);
   });
 
   testWidgets('卦库点卦 → 详情; 详情 → 变卦推演路由', (tester) async {

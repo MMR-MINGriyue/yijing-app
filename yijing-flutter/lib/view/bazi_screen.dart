@@ -39,8 +39,10 @@ class _BaziScreenState extends State<BaziScreen> {
     if (!mounted) return;
     final t = time ?? _time;
     setState(() => _time = t);
-    widget.vm.setBirth(
-        DateTime(date.year, date.month, date.day, t.hour, t.minute));
+    // iter53: 选完即排 (免按排盘键), 保留手动重排按钮
+    widget.vm
+      ..setBirth(DateTime(date.year, date.month, date.day, t.hour, t.minute))
+      ..compute();
   }
 
   String get _birthLabel {
