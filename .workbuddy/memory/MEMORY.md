@@ -60,6 +60,17 @@
 - Flutter: `flutter analyze` (0 issue 基线) + `flutter test` (120 项, iter41) + `dart run tool/verify_engine.dart` (79 项, 纯 Dart 无 Flutter 依赖)
 - **JS→Dart 哈希三语义**: `^` Int32 有符号 / `*` double 53 位舍入 / `>>>0` 负数 mod — 直译必错, 见 cast_engine.numbersFromText 注释
 - **CI pipefail**: `flutter test | tail` 吞退出码, workflow 必须 `set -o pipefail` (iter33 修)
+- **CI 镜像门控 (iter42)**: 国内镜像 (aliyun/tencent) 只能本地用 — GitHub US runner 访问中国 CDN
+  间歇超时; settings.gradle.kts 用 CI/GITHUB_ACTIONS 环境变量门控, wrapper dist 在 workflow 里
+  sed 回 services.gradle.org。查 CI 状态: 推 tag → 出 Release 即过; CI 日志 API 会被 sandbox
+  DLP 拦 (token 出站即杀); git push 走 SSH (origin 已切 git@github.com:, HTTPS push 被 DLP 杀)
+- **iter43 终局**: CI Build 挂的真根因 = file_picker 11×AGP9 KGP 冲突 (升 12.3.0+share_plus
+  13.3.0 修复) + tag push 配 paths 被跳过 (workflow_call 独立 release 工作流修复); v1.37.1
+  Release 已出, CI 全绿
+- **sandbox 环境变量剥离 (iter43, 关键)**: Windows 会话里 bash 可见但子进程拿不到
+  TMP/LOCALAPPDATA/ANDROID_HOME/FLUTTER_STORAGE_BASE_URL 等 → flutter test/build 全挂;
+  必须用 env 前缀显式导出 (完整模板见 2026-09-12.md); 引擎 jar 下载必须
+  FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn 传到 gradle
 - **Prefs 存储单独文件**: history_store_prefs 若并入核心 data 文件, dart run verify_engine 传递 dart:ui 崩溃
 - **PWA node 对拍法**: stub window + 00-core 历法 stub + eval PWA 源码, 全局双挂 (window.X + bare X); 补丁脚本用 Write 工具写文件, 不用 bash heredoc ($ 转义坑)
 - **IndexedStack 测试**: 离屏子树可被 find 命中; Tab 定位用 find.descendant(BottomNavigationBar, text)

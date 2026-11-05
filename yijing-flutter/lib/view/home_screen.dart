@@ -4,6 +4,7 @@ import '../core/yi_almanac.dart';
 
 import '../model/hex.dart';
 import '../theme/yijing_theme.dart';
+import '../theme/yi_ornament.dart';
 import '../viewmodel/home_viewmodel.dart';
 import 'hero_fullscreen.dart';
 import 'widgets/hex_glyph.dart';
@@ -76,9 +77,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _greeting() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Text(widget.vm.greeting,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500,
-                letterSpacing: 2, color: YiColors.textPrimary)),
+        Row(mainAxisSize: MainAxisSize.min, children: [
+          Text(widget.vm.greeting,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500,
+                  letterSpacing: 2, color: YiColors.textPrimary)),
+          const SizedBox(width: 10),
+          const YiSeal(text: '易', size: 22), // 朱砂方印 (iter58)
+        ]),
         Row(mainAxisSize: MainAxisSize.min, children: [
           IconButton(
             icon: const Icon(Icons.refresh, size: 22, color: YiColors.textTertiary),
@@ -125,7 +130,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: Column(children: [
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            HexGlyph(lines: h.yangs, width: 42, lineH: 6.5, gap: 5.5),
+            Hero(
+              tag: YiMotion.dailyHexHero,
+              child: HexGlyph(
+                  lines: h.yangs, width: 42, lineH: 6.5, gap: 5.5),
+            ),
             const SizedBox(width: 24),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

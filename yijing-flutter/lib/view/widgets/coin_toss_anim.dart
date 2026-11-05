@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../../theme/yijing_theme.dart';
+import '../../theme/yi_ornament.dart';
 
 /// 铜钱投掷动画 (iter50 重构 / iter51 道家化) — 六爻逐次真实掷币.
 /// 币面取山鬼花钱式: 正面方孔 + 「山鬼」二字, 背面太极居中八卦环绕.
@@ -329,36 +330,9 @@ class _BaguaPainter extends CustomPainter {
       ..color = const Color(0xFF52391F)
       ..style = PaintingStyle.fill;
 
-    // 太极图 (径 0.17d): 阳鱼米金 / 阴鱼墨
-    final tr = d * 0.17;
-    canvas.drawCircle(c, tr, Paint()..color = const Color(0xFFF2DDB0));
-    // 阴半 (右半旋转 90°: 以竖直径分割, S 弧)
-    final sPath = Path()
-      ..moveTo(c.dx, c.dy - tr)
-      ..arcTo(Rect.fromCircle(center: c, radius: tr), -pi / 2, pi, false)
-      ..arcTo(
-          Rect.fromCircle(
-              center: Offset(c.dx, c.dy + tr / 2), radius: tr / 2),
-          0,
-          pi,
-          false)
-      ..arcTo(
-          Rect.fromCircle(
-              center: Offset(c.dx, c.dy - tr / 2), radius: tr / 2),
-          pi,
-          pi,
-          false)
-      ..close();
-    canvas.drawPath(sPath, Paint()..color = const Color(0xFF3A2E1E));
-    canvas.drawCircle(Offset(c.dx, c.dy - tr / 2), tr * 0.13,
-        Paint()..color = const Color(0xFF3A2E1E));
-    canvas.drawCircle(Offset(c.dx, c.dy + tr / 2), tr * 0.13,
-        Paint()..color = const Color(0xFFF2DDB0));
-    // 太极外郭
-    canvas.drawCircle(c, tr, Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1
-      ..color = const Color(0xFF8F6F42));
+    // 太极图 (iter58: 标准叠画阴阳鱼, 修复 arcTo 路径畸形)
+    paintTaiji(canvas, c, d * 0.17,
+        yang: const Color(0xFFF2DDB0), yin: const Color(0xFF3A2E1E));
 
     // 八卦符环绕 (半径 0.33d, 每卦 3 画横排)
     final rOrbit = d * 0.33;

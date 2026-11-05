@@ -16,6 +16,12 @@ class YiColors {
   static const textMuted = Color(0xFF6E6353);
   static const stroke = Color(0xFF3A3127);
   static const strokeSoft = Color(0xFF2A241D);
+
+  // iter58 复古玄幻层: 古铜 / 符箓金 / 星银 / 旧纸
+  static const bronze = Color(0xFF7A5C34);      // 古铜 (外郭)
+  static const talisman = Color(0xFFD8B25A);    // 符箓金
+  static const starSilver = Color(0xFF9AA6A2);  // 星宿银
+  static const parchment = Color(0xFFE8D9BC);   // 旧纸米
 }
 
 /// 动效 token — PWA v1.17 全站 ease-out-expo 曲线体系 (iter38)
@@ -35,6 +41,9 @@ class YiMotion {
   /// 动爻呼吸动画周期
   static const Duration breathCycle = Duration(milliseconds: 1400);
 
+  /// 启动转盘六爻 → 主页今日一卦卡 共享 Hero tag (iter57)
+  static const String dailyHexHero = 'daily-hex';
+
   /// 首屏入场编排四段延迟 (PWA v1.17 stagger: 问候→今日一卦→快捷入口→最近占卜)
   static const List<Duration> homeStagger = [
     Duration(milliseconds: 0),
@@ -44,16 +53,29 @@ class YiMotion {
   ];
 }
 
-/// 卡片装饰 — 三层渐变 token (--grad-card 对应), 光从左上入
+/// 卡片装饰 (iter58 复古化) — 做旧墨渐变 + 古金细线 + 外圈第二道金线.
+/// 双层描边由 boxShadow(spread) 形成, 全应用卡片一处生效.
 Decoration yiCardDecoration({Color? border, double radius = 14}) {
   return BoxDecoration(
     gradient: const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [Color(0xFF221C15), YiColors.inkCard],
+      colors: [Color(0xFF241D15), Color(0xFF17120E)],
     ),
     borderRadius: BorderRadius.circular(radius),
-    border: Border.all(color: border ?? YiColors.strokeSoft),
+    border: Border.all(color: border ?? YiColors.bronze, width: 0.8),
+    boxShadow: [
+      BoxShadow(
+        color: YiColors.goldDark.withValues(alpha: 0.16),
+        blurRadius: 0,
+        spreadRadius: 1.5,
+      ),
+      BoxShadow(
+        color: const Color(0xFF000000).withValues(alpha: 0.35),
+        blurRadius: 10,
+        offset: const Offset(0, 3),
+      ),
+    ],
   );
 }
 

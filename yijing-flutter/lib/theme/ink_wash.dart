@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'yijing_theme.dart';
+import 'yi_ornament.dart';
 
 /// 墨韵背景 (iter45) — 与新图标同源的层叠晕染:
 /// 基底墨色 + 顶部金晕 (光) + 右下松绿沉晕 (水) + 左下朱砂微晕 (火).
@@ -60,6 +61,14 @@ class YiInkWash extends StatelessWidget {
                 ],
                 stops: const [0, 1],
               ),
+            ),
+          ),
+        ),
+        // iter58: 星宿云篆底纹 — 全应用统一复古玄幻层, 不接收指针事件
+        const Positioned.fill(
+          child: IgnorePointer(
+            child: RepaintBoundary(
+              child: CustomPaint(painter: YiMysticPainter()),
             ),
           ),
         ),
