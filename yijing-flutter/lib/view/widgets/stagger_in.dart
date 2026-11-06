@@ -28,14 +28,23 @@ class _StaggerInState extends State<StaggerIn>
     parent: _ctrl,
     curve: YiMotion.easeOutExpo,
   );
+  bool _started = false;
 
   @override
-  void initState() {
-    super.initState();
-    if (widget.delay == Duration.zero) {
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    // iter59: 系统减少动画 → 直接落终态 (MediaQuery 依赖必须在此读取)
+    if (MediaQuery.of(context).disableAnimations) {
+      _ctrl.value = 1.0;
+      return;
+    }
+    final delay = YiMotion.reduced(context, widget.delay);
+    if (delay == Duration.zero) {
       _ctrl.forward();
     } else {
-      Future.delayed(widget.delay, () {
+      Future.delayed(delay, () {
         if (mounted) _ctrl.forward();
       });
     }

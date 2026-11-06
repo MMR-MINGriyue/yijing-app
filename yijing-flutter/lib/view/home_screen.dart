@@ -66,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 14),
             StaggerIn(delay: YiMotion.homeStagger[3], child: _almanacRow()),
             const SizedBox(height: 12),
-            StaggerIn(delay: YiMotion.homeStagger[3], child: _quoteBanner()),
+            StaggerIn(delay: YiMotion.homeStagger[4], child: _quoteBanner()),
           ],
         ),
       ),

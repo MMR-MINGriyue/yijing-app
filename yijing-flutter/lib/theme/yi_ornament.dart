@@ -56,11 +56,11 @@ class YiMysticPainter extends CustomPainter {
           rr,
           Paint()
             ..color = (i % 5 == 0 ? YiColors.talisman : YiColors.starSilver)
-                .withValues(alpha: 0.06 + rnd.nextDouble() * 0.07));
+                .withValues(alpha: 0.09 + rnd.nextDouble() * 0.09));
     }
     // 云篆弧: 左上与右下各两道同心淡弧
     final cloudPaint = Paint()
-      ..color = YiColors.gold.withValues(alpha: 0.055)
+      ..color = YiColors.gold.withValues(alpha: 0.075)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     for (final anchor in <Offset>[
@@ -96,7 +96,7 @@ class YiMysticPainter extends CustomPainter {
       for (var line = 0; line < 3; line++) {
         final ly = y0 + line * 5.0;
         final paint = Paint()
-          ..color = YiColors.gold.withValues(alpha: 0.07)
+          ..color = YiColors.gold.withValues(alpha: 0.09)
           ..strokeWidth = 1.5
           ..strokeCap = StrokeCap.round;
         if (tri[line] == 1) {

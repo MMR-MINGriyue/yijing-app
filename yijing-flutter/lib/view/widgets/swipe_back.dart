@@ -63,7 +63,9 @@ class _SwipeBackPageState extends State<SwipeBackPage> {
       const Positioned.fill(child: ColoredBox(color: YiColors.ink)),
       AnimatedSlide(
         offset: Offset(max(0, _dx) / w, 0),
-        duration: _dragging ? Duration.zero : const Duration(milliseconds: 180),
+        duration: _dragging
+            ? Duration.zero
+            : YiMotion.reduced(context, const Duration(milliseconds: 180)),
         curve: Curves.easeOutCubic,
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,

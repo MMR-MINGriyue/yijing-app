@@ -123,15 +123,20 @@ class _AppShellState extends State<AppShell> {
   /// Tab 切换过渡 (iter52): 交叉淡入 + 方向感知滑动 —
   /// 切向右侧 Tab 时新页自右滑入, 向左反之; IndexedStack 状态保留
   Widget _fadeTab(int i, Widget child) {
+    // iter59: 整页不透明滑入 — IndexedStack 只绘制当前页, 透明度淡入会让
+    // 切换中段出现「半透明新页 + 墨底」的发虚空白; 改为位移+缩放归位,
+    // 内容自第一帧完整可见, 方向感来自 7.5% 侧滑。
     final dir = (i - _tab).sign.toDouble();
-    return AnimatedOpacity(
-      opacity: i == _tab ? 1.0 : 0.0,
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOut,
-      child: AnimatedSlide(
-        offset: Offset(dir * 0.035, 0),
-        duration: const Duration(milliseconds: 260),
-        curve: Curves.easeOut,
+    final active = i == _tab;
+    final dur = YiMotion.reduced(context, const Duration(milliseconds: 280));
+    return AnimatedSlide(
+      offset: Offset(active ? 0 : dir * 0.075, 0),
+      duration: dur,
+      curve: YiMotion.easeOutExpo,
+      child: AnimatedScale(
+        scale: active ? 1.0 : 0.985,
+        duration: dur,
+        curve: YiMotion.easeOutExpo,
         child: child,
       ),
     );

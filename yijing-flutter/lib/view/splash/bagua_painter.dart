@@ -99,7 +99,7 @@ class BaguaPainter extends CustomPainter {
           }
         }
       }
-      // 停位金圈
+      // 停位金圈 + 定盘涟漪 (iter59: 随 reveal 扩散淡出)
       if (isUp) {
         canvas.drawCircle(
             p,
@@ -108,6 +108,13 @@ class BaguaPainter extends CustomPainter {
               ..color = _gold.withValues(alpha: reveal * 0.9)
               ..style = PaintingStyle.stroke
               ..strokeWidth = 1.5);
+        canvas.drawCircle(
+            p,
+            lineW * 0.72 + reveal * R * 0.18,
+            Paint()
+              ..color = _gold.withValues(alpha: (1 - reveal) * 0.55)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.2);
       }
     }
 
@@ -134,6 +141,13 @@ class BaguaPainter extends CustomPainter {
               ..color = _gold.withValues(alpha: reveal * 0.75)
               ..style = PaintingStyle.stroke
               ..strokeWidth = 1.2);
+        canvas.drawCircle(
+            p,
+            R * (0.085 + reveal * 0.12),
+            Paint()
+              ..color = _gold.withValues(alpha: (1 - reveal) * 0.4)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.0);
       }
     }
 
@@ -155,6 +169,16 @@ class BaguaPainter extends CustomPainter {
         Paint()
           ..color = _cinnabar.withValues(alpha: 0.5)
           ..strokeWidth = 1);
+    // 定盘脉冲: 指针处朱砂光环扩散 (iter59)
+    if (reveal > 0) {
+      canvas.drawCircle(
+          Offset(c.dx, tipY + R * 0.04),
+          R * (0.04 + reveal * 0.10),
+          Paint()
+            ..color = _cinnabar.withValues(alpha: (1 - reveal) * 0.5)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5);
+    }
   }
 
   @override

@@ -44,12 +44,17 @@ class YiMotion {
   /// 启动转盘六爻 → 主页今日一卦卡 共享 Hero tag (iter57)
   static const String dailyHexHero = 'daily-hex';
 
-  /// 首屏入场编排四段延迟 (PWA v1.17 stagger: 问候→今日一卦→快捷入口→最近占卜)
+  /// 系统「减少动画」时把时长/延迟压零 (iter59 全站统一)
+  static Duration reduced(BuildContext context, Duration d) =>
+      MediaQuery.of(context).disableAnimations ? Duration.zero : d;
+
+  /// 首屏入场编排五段 (iter59: 节气/四柱与卦语错峰)
   static const List<Duration> homeStagger = [
     Duration(milliseconds: 0),
     Duration(milliseconds: 110),
     Duration(milliseconds: 260),
     Duration(milliseconds: 380),
+    Duration(milliseconds: 500),
   ];
 }
 
@@ -63,10 +68,10 @@ Decoration yiCardDecoration({Color? border, double radius = 14}) {
       colors: [Color(0xFF241D15), Color(0xFF17120E)],
     ),
     borderRadius: BorderRadius.circular(radius),
-    border: Border.all(color: border ?? YiColors.bronze, width: 0.8),
+    border: Border.all(color: border ?? YiColors.bronze, width: 1.0),
     boxShadow: [
       BoxShadow(
-        color: YiColors.goldDark.withValues(alpha: 0.16),
+        color: YiColors.goldDark.withValues(alpha: 0.26),
         blurRadius: 0,
         spreadRadius: 1.5,
       ),
