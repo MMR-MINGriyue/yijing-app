@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../data/favorites_store.dart';
 import '../theme/yijing_theme.dart';
+import '../theme/yi_ornament.dart';
 import '../viewmodel/hexgrid_viewmodel.dart';
 import 'widgets/hex_glyph.dart';
 import 'widgets/swipe_back.dart';
@@ -10,8 +12,14 @@ import 'widgets/pressable.dart';
 class HexGridScreen extends StatefulWidget {
   final HexGridViewModel vm;
   final void Function(int hexNo) onOpenDetail;
+  final FavoritesRepository? favorites;
 
-  const HexGridScreen({super.key, required this.vm, required this.onOpenDetail});
+  const HexGridScreen({
+    super.key,
+    required this.vm,
+    required this.onOpenDetail,
+    this.favorites,
+  });
 
   @override
   State<HexGridScreen> createState() => _HexGridScreenState();
@@ -38,6 +46,9 @@ class _HexGridScreenState extends State<HexGridScreen> {
   @override
   Widget build(BuildContext context) {
     final list = widget.vm.filtered;
+    final favs = (widget.favorites ?? FavoritesRepository.instance)
+        .load()
+        .toSet(); // 一次读取, 避免每格 _store.read() 复制列表
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -73,45 +84,113 @@ class _HexGridScreenState extends State<HexGridScreen> {
           ),
         ),
         Expanded(
-          // iter39: 宫筛选/搜索切换时网格淡入滑入过渡
-          child: AnimatedSwitcher(
-            duration: YiMotion.base,
-            switchInCurve: YiMotion.easeOutExpo,
-            transitionBuilder: (child, anim) => FadeTransition(
-              opacity: anim,
-              child: SlideTransition(
-                position: Tween(begin: const Offset(0, 0.02), end: Offset.zero)
-                    .animate(anim),
-                child: child,
-              ),
-            ),
-            child: GridView.builder(
+          // iter61: 空结果即时反馈 (不走切换动画, 避免旧网格残留过渡层);
+          // 网格筛选/搜索仍保留 iter39 的淡入滑入
+          child: list.isEmpty
+              ? const Center(
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    YiSeal(text: '无', size: 34),
+                    SizedBox(height: 12),
+                    Text('未找到相关卦象',
+                        style: TextStyle(
+                            fontSize: 13,
+                            letterSpacing: 2,
+                            color: YiColors.textSecondary)),
+                    SizedBox(height: 6),
+                    Text('换个卦名 / 拼音 / 卦序试试',
+                        style: TextStyle(
+                            fontSize: 11, color: YiColors.textMuted)),
+                  ]),
+                )
+              : AnimatedSwitcher(
+                  duration: YiMotion.base,
+                  switchInCurve: YiMotion.easeOutExpo,
+                  transitionBuilder: (child, anim) => FadeTransition(
+                    opacity: anim,
+                    child: SlideTransition(
+                      position:
+                          Tween(begin: const Offset(0, 0.02), end: Offset.zero)
+                              .animate(anim),
+                      child: child,
+                    ),
+                  ),
+                  child: GridView.builder(
             key: ValueKey('${widget.vm.palaceFilter}|${widget.vm.keyword}|${list.length}'),
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 4,
               mainAxisSpacing: 10,
               crossAxisSpacing: 10,
-              childAspectRatio: 0.74,
+              childAspectRatio: 0.82,
             ),
             itemCount: list.length,
             itemBuilder: (_, i) {
               final h = list[i];
               final palace = widget.vm.palaceOfHex(h.no);
-              return InkWell(
+              // iter61: 逐格错峰浮现 (隐式动画, 无控制器), 按压改全站 PressableScale
+              return PressableScale(
                 onTap: () => widget.onOpenDetail(h.no),
-                borderRadius: BorderRadius.circular(14),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                  decoration: yiCardDecoration(),
-                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    HexGlyph(lines: h.yangs, width: 26, lineH: 3.6, gap: 2.8),
-                    const SizedBox(height: 8),
-                    Text(h.name, style: const TextStyle(
-                        fontSize: 15, letterSpacing: 2, color: YiColors.textPrimary)),
-                    Text('第${h.no}卦${palace == null ? '' : ' · ${palace.substring(0, 1)}宫'}',
-                        style: const TextStyle(fontSize: 9, color: YiColors.textMuted)),
-                  ]),
+                child: TweenAnimationBuilder<double>(
+                  key: ValueKey('grid_item_${h.no}'),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: YiMotion.reduced(context,
+                      Duration(milliseconds: 180 + (i % 8) * 22)),
+                  curve: YiMotion.easeOutExpo,
+                  builder: (_, v, child) => Opacity(
+                    opacity: v,
+                    child: Transform.translate(
+                        offset: Offset(0, (1 - v) * 10), child: child!),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                    decoration: yiCardDecoration(),
+                    child: Stack(children: [
+                      Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        HexGlyph(lines: h.yangs, width: 26, lineH: 3.6, gap: 2.8),
+                        const SizedBox(height: 8),
+                        Text(h.name, style: const TextStyle(
+                            fontSize: 15, letterSpacing: 2, color: YiColors.textPrimary)),
+                        const SizedBox(height: 3),
+                        Row(mainAxisSize: MainAxisSize.min, children: [
+                          if (palace != null)
+                            Container(
+                              key: Key('grid_palace_${h.no}'),
+                              width: 14,
+                              height: 14,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: YiColors.bronze.withValues(alpha: 0.25),
+                                borderRadius: BorderRadius.circular(2),
+                                border: Border.all(
+                                    color: YiColors.goldDark, width: 0.5),
+                              ),
+                              child: Text(palace.substring(0, 1),
+                                  style: const TextStyle(
+                                      fontSize: 9, color: YiColors.gold)),
+                            ),
+                          if (palace != null) const SizedBox(width: 4),
+                          Text('第${h.no}卦',
+                              style: const TextStyle(
+                                  fontSize: 9, color: YiColors.textMuted)),
+                        ]),
+                      ]),
+                      if (favs.contains(h.no))
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: SizedBox(
+                            key: Key('grid_fav_${h.no}'),
+                            width: 6,
+                            height: 6,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                  color: YiColors.cinnabar,
+                                  shape: BoxShape.circle),
+                            ),
+                          ),
+                        ),
+                    ]),
+                  ),
                 ),
               );
             },
@@ -169,9 +248,20 @@ class _HexGridScreenState extends State<HexGridScreen> {
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: active ? YiColors.cinnabar : YiColors.strokeSoft),
           ),
-          child: Text(label, style: TextStyle(
-              fontSize: 12, letterSpacing: 1,
-              color: active ? YiColors.cinnabar : YiColors.textTertiary)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Container(
+              width: 5,
+              height: 5,
+              decoration: BoxDecoration(
+                color: active ? YiColors.cinnabar : YiColors.textMuted,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(label, style: TextStyle(
+                fontSize: 12, letterSpacing: 1,
+                color: active ? YiColors.cinnabar : YiColors.textTertiary)),
+          ]),
         ),
       ),
     );
