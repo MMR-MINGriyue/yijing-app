@@ -5,6 +5,7 @@ import '../theme/ink_wash.dart';
 import 'widgets/swipe_back.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/transform_viewmodel.dart';
+import 'widgets/stagger_in.dart';
 import 'widgets/yao_sheet.dart';
 
 /// 屏 5 变卦推演 — View 层 (纯 UI, 一切状态来自 ViewModel)
@@ -66,10 +67,17 @@ class _TransformScreenState extends State<TransformScreen> {
       decoration: _cardDeco(),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
+        // iter66: 本卦 → 变卦 → 互卦 三列接力入场
         children: [
-          _hexCol('本 卦 · ${r.ben.name}', r.ben, s.moving, isCurrent: true, onTap: (i) => widget.vm.toggleMoving(i)),
-          _hexCol('变 卦 · ${r.changed.name}', r.changed, const [], isCurrent: false, onTap: null),
-          _hexCol('互 卦 · ${r.hu.name}', r.hu, const [], isCurrent: false, onTap: null),
+          StaggerIn(child: _hexCol('本 卦 · ${r.ben.name}', r.ben, s.moving, isCurrent: true, onTap: (i) => widget.vm.toggleMoving(i))),
+          StaggerIn(
+            delay: const Duration(milliseconds: 80),
+            child: _hexCol('变 卦 · ${r.changed.name}', r.changed, const [], isCurrent: false, onTap: null),
+          ),
+          StaggerIn(
+            delay: const Duration(milliseconds: 160),
+            child: _hexCol('互 卦 · ${r.hu.name}', r.hu, const [], isCurrent: false, onTap: null),
+          ),
         ],
       ),
     );
@@ -83,8 +91,23 @@ class _TransformScreenState extends State<TransformScreen> {
         const SizedBox(height: 10),
         _YaoStack(hex: hex, moving: moving, onTap: onTap, sheetContext: context),
         const SizedBox(height: 8),
-        Text(hex.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500,
-            letterSpacing: 6, color: YiColors.textPrimary)),
+        // iter66: 卦名切换淡入上浮 (点动爻后变卦名随动更新)
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, anim) => FadeTransition(
+            opacity: anim,
+            child: SlideTransition(
+              position: Tween(begin: const Offset(0, 0.35), end: Offset.zero).animate(anim),
+              child: child,
+            ),
+          ),
+          child: Text(hex.name,
+              key: ValueKey('hn-${hex.no}'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500,
+                  letterSpacing: 6, color: YiColors.textPrimary)),
+        ),
       ],
     );
   }
@@ -97,7 +120,13 @@ class _TransformScreenState extends State<TransformScreen> {
       children: [
         Container(width: 7, height: 7, decoration: const BoxDecoration(color: YiColors.cinnabar, shape: BoxShape.circle)),
         const SizedBox(width: 8),
-        Text(mvText, style: const TextStyle(color: YiColors.textPrimary, fontSize: 13, letterSpacing: 1)),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 240),
+          switchInCurve: Curves.easeOutCubic,
+          child: Text(mvText,
+              key: ValueKey('mvnote-$mvText'),
+              style: const TextStyle(color: YiColors.textPrimary, fontSize: 13, letterSpacing: 1)),
+        ),
       ],
     );
   }
@@ -114,7 +143,13 @@ class _TransformScreenState extends State<TransformScreen> {
         children: [
           Text('${r.ben.name}卦 · ${kTriNature[r.ben.triU]}${kTriNature[r.ben.triD]}', style: const TextStyle(fontSize: 16, letterSpacing: 2, color: YiColors.textPrimary)),
           const SizedBox(height: 12),
-          for (final c in changes) _diffRow(c),
+          // iter66: 爻变明细逐行错峰 (key 含爻位与前后爻名, 重算时重新入场)
+          for (final (i, c) in changes.indexed)
+            StaggerIn(
+              key: ValueKey('diff-${c.idx}-${c.from}-${c.to}'),
+              delay: Duration(milliseconds: 60 * i),
+              child: _diffRow(c),
+            ),
           if (changes.isEmpty)
             const Text('点击上方本卦任意爻，生成变卦推演', style: TextStyle(color: YiColors.textTertiary, fontSize: 12)),
           const SizedBox(height: 12),
@@ -152,12 +187,35 @@ class _TransformScreenState extends State<TransformScreen> {
       child: Row(children: [
         Text('体 ${r.tiName}(${r.tiWuxing})', style: const TextStyle(color: YiColors.textPrimary, fontSize: 12)),
         const SizedBox(width: 14),
-        Text(r.relation, style: const TextStyle(color: YiColors.gold, fontSize: 13, fontWeight: FontWeight.w500)),
+        // iter66: 体用生克关系与断语切换时弹跳入场
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 320),
+          switchInCurve: Curves.easeOutBack,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, anim) => ScaleTransition(
+            scale: Tween(begin: 0.7, end: 1.0).animate(anim),
+            child: FadeTransition(opacity: anim, child: child),
+          ),
+          child: Text(r.relation,
+              key: ValueKey('rel-${r.relation}'),
+              style: const TextStyle(color: YiColors.gold, fontSize: 13, fontWeight: FontWeight.w500)),
+        ),
         const SizedBox(width: 14),
         Text('用 ${r.yongName}(${r.yongWuxing})', style: const TextStyle(color: YiColors.textSecondary, fontSize: 12)),
         const Spacer(),
-        Text(r.verdict, style: TextStyle(
-          color: _verdictColor(r.verdict), fontSize: 15, fontWeight: FontWeight.w500)),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 320),
+          switchInCurve: Curves.easeOutBack,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, anim) => ScaleTransition(
+            scale: Tween(begin: 0.7, end: 1.0).animate(anim),
+            child: FadeTransition(opacity: anim, child: child),
+          ),
+          child: Text(r.verdict,
+              key: ValueKey('verdict-${r.verdict}'),
+              style: TextStyle(
+                color: _verdictColor(r.verdict), fontSize: 15, fontWeight: FontWeight.w500)),
+        ),
       ]),
     );
   }
@@ -260,24 +318,30 @@ class _YaoStack extends StatelessWidget {
 
   Widget _yaoLine(bool yang, bool isMoving, String name) {
     final color = isMoving ? YiColors.cinnabar : YiColors.gold;
-    Widget line() => Container(
+    // iter66: 动爻高亮金→朱砂平滑过渡
+    Widget line() => AnimatedContainer(
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
       width: yang ? 44 : 20,
       height: 4,
       decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
     );
     return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
       SizedBox(width: 52, child: Center(
-        child: isMoving
-            ? Text(name, style: const TextStyle(fontSize: 9, color: YiColors.cinnabar))
-            : const SizedBox.shrink(),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: isMoving
+              ? Text(name, key: ValueKey('mv-$name'), style: const TextStyle(fontSize: 9, color: YiColors.cinnabar))
+              : const SizedBox.shrink(key: ValueKey('mv-none')),
+        ),
       )),
       if (yang)
         line()
       else
         Row(children: [
-          Container(width: 20, height: 4, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
+          AnimatedContainer(duration: const Duration(milliseconds: 260), width: 20, height: 4, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
           const SizedBox(width: 4),
-          Container(width: 20, height: 4, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
+          AnimatedContainer(duration: const Duration(milliseconds: 260), width: 20, height: 4, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
         ]),
     ]);
   }

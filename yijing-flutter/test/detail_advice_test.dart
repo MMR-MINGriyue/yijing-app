@@ -65,6 +65,8 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       final vm = newVm();
       await tester.pumpWidget(MaterialApp(home: DetailScreen(vm: vm)));
+      // iter66: 入场编排 — 等待 stagger 落位再交互 (避免 16px 偏移期 tap 未命中)
+      await tester.pumpAndSettle();
 
       // 乾卦事业建议默认可见
       expect(find.textContaining('主动谋局'), findsOneWidget);
@@ -85,6 +87,7 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       final vm = newVm(direction: '感情');
       await tester.pumpWidget(MaterialApp(home: DetailScreen(vm: vm)));
+      await tester.pumpAndSettle(); // 冲销 stagger 延时定时器
       expect(vm.adviceDir, '感情');
       expect(find.textContaining('以柔和相待'), findsOneWidget);
     });

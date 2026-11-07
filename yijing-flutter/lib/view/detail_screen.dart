@@ -9,6 +9,7 @@ import '../model/hex.dart';
 import '../data/hex_advice.dart';
 import 'widgets/hex_glyph.dart';
 import 'widgets/share_card.dart';
+import 'widgets/stagger_in.dart';
 import 'widgets/yao_sheet.dart';
 import '../theme/ink_wash.dart';
 import '../theme/yi_transitions.dart';
@@ -73,13 +74,20 @@ class _DetailScreenState extends State<DetailScreen> {
           child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
         children: [
-          _hero(h),
+          // iter66: 入场编排 — hero → tabs → 文卡错峰 → 建议, 自上而下接力
+          StaggerIn(child: _hero(h)),
           const SizedBox(height: 14),
-          _tabs(),
+          StaggerIn(
+            delay: const Duration(milliseconds: 60),
+            child: _tabs(),
+          ),
           const SizedBox(height: 14),
-          ..._tabContent(h),
+          ..._staggeredTabContent(h),
           const SizedBox(height: 14),
-          _advice(h),
+          StaggerIn(
+            delay: Duration(milliseconds: 100 + _tabCardCount(h) * 45),
+            child: _advice(h),
+          ),
           const SizedBox(height: 16),
           if (widget.onOpenTransform != null) _openTransformBtn(h),
           const SizedBox(height: 12),
@@ -161,7 +169,9 @@ class _DetailScreenState extends State<DetailScreen> {
         Expanded(
           child: InkWell(
             onTap: () => widget.vm.setTab(t),
-            child: Container(
+            child: AnimatedContainer(
+              duration: YiMotion.base,
+              curve: YiMotion.easeOutExpo,
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
                 border: Border(
@@ -171,16 +181,39 @@ class _DetailScreenState extends State<DetailScreen> {
                   ),
                 ),
               ),
-              child: Text(label, textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14, letterSpacing: 4,
-                    color: widget.vm.tab == t ? YiColors.cinnabar : YiColors.textTertiary,
-                  )),
+              child: AnimatedDefaultTextStyle(
+                duration: YiMotion.base,
+                curve: YiMotion.easeOutExpo,
+                style: TextStyle(
+                  fontSize: 14, letterSpacing: 4,
+                  color: widget.vm.tab == t ? YiColors.cinnabar : YiColors.textTertiary,
+                ),
+                child: Text(label, textAlign: TextAlign.center),
+              ),
             ),
           ),
         ),
     ]);
   }
+
+  /// iter66: Tab 文卡错峰入场 — key 含 tab, 切 Tab 时重新接力入场
+  List<Widget> _staggeredTabContent(Hex h) {
+    final cards = _tabContent(h);
+    return [
+      for (var i = 0; i < cards.length; i++)
+        StaggerIn(
+          key: ValueKey('dc-$i-${widget.vm.tab}'),
+          delay: Duration(milliseconds: 100 + i * 45),
+          child: cards[i],
+        ),
+    ];
+  }
+
+  int _tabCardCount(Hex h) => switch (widget.vm.tab) {
+    DetailTab.yaoci => h.yao.length,
+    DetailTab.xiangzhuan => 2,
+    _ => 1,
+  };
 
   List<Widget> _tabContent(Hex h) {
     return switch (widget.vm.tab) {
@@ -344,11 +377,14 @@ class _DetailScreenState extends State<DetailScreen> {
         curve: Curves.easeOutCubic,
         child: Column(children: [
           for (var i = 0; i < visibleCount; i++)
-            InkWell(
-              key: ValueKey('yao-$i'),
-              onTap: () => showYaoSheet(context, h, i),
-              borderRadius: BorderRadius.circular(10),
-              child: Padding(
+            StaggerIn(
+              key: ValueKey('yl-$i'),
+              delay: Duration(milliseconds: 40 * i),
+              child: InkWell(
+                key: ValueKey('yao-$i'),
+                onTap: () => showYaoSheet(context, h, i),
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Container(
@@ -369,6 +405,7 @@ class _DetailScreenState extends State<DetailScreen> {
                       style: const TextStyle(fontSize: 11, height: 1.6, color: YiColors.textSecondary)),
                 ])),
               ]),
+                ),
               ),
             ),
         ]),
