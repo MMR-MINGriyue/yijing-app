@@ -29,7 +29,10 @@ import '../viewmodel/transform_viewmodel.dart';
 /// 应用壳层 — 4 Tab Hub (今日/占卜/八字/我的; IndexedStack 保留各屏状态)
 /// 详情/推演为 push 路由, 由壳层统一接线
 class AppShell extends StatefulWidget {
-  const AppShell({super.key});
+  const AppShell({super.key, this.fromSplash = false});
+
+  /// 由启动转盘进入 (iter60): 主页 hero 卡免淡入, 稳定 Hero 落点
+  final bool fromSplash;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -153,6 +156,7 @@ class _AppShellState extends State<AppShell> {
           index: _tab,
           children: [
             _fadeTab(0, HomeScreen(
+            heroImmediate: widget.fromSplash,
             vm: _homeVm,
             onOpenDetail: (no, {question}) => _openDetail(no, question: question),
             onGoCast: () => _go(1),
@@ -176,27 +180,52 @@ class _AppShellState extends State<AppShell> {
           ]),
       ),
       bottomNavigationBar: DecoratedBox(
-        // iter49: 顶部金色发丝线, 与墨韵一体
+        // iter49: 顶部金色发丝线; iter60: 朱砂指示条随 Tab 滑动
         decoration: BoxDecoration(
           border: Border(
               top: BorderSide(color: YiColors.gold.withValues(alpha: 0.14))),
         ),
-        child: BottomNavigationBar(
-        backgroundColor: Colors.transparent,
-        selectedItemColor: YiColors.cinnabar,
-        unselectedItemColor: YiColors.textTertiary,
-        type: BottomNavigationBarType.fixed,
-        selectedFontSize: 11,
-        unselectedFontSize: 11,
-        currentIndex: _tab,
-        onTap: (i) => _go(i),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.wb_twilight_outlined), label: '今日'),
-          BottomNavigationBarItem(icon: Icon(Icons.auto_awesome_outlined), label: '占卜'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_month_outlined), label: '八字'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: '我的'),
-        ],
-      ),
+        child: LayoutBuilder(builder: (ctx, cons) {
+          final segW = cons.maxWidth / 4;
+          return Stack(children: [
+            BottomNavigationBar(
+              backgroundColor: Colors.transparent,
+              selectedItemColor: YiColors.cinnabar,
+              unselectedItemColor: YiColors.textTertiary,
+              type: BottomNavigationBarType.fixed,
+              selectedFontSize: 11,
+              unselectedFontSize: 11,
+              currentIndex: _tab,
+              onTap: (i) => _go(i),
+              items: const [
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.wb_twilight_outlined), label: '今日'),
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.auto_awesome_outlined), label: '占卜'),
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.calendar_month_outlined), label: '八字'),
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.person_outline), label: '我的'),
+              ],
+            ),
+            AnimatedPositioned(
+              key: const Key('tab_indicator'),
+              duration:
+                  YiMotion.reduced(ctx, const Duration(milliseconds: 260)),
+              curve: YiMotion.easeOutExpo,
+              left: _tab * segW + segW * 0.36,
+              top: 0,
+              width: segW * 0.28,
+              height: 2,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: YiColors.cinnabar,
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+            ),
+          ]);
+        }),
       ),
     );
   }

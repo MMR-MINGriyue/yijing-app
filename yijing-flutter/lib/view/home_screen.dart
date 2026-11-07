@@ -19,6 +19,8 @@ class HomeScreen extends StatefulWidget {
   final VoidCallback onGoGrid;
   final VoidCallback onGoHistory;
   final VoidCallback onOpenSettings;
+  /// 从启动转盘进入时 hero 卡不参与淡入, 让六爻 Hero 有稳定落点 (iter60)
+  final bool heroImmediate;
 
   const HomeScreen({
     super.key,
@@ -28,6 +30,7 @@ class HomeScreen extends StatefulWidget {
     required this.onGoGrid,
     required this.onGoHistory,
     required this.onOpenSettings,
+    this.heroImmediate = false,
   });
 
   @override
@@ -60,7 +63,9 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             StaggerIn(delay: YiMotion.homeStagger[0], child: _greeting()),
             const SizedBox(height: 14),
-            StaggerIn(delay: YiMotion.homeStagger[1], child: _hero(h)),
+            widget.heroImmediate
+                ? _hero(h)
+                : StaggerIn(delay: YiMotion.homeStagger[1], child: _hero(h)),
             const SizedBox(height: 14),
             StaggerIn(delay: YiMotion.homeStagger[2], child: _quickEntries()),
             const SizedBox(height: 14),

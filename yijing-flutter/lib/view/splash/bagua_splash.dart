@@ -93,7 +93,7 @@ class _BaguaSplashState extends State<BaguaSplash>
   /// 裸路由: 页面本身不做淡入, 由 Hero 六爻飞入承担过渡
   Route<void> _heroRoute() => PageRouteBuilder<void>(
         transitionDuration: const Duration(milliseconds: 450),
-        pageBuilder: (_, _, _) => const AppShell(),
+        pageBuilder: (_, _, _) => const AppShell(fromSplash: true),
         transitionsBuilder: (_, anim, _, child) => child,
       );
 

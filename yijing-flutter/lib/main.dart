@@ -13,11 +13,18 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HexRepository.instance.init(); // 加载 64 卦
   installPrefsStores(); // 真机持久化: 默认存储工厂 → shared_preferences 实现
-  await HistoryRepository.instance.warmUp(); // 预热历史
-  await FavoritesRepository.instance.warmUp(); // 预热收藏
-  try {
-    await PluginReminderScheduler.instance.init(); // 通知通道 + 时区 (iter39)
-  } catch (_) {} // 桌面/测试环境无通道, 静默
+  // iter60: 历史/收藏/通知通道互不依赖, 并行预热缩短冷启动首帧等待
+  Future<void> initReminder() async {
+    try {
+      await PluginReminderScheduler.instance.init(); // 通知通道 + 时区
+    } catch (_) {} // 桌面/测试环境无通道, 静默
+  }
+
+  await Future.wait<void>([
+    HistoryRepository.instance.warmUp(),
+    FavoritesRepository.instance.warmUp(),
+    initReminder(),
+  ]);
   // 通知冷启动直达起卦屏: 不播放启动动画 (iter57)
   String? bootPayload;
   try {
