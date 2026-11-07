@@ -189,9 +189,11 @@ class _CastScreenState extends State<CastScreen> {
           ),
           child: KeyedSubtree(
             key: ValueKey(_segment),
+            // iter65: AnimatedSwitcher 用 Positioned.fill, 短面板会被拉成
+            // 整屏高留下大片空白 → 用 Align 顶部对齐保留自适应高度
             child: switch (_segment) {
-              1 => _xlrPanel(s),
-              2 => _meihuaPanel(s),
+              1 => Align(alignment: Alignment.topCenter, child: _xlrPanel(s)),
+              2 => Align(alignment: Alignment.topCenter, child: _meihuaPanel(s)),
               _ => _liuyaoForm(s),
             },
           ),
@@ -200,7 +202,7 @@ class _CastScreenState extends State<CastScreen> {
     ]);
   }
 
-  /// 分段器 (六爻卦 / 小六壬 / 梅花易数)
+  /// 分段器 (iter65: 金色胶囊随选中项滑动, 与底栏指示条语言统一)
   Widget _segmentBar() {
     const labels = ['六爻卦', '小六壬', '梅花易数'];
     return Container(
@@ -211,35 +213,51 @@ class _CastScreenState extends State<CastScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: YiColors.strokeSoft),
       ),
-      child: Row(children: [
-        for (var i = 0; i < labels.length; i++)
-          Expanded(
-            child: InkWell(
-              onTap: () => setState(() => _segment = i),
-              borderRadius: BorderRadius.circular(9),
+      child: LayoutBuilder(builder: (ctx, cons) {
+        final segW = cons.maxWidth / labels.length;
+        return SizedBox(
+          height: 38,
+          child: Stack(children: [
+            AnimatedPositioned(
+              key: const Key('cast_segment_indicator'),
+              duration: YiMotion.reduced(
+                  context, const Duration(milliseconds: 260)),
+              curve: YiMotion.easeOutExpo,
+              left: _segment * segW,
+              top: 0,
+              width: segW,
+              height: 38,
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 9),
                 decoration: BoxDecoration(
-                  color: _segment == i
-                      ? YiColors.gold.withValues(alpha: 0.18)
-                      : Colors.transparent,
+                  color: YiColors.gold.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(9),
-                  border: _segment == i
-                      ? Border.all(color: YiColors.goldDark)
-                      : null,
+                  border: Border.all(color: YiColors.goldDark),
                 ),
-                child: Text(labels[i],
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 12,
-                        letterSpacing: 2,
-                        color: _segment == i
-                            ? YiColors.gold
-                            : YiColors.textTertiary)),
               ),
             ),
-          ),
-      ]),
+            Row(children: [
+              for (var i = 0; i < labels.length; i++)
+                Expanded(
+                  child: InkWell(
+                    onTap: () => setState(() => _segment = i),
+                    borderRadius: BorderRadius.circular(9),
+                    child: Container(
+                      alignment: Alignment.center,
+                      child: Text(labels[i],
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 12,
+                              letterSpacing: 2,
+                              color: _segment == i
+                                  ? YiColors.gold
+                                  : YiColors.textTertiary)),
+                    ),
+                  ),
+                ),
+            ]),
+          ]),
+        );
+      }),
     );
   }
 

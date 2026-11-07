@@ -170,30 +170,46 @@ class _MeScreenState extends State<MeScreen> {
           padding: const EdgeInsets.all(14),
           decoration: _card(),
           child: Column(children: [
-            for (final e in items)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: Row(children: [
-                  SizedBox(width: 44,
-                      child: Text(e.label, style: const TextStyle(fontSize: 12, color: YiColors.textSecondary))),
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: e.count / maxCount,
-                        child: Container(height: 10, color: e.color.withValues(alpha: 0.75)),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 30,
-                      child: Text('${e.count}', textAlign: TextAlign.right,
-                          style: TextStyle(fontSize: 12, color: e.color))),
-                ]),
-              ),
+            for (var ei = 0; ei < items.length; ei++)
+              _distRow(title, items[ei], ei, maxCount),
           ]),
         ),
     ]);
+  }
+
+  /// iter65: 分布条从 0 生长到目标比例 (错峰 easeOutExpo, 尊重减少动画)
+  Widget _distRow(String title,
+      ({String label, int count, Color color}) e, int i, int maxCount) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(children: [
+        SizedBox(width: 44,
+            child: Text(e.label,
+                style: const TextStyle(fontSize: 12, color: YiColors.textSecondary))),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: TweenAnimationBuilder<double>(
+              key: ValueKey('dist_${title}_${e.label}_${e.count}'),
+              tween: Tween(begin: 0.0, end: e.count / maxCount),
+              duration: YiMotion.reduced(
+                  context, Duration(milliseconds: 520 + (i % 5) * 60)),
+              curve: YiMotion.easeOutExpo,
+              builder: (_, v, child) => FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: v,
+                child: child,
+              ),
+              child: Container(height: 10,
+                  color: e.color.withValues(alpha: 0.75)),
+            ),
+          ),
+        ),
+        SizedBox(width: 30,
+            child: Text('${e.count}', textAlign: TextAlign.right,
+                style: TextStyle(fontSize: 12, color: e.color))),
+      ]),
+    );
   }
 
   // ---------- 快捷入口 ----------

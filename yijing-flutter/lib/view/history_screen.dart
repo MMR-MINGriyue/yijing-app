@@ -274,12 +274,35 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
     final group1 = list.where((r) => r.day >= 16).toList();
     final group2 = list.where((r) => r.day < 16).toList();
-    return [
-      _groupCap('近 期'),
-      for (final r in group1) _recordCard(r),
-      if (group2.isNotEmpty) _groupCap('同 月 早 些'),
-      for (final r in group2) _recordCard(r),
-    ];
+    final out = <Widget>[_groupCap('近 期')];
+    var idx = 0;
+    for (final r in group1) {
+      out.add(_staggered(r, idx++));
+    }
+    if (group2.isNotEmpty) out.add(_groupCap('同 月 早 些'));
+    for (final r in group2) {
+      out.add(_staggered(r, idx++));
+    }
+    return out;
+  }
+
+  /// iter65: 列表逐项淡入上浮 (仅前 10 项, 避免长列表开销)
+  Widget _staggered(HistoryRecord r, int i) {
+    final card = _recordCard(r);
+    if (i >= 10) return card;
+    return TweenAnimationBuilder<double>(
+      key: ValueKey('hist_${r.ts.millisecondsSinceEpoch}_${r.question}'),
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: YiMotion.reduced(
+          context, Duration(milliseconds: 240 + (i % 6) * 40)),
+      curve: YiMotion.easeOutExpo,
+      builder: (_, v, child) => Opacity(
+        opacity: v,
+        child: Transform.translate(
+            offset: Offset(0, (1 - v) * 10), child: child!),
+      ),
+      child: card,
+    );
   }
 
   Widget _groupCap(String text) {
