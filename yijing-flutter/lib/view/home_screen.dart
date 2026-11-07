@@ -143,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 24),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(widget.vm.isHourHex ? '今日一卦 · 依时而定' : '今日一卦 · 随机轮换',
+                Text(widget.vm.isHourHex ? '今日一卦 · 依日时起卦' : '今日一卦 · 随机轮换',
                     style: const TextStyle(fontSize: 11, letterSpacing: 3, color: YiColors.textTertiary)),
                 const SizedBox(height: 8),
                 Text('${h.name} 卦',

@@ -327,8 +327,9 @@ class _SettingsPanelState extends State<SettingsPanel> {
               style: TextStyle(
                   fontSize: 11, letterSpacing: 2, color: YiColors.gold)),
           const SizedBox(height: 8),
-          _infoLine('导出 / 备份生成 JSON：app · exportedAt · history · favorites，与易道 PWA 互通'),
+          _infoLine('导出 / 备份生成 JSON：app · exportedAt · history · favorites · profiles，与 PWA 互通'),
           _infoLine('导入按合并语义去重合入，不覆盖、不删除现有记录'),
+          _infoLine('八字命盘册随备份一同导出，换机后名下命盘不丢'),
           _infoLine('备份可存网盘 / 微信 / 文件管理，换机后从文件导入恢复'),
           _infoLine('清空只移除真实占卜记录，内置示例与收藏不受影响'),
         ]),

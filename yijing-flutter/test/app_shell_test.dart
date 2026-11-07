@@ -48,7 +48,7 @@ void main() {
   testWidgets('今日一卦 hero 点击 → 全屏详解 → 依此卦起卦落起卦屏', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: AppShell()));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('今日一卦 · 依时而定'));
+    await tester.tap(find.text('今日一卦 · 依日时起卦'));
     await tester.pumpAndSettle();
     // iter38: hero 进全屏详解 (不再是直接推详情页)
     expect(find.text('本 卦 · 详 解'), findsOneWidget);

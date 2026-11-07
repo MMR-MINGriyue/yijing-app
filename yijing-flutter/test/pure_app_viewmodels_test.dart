@@ -13,6 +13,7 @@ import 'package:yijing_transform/service/reminder_service.dart';
 import 'package:yijing_transform/viewmodel/settings_viewmodel.dart';
 import 'package:yijing_transform/model/history.dart';
 import 'package:yijing_transform/core/bazi.dart';
+import 'package:yijing_transform/core/daily_hex.dart';
 import 'package:yijing_transform/core/yi_almanac.dart';
 import 'package:yijing_transform/core/yi_calendar.dart';
 import 'package:yijing_transform/core/bazi_extra.dart';
@@ -35,14 +36,14 @@ void main() {
       HistoryRepository(store: MemoryHistoryStore(), seedSamples: seed);
 
   group('HomeViewModel — 屏1 今日一卦', () {
-    test('时辰卦 + 问候 + 干支日期', () {
+    test('今日卦(梅花年月日时) + 问候 + 干支日期', () {
       final fixed = DateTime(2026, 9, 6, 10); // 巳时
       final vm = HomeViewModel(
         hexRepo: repo,
         history: newHist(),
         now: () => fixed,
       );
-      expect(vm.todayHex.no, 11); // hour 10 → 序号10 泰卦
+      expect(vm.todayHex.no, dailyHex(fixed).no); // iter63: 梅花年月日时起卦
       expect(vm.isHourHex, isTrue);
       expect(vm.greeting, '巳时安，慕白');
       expect(vm.shichenTip, '巳 · 隅 中');

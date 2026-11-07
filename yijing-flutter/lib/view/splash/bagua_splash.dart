@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_shell.dart';
 import '../../core/bagua.dart';
-import '../../core/cast_engine.dart';
+import '../../core/daily_hex.dart';
 import '../../data/hex_repository.dart';
 import '../../model/hex.dart';
 import '../../theme/yijing_theme.dart';
@@ -13,7 +13,7 @@ import '../widgets/hex_glyph.dart';
 import 'bagua_painter.dart';
 
 /// 启动动画 (iter57) — 先天八卦双层转盘演算今时卦, 六爻 Hero 飞入主页.
-/// 卦象由 hourHex(now) 预先算出 (与主页 todayHex 同源), 转盘只是仪式化呈现.
+/// 卦象由 dailyHex(now) 预先算出 (与主页 todayHex 同源), 转盘只是仪式化呈现.
 class BaguaSplash extends StatefulWidget {
   const BaguaSplash({super.key, this.now});
 
@@ -22,7 +22,7 @@ class BaguaSplash extends StatefulWidget {
 
   /// 纯函数: 今时卦 (供测试断言与主页一致性)
   static Hex hexOf(DateTime now) =>
-      HexRepository.instance.hexByNo(hourHex(now).no);
+      HexRepository.instance.hexByNo(dailyHex(now).no);
 
   @override
   State<BaguaSplash> createState() => _BaguaSplashState();

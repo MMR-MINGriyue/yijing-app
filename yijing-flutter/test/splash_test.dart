@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yijing_transform/app/app_shell.dart';
 import 'package:yijing_transform/core/bagua.dart';
-import 'package:yijing_transform/core/cast_engine.dart';
+import 'package:yijing_transform/core/daily_hex.dart';
 import 'package:yijing_transform/data/hex_repository.dart';
 import 'package:yijing_transform/theme/yijing_theme.dart';
 import 'package:yijing_transform/view/splash/bagua_splash.dart';
@@ -10,10 +10,10 @@ import 'package:yijing_transform/view/splash/bagua_splash.dart';
 void main() {
   setUpAll(() => HexRepository.instance.init());
 
-  test('启动卦与主页同源: hourHex(now) 且上下卦落先天八卦位', () {
+  test('启动卦与主页同源: dailyHex(now) 且上下卦落先天八卦位', () {
     final now = DateTime(2026, 9, 19, 10, 30);
     final hex = BaguaSplash.hexOf(now);
-    expect(hex.no, hourHex(now).no); // 与 HomeViewModel.todayHex 同源
+    expect(hex.no, dailyHex(now).no); // 与 HomeViewModel.todayHex 同源
     final up = baguaIndexOf(hex.triUN);
     final down = baguaIndexOf(hex.triDN);
     expect(up, inInclusiveRange(0, 7));

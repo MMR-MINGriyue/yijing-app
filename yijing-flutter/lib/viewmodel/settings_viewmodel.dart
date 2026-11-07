@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
+import '../data/bazi_store.dart';
 import '../data/favorites_store.dart';
 import '../data/history_repository.dart';
 import '../model/history.dart';
@@ -10,21 +11,25 @@ import '../service/reminder_service.dart';
 
 /// ViewModel — 设置面板 (导出 / 导入合并 / 清空 / 重置 / 每日提醒)
 /// 数据格式与易道 PWA 互通: {app, exportedAt, history, favorites}
+/// iter63 追加 profiles (八字命盘册), 旧版 PWA 导出无此字段, 导入时忽略缺失.
 class SettingsViewModel extends ChangeNotifier {
   final HistoryRepository _history;
   final FavoritesRepository _favs;
   final ReminderService _reminder;
   final BackupService _backup;
+  final BaziBirthStore _bazi;
 
   SettingsViewModel({
     HistoryRepository? history,
     FavoritesRepository? favs,
     ReminderService? reminder,
     BackupService? backup,
+    BaziBirthStore? baziStore,
   })  : _history = history ?? HistoryRepository.instance,
         _favs = favs ?? FavoritesRepository.instance,
         _reminder = reminder ?? ReminderService(),
-        _backup = backup ?? BackupService();
+        _backup = backup ?? BackupService(),
+        _bazi = baziStore ?? baziBirthStoreFactory();
 
   bool _remindEnabled = false;
   int _remindHour = 8;
@@ -48,6 +53,9 @@ class SettingsViewModel extends ChangeNotifier {
     _remindHour = p.hour;
     _remindMinute = p.minute;
     _remindLoaded = true;
+    try {
+      await _bazi.warmUp(); // 命盘册随设置页一起就绪 (iter63)
+    } catch (_) {}
     notifyListeners();
   }
 
@@ -77,6 +85,9 @@ class SettingsViewModel extends ChangeNotifier {
       'exportedAt': DateTime.now().toUtc().toIso8601String(),
       'history': _history.load().map((r) => r.toJson()).toList(),
       'favorites': _favs.load(),
+      'profiles': _bazi
+          .readProfiles()
+          .map((k, v) => MapEntry(k, v.toJson())),
     };
     return const JsonEncoder.withIndent('  ').convert(payload);
   }
@@ -110,13 +121,39 @@ class SettingsViewModel extends ChangeNotifier {
         .map(HistoryRecord.fromJson)
         .toList();
     final favs = incomingFavs.whereType<num>().map((n) => n.toInt()).toList();
-    if (records.isEmpty && favs.isEmpty) {
+    // iter63: 命盘册按「同名不覆盖」合并, 与历史/收藏语义一致
+    final incomingProfiles = data['profiles'];
+    final parsedProfiles = <String, BaziBirth>{};
+    if (incomingProfiles is Map) {
+      for (final e in incomingProfiles.entries) {
+        final v = e.value;
+        if (e.key is String && v is Map<String, dynamic>) {
+          final b = BaziBirth.fromJson(v);
+          if (b != null) parsedProfiles[e.key as String] = b;
+        }
+      }
+    }
+    if (records.isEmpty && favs.isEmpty && parsedProfiles.isEmpty) {
       return '没有可导入的数据';
     }
     final r = _history.mergeAll(records);
     final favAdded = _favs.mergeUnion(favs);
+    final mergedProfiles = _bazi.readProfiles();
+    var profileAdded = 0;
+    for (final e in parsedProfiles.entries) {
+      if (!mergedProfiles.containsKey(e.key)) {
+        mergedProfiles[e.key] = e.value;
+        profileAdded++;
+      }
+    }
+    if (profileAdded > 0) _bazi.writeProfiles(mergedProfiles);
     notifyListeners();
-    return '已导入：新增 ${r.added} 条记录${favAdded > 0 ? ' · $favAdded 卦收藏' : ''}';
+    if (r.added == 0 && favAdded == 0 && profileAdded > 0) {
+      return '已导入：新增 $profileAdded 个命盘';
+    }
+    return '已导入：新增 ${r.added} 条记录'
+        '${favAdded > 0 ? ' · $favAdded 卦收藏' : ''}'
+        '${profileAdded > 0 ? ' · $profileAdded 个命盘' : ''}';
   }
 
   /// 清空本地历史 (示例保留; 收藏不动)

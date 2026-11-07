@@ -1,13 +1,14 @@
 import 'package:flutter/foundation.dart';
 
 import '../core/cast_engine.dart';
+import '../core/daily_hex.dart';
 import '../core/yi_calendar.dart';
 import '../data/history_repository.dart';
 import '../data/hex_repository.dart';
 import '../model/hex.dart';
 import '../model/history.dart';
 
-/// ViewModel — 屏 1 今日一卦 (时辰卦 + 干支问候 + 最近占卜)
+/// ViewModel — 屏 1 今日一卦 (日辰卦序 + 干支问候)
 class HomeViewModel extends ChangeNotifier {
   final HexRepository _hexRepo;
   final HistoryRepository _history;
@@ -39,7 +40,7 @@ class HomeViewModel extends ChangeNotifier {
   /// 今日一卦 (时辰卦 / 刷新轮换)
   Hex get todayHex => _refreshed
       ? _hexRepo.hexByNo(refreshHex(_refreshCount).no)
-      : _hexRepo.hexByNo(hourHex(_now).no);
+      : _hexRepo.hexByNo(dailyHex(_now).no); // iter63: 年月日时起卦
 
   bool get isHourHex => !_refreshed;
 
