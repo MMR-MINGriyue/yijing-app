@@ -255,7 +255,10 @@ void main() {
     expect(find.text('导入历史数据'), findsOneWidget);
     // 危险项默认非确认态
     expect(find.text('清空本地历史'), findsOneWidget);
-    expect(find.text('重置为示例数据'), findsOneWidget);
+    // iter62: 重置与清空实现完全相同, 已合并; 新增分组与说明卡
+    expect(find.text('重置为示例数据'), findsNothing);
+    expect(find.text('数 据 管 理'), findsOneWidget);
+    expect(find.text('数据与备份说明'), findsOneWidget);
     // iter39: 每日提醒区块
     expect(find.text('每日占卜提醒'), findsOneWidget);
     expect(find.text('提醒时间'), findsOneWidget);
