@@ -5,6 +5,7 @@ import '../core/bazi_reading.dart';
 import '../core/dayun.dart';
 import '../theme/ink_wash.dart';
 import '../theme/yijing_theme.dart';
+import 'widgets/stagger_in.dart';
 import '../viewmodel/bazi_viewmodel.dart';
 
 /// 屏「八字」— 命盘输入 + 排盘 + 大运流年 + 解读 (iter47)
@@ -380,25 +381,17 @@ class _BaziScreenState extends State<BaziScreen> {
               style: const TextStyle(fontSize: 10, color: YiColors.textTertiary)),
         ]),
         const SizedBox(height: 12),
-        // 四柱表
+        // 四柱表 (iter64: 自左向右逐柱错峰浮现)
         Row(children: [
-          for (final p in c.pillars)
-            Expanded(child: Column(children: [
-              Text(p.pos, style: const TextStyle(fontSize: 10, color: YiColors.textMuted)),
-              const SizedBox(height: 4),
-              Text(p.gz, style: const TextStyle(fontSize: 19, letterSpacing: 1,
-                  color: YiColors.textPrimary)),
-              const SizedBox(height: 3),
-              Text(p.ganGod, style: TextStyle(fontSize: 10,
-                  color: p.ganGod == '日主' ? YiColors.cinnabar : YiColors.gold)),
-              const SizedBox(height: 3),
-              Text(nayinOf(p.gz), style: const TextStyle(fontSize: 9, color: YiColors.textMuted)),
-              const SizedBox(height: 5),
-              Text(p.hidden.map((h) => h.gan).join(' '),
-                  style: const TextStyle(fontSize: 10, color: YiColors.textSecondary)),
-              Text(p.hidden.map((h) => h.god).join('/'),
-                  style: const TextStyle(fontSize: 8, color: YiColors.textMuted)),
-            ])),
+          for (var pi = 0; pi < c.pillars.length; pi++)
+            Expanded(
+              child: StaggerIn(
+                key: ValueKey('pillar_${pi}_${c.pillars[pi].gz}'),
+                delay: Duration(milliseconds: 80 * pi),
+                offset: const Offset(0, 12),
+                child: _pillarCard(c.pillars[pi]),
+              ),
+            ),
         ]),
         if (ex != null) ...[
           const SizedBox(height: 8),
@@ -423,6 +416,30 @@ class _BaziScreenState extends State<BaziScreen> {
       ]),
     );
   }
+
+  Widget _pillarCard(BaZiPillar p) => Column(children: [
+        Text(p.pos,
+            style: const TextStyle(fontSize: 10, color: YiColors.textMuted)),
+        const SizedBox(height: 4),
+        Text(p.gz,
+            style: const TextStyle(
+                fontSize: 19,
+                letterSpacing: 1,
+                color: YiColors.textPrimary)),
+        const SizedBox(height: 3),
+        Text(p.ganGod,
+            style: TextStyle(
+                fontSize: 10,
+                color: p.ganGod == '日主' ? YiColors.cinnabar : YiColors.gold)),
+        const SizedBox(height: 3),
+        Text(nayinOf(p.gz),
+            style: const TextStyle(fontSize: 9, color: YiColors.textMuted)),
+        const SizedBox(height: 5),
+        Text(p.hidden.map((h) => h.gan).join(' '),
+            style: const TextStyle(fontSize: 10, color: YiColors.textSecondary)),
+        Text(p.hidden.map((h) => h.god).join('/'),
+            style: const TextStyle(fontSize: 8, color: YiColors.textMuted)),
+      ]);
 
   Widget _wuxingBars(Map<String, int> wx) {
     final colors = {

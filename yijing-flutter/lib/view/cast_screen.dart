@@ -6,6 +6,8 @@ import '../core/cast_engine.dart' show CastResult;
 import '../core/meihua.dart';
 import '../core/xiaoliuren.dart';
 import 'widgets/casting_anim.dart';
+import 'widgets/divination_ritual.dart';
+import 'widgets/stagger_in.dart';
 import 'widgets/coin_toss_anim.dart';
 import 'widgets/pressable.dart';
 import '../model/hex.dart';
@@ -37,6 +39,7 @@ class _CastScreenState extends State<CastScreen> {
   final _mh1Controller = TextEditingController();
   final _mh2Controller = TextEditingController();
   String _xlrAskKind = '谋事'; // 小六壬问事分类 (iter44)
+  _Ritual? _ritual; // iter64: 其他占法起课仪式 (动画结束才落库)
 
   @override
   void initState() {
@@ -55,6 +58,48 @@ class _CastScreenState extends State<CastScreen> {
   }
 
   bool _autoOpened = false; // 完成后是否已自动进入卦辞解析 (iter53)
+
+  // ---------- iter64: 其他占法起课仪式 ----------
+  void _startXlr() {
+    final kind = _xlrAskKind;
+    final res = divineXiaoLiuRen(widget.vm.now, askKind: kind);
+    if (res == null) {
+      widget.vm.castXlr(kind); // 农历范围外: 直接落库
+      return;
+    }
+    setState(() => _ritual = _Ritual(
+      RitualKind.xiaoLiuRen,
+      res.path,
+      () => widget.vm.castXlr(kind),
+    ));
+  }
+
+  void _startMeihua(VoidCallback commit) => setState(
+      () => _ritual = _Ritual(RitualKind.meiHua, const [], commit));
+
+  void _finishRitual() {
+    final r = _ritual;
+    if (r == null) return;
+    setState(() => _ritual = null);
+    r.commit(); // 动画结束才写历史 / 切结果
+  }
+
+  Widget _ritualOverlay() {
+    final r = _ritual!;
+    return Positioned.fill(
+      child: Container(
+        color: YiColors.ink.withValues(alpha: 0.94),
+        child: Center(
+          child: DivinationRitual(
+            key: ValueKey('${r.kind}|${r.path.join('|')}|${r.commit.hashCode}'),
+            kind: r.kind,
+            path: r.path,
+            onDone: _finishRitual,
+          ),
+        ),
+      ),
+    );
+  }
 
   void _onVm() {
     final phase = widget.vm.state.phase;
@@ -106,7 +151,10 @@ class _CastScreenState extends State<CastScreen> {
         title: const Text('占  卜',
             style: TextStyle(letterSpacing: 6, fontSize: 17)),
       ),
-      body: YiInkWash(child: _mainPage(s)),
+      body: YiInkWash(child: Stack(children: [
+        _mainPage(s),
+        if (_ritual != null) _ritualOverlay(),
+      ])),
     );
   }
 
@@ -115,7 +163,8 @@ class _CastScreenState extends State<CastScreen> {
     return switch (s.phase) {
       CastPhase.form => _form(s),
       CastPhase.casting => _casting(),
-      CastPhase.done => _done(s),
+      CastPhase.done => StaggerIn(
+          key: const ValueKey('cast_done'), child: _done(s)),
     };
   }
 
@@ -509,7 +558,7 @@ class _CastScreenState extends State<CastScreen> {
         SizedBox(
           width: double.infinity,
           child: FilledButton(
-            onPressed: () => widget.vm.castXlr(_xlrAskKind),
+            onPressed: _startXlr,
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0x225BA88A),
               foregroundColor: YiColors.pine,
@@ -521,7 +570,10 @@ class _CastScreenState extends State<CastScreen> {
         ),
         if (s.xlr != null) ...[
           const SizedBox(height: 12),
-          _xlrResult(s.xlr!),
+          StaggerIn(
+            key: ValueKey('xlr_${s.xlr!.summary}'),
+            child: _xlrResult(s.xlr!),
+          ),
         ],
       ]),
     );
@@ -595,7 +647,7 @@ class _CastScreenState extends State<CastScreen> {
         SizedBox(
           width: double.infinity,
           child: FilledButton(
-            onPressed: widget.vm.castMeihuaTime,
+            onPressed: () => _startMeihua(widget.vm.castMeihuaTime),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0x22C9A876),
               foregroundColor: YiColors.gold,
@@ -633,7 +685,7 @@ class _CastScreenState extends State<CastScreen> {
               final n1 = int.tryParse(_mh1Controller.text) ?? 0;
               final n2 = int.tryParse(_mh2Controller.text) ?? 0;
               if (n1 <= 0 || n2 <= 0) return;
-              widget.vm.castMeihua(n1, n2);
+              _startMeihua(() => widget.vm.castMeihua(n1, n2));
             },
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0x22C9A876),
@@ -648,7 +700,7 @@ class _CastScreenState extends State<CastScreen> {
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
-            onPressed: widget.vm.castMeihuaDice,
+            onPressed: () => _startMeihua(widget.vm.castMeihuaDice),
             style: OutlinedButton.styleFrom(
               foregroundColor: YiColors.gold,
               side: const BorderSide(color: YiColors.goldDark),
@@ -741,4 +793,13 @@ class _CastScreenState extends State<CastScreen> {
       };
 
   Decoration _card() => yiCardDecoration();
+}
+
+/// 一次起课仪式: 动画类型 / 小六壬停位 / 动画结束后的落库动作
+class _Ritual {
+  final RitualKind kind;
+  final List<String> path;
+  final VoidCallback commit;
+
+  const _Ritual(this.kind, this.path, this.commit);
 }

@@ -103,6 +103,9 @@ class CastViewModel extends ChangeNotifier {
   late CastState _state;
   CastState get state => _state;
 
+  /// 当前时钟 (iter64: UI 层仪式动画预计算停位, 与落库同源)
+  DateTime get now => _clock;
+
   void setMethod(CastMethod m) {
     _state = _state.copyWith(method: m, phase: CastPhase.form, clearResult: true, clearXlr: true);
     notifyListeners();
