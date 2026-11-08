@@ -146,9 +146,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(widget.vm.isHourHex ? '今日一卦 · 依日时起卦' : '今日一卦 · 随机轮换',
                     style: const TextStyle(fontSize: 11, letterSpacing: 3, color: YiColors.textTertiary)),
                 const SizedBox(height: 8),
-                Text('${h.name} 卦',
-                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w500,
-                        letterSpacing: 6, color: YiColors.textPrimary)),
+                // iter69: 卦名与全屏详解 Hero 配对, 点击卡时随卦象一起飞行
+                Hero(
+                  tag: YiMotion.dailyHexNameHero,
+                  child: Text('${h.name} 卦',
+                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w500,
+                          letterSpacing: 6, color: YiColors.textPrimary)),
+                ),
                 const SizedBox(height: 4),
                 Text('${h.en} · 第 ${h.no} 卦',
                     style: const TextStyle(fontSize: 11, letterSpacing: 2, color: YiColors.gold)),

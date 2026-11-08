@@ -44,6 +44,9 @@ class YiMotion {
   /// 启动转盘六爻 → 主页今日一卦卡 共享 Hero tag (iter57)
   static const String dailyHexHero = 'daily-hex';
 
+  /// 主页今日一卦卡 → 全屏详解 卦名 Hero tag (iter69)
+  static const String dailyHexNameHero = 'daily-hex-name';
+
   /// 系统「减少动画」时把时长/延迟压零 (iter59 全站统一)
   static Duration reduced(BuildContext context, Duration d) =>
       MediaQuery.of(context).disableAnimations ? Duration.zero : d;

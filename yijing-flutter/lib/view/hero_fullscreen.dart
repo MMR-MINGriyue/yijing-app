@@ -61,16 +61,6 @@ class _HeroFullscreenState extends State<HeroFullscreen> {
         ),
         child: SafeArea(
           child: Stack(children: [
-            // 关闭按钮
-            Positioned(
-              top: 8,
-              right: 12,
-              child: IconButton(
-                icon: const Icon(Icons.close, size: 24, color: YiColors.textTertiary),
-                onPressed: () => Navigator.of(context).pop(),
-                tooltip: '关闭',
-              ),
-            ),
             ListView(
               padding: const EdgeInsets.fromLTRB(24, 52, 24, 32),
               children: [
@@ -98,6 +88,16 @@ class _HeroFullscreenState extends State<HeroFullscreen> {
                 const SizedBox(height: 16),
               ],
             ),
+            // 关闭按钮 — iter69: 移到 Stack 顶层 (原被 ListView 盖住点不到)
+            Positioned(
+              top: 8,
+              right: 12,
+              child: IconButton(
+                icon: const Icon(Icons.close, size: 24, color: YiColors.textTertiary),
+                onPressed: () => Navigator.of(context).pop(),
+                tooltip: '关闭',
+              ),
+            ),
           ]),
         ),
       ),
@@ -118,11 +118,22 @@ class _HeroFullscreenState extends State<HeroFullscreen> {
         Text('${h.triU} 上·${h.triUN}   ${h.triD} 下·${h.triDN}',
             style: const TextStyle(fontSize: 12, letterSpacing: 2, color: YiColors.textTertiary)),
         const SizedBox(height: 18),
-        HexGlyph(lines: h.yangs, width: 120, lineH: 13, gap: 11),
+        // iter69: 与主页今日一卦卡配对 — 卦象与卦名推入时从卡位飞入;
+        // FittedBox 让飞行中间帧按比例缩放 (固有 120px 宽在小约束下不再溢出)
+        Hero(
+          tag: YiMotion.dailyHexHero,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: HexGlyph(lines: h.yangs, width: 120, lineH: 13, gap: 11),
+          ),
+        ),
         const SizedBox(height: 20),
-        Text('${h.name} 卦',
-            style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w500,
-                letterSpacing: 10, color: YiColors.textPrimary)),
+        Hero(
+          tag: YiMotion.dailyHexNameHero,
+          child: Text('${h.name} 卦',
+              style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w500,
+                  letterSpacing: 10, color: YiColors.textPrimary)),
+        ),
         const SizedBox(height: 6),
         Text('${h.en} · 第 ${h.no} 卦',
             style: const TextStyle(fontSize: 11, letterSpacing: 2, color: YiColors.gold)),
