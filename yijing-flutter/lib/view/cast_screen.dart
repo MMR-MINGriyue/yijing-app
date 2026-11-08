@@ -20,6 +20,7 @@ import '../viewmodel/cast_viewmodel.dart';
 import '../viewmodel/detail_viewmodel.dart';
 import '../viewmodel/transform_viewmodel.dart';
 import 'widgets/hex_glyph.dart';
+import 'widgets/haptics.dart';
 
 /// 屏 2 赐卦 — 三种起卦方式 + 推演动画 + 结果 + 更多占法子页 (小六壬/梅花)
 class CastScreen extends StatefulWidget {
@@ -80,6 +81,7 @@ class _CastScreenState extends State<CastScreen> {
   void _finishRitual() {
     final r = _ritual;
     if (r == null) return;
+    Haptics.settle(); // iter70: 仪式落定触感
     setState(() => _ritual = null);
     r.commit(); // 动画结束才写历史 / 切结果
   }
@@ -239,7 +241,10 @@ class _CastScreenState extends State<CastScreen> {
               for (var i = 0; i < labels.length; i++)
                 Expanded(
                   child: InkWell(
-                    onTap: () => setState(() => _segment = i),
+                    onTap: () {
+                      Haptics.tap();
+                      setState(() => _segment = i);
+                    },
                     borderRadius: BorderRadius.circular(9),
                     child: Container(
                       alignment: Alignment.center,

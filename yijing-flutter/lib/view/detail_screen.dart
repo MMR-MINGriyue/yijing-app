@@ -9,6 +9,7 @@ import '../model/hex.dart';
 import '../data/hex_advice.dart';
 import 'widgets/hex_glyph.dart';
 import 'widgets/share_card.dart';
+import 'widgets/haptics.dart';
 import 'widgets/stagger_in.dart';
 import 'widgets/yao_sheet.dart';
 import '../theme/ink_wash.dart';
@@ -521,7 +522,10 @@ class _FavStarState extends State<_FavStar>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: widget.onTap,
+      onTap: () {
+        Haptics.light(); // iter70: 收藏轻触感
+        widget.onTap();
+      },
       child: AnimatedBuilder(
         animation: _ctrl,
         builder: (_, _) {

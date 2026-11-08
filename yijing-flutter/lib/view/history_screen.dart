@@ -5,6 +5,7 @@ import '../model/history.dart';
 import '../theme/yijing_theme.dart';
 import 'widgets/swipe_back.dart';
 import '../viewmodel/history_viewmodel.dart';
+import 'widgets/haptics.dart';
 import 'widgets/pressable.dart';
 
 /// 屏 6 历史记录 — View 层 (长按多选删除, PWA 对齐)
@@ -64,6 +65,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Future<void> _deleteSelected() async {
     if (_selected.isEmpty) return;
+    Haptics.warn(); // iter70: 破坏性操作触感
     final count = _selected.length;
     final records = _selected.toList();
     widget.vm.removeRecords(records);

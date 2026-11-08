@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/yijing_theme.dart';
 import '../../theme/yi_ornament.dart';
+import 'haptics.dart';
 
 /// 铜钱投掷动画 (iter50 重构 / iter51 道家化) — 六爻逐次真实掷币.
 /// 币面取山鬼花钱式: 正面方孔 + 「山鬼」二字, 背面太极居中八卦环绕.
@@ -30,6 +31,8 @@ class _CoinTossAnimState extends State<CoinTossAnim>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final bool _real;
+  int _hapticRound = 0; // iter70: round 递增 (爻落定) 时轻触感, 首掷不触发
+  bool _finalHaptic = false; // 全部落定补一次完成触感
 
   @override
   void initState() {
@@ -64,6 +67,15 @@ class _CoinTossAnimState extends State<CoinTossAnim>
         final elapsed = _ctrl.value * CoinTossAnim.realDuration.inMilliseconds;
         final round =
             min(CoinTossAnim.rounds - 1, elapsed ~/ CoinTossAnim.roundMs);
+        // iter70: 爻落定触感 — round 递增时一次 (首掷不触发); 全部完成后一次完成触感
+        if (round > _hapticRound) {
+          _hapticRound = round;
+          Haptics.light();
+        }
+        if (_ctrl.isCompleted && !_finalHaptic) {
+          _finalHaptic = true;
+          Haptics.settle();
+        }
         final t01 = ((elapsed - round * CoinTossAnim.roundMs) /
                 CoinTossAnim.roundMs)
             .clamp(0.0, 1.0);

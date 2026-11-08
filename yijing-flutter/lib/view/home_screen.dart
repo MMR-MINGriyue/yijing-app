@@ -7,6 +7,7 @@ import '../theme/yijing_theme.dart';
 import '../theme/yi_ornament.dart';
 import '../viewmodel/home_viewmodel.dart';
 import 'hero_fullscreen.dart';
+import 'widgets/haptics.dart';
 import 'widgets/hex_glyph.dart';
 import 'widgets/pressable.dart';
 import 'widgets/stagger_in.dart';
@@ -92,7 +93,10 @@ class _HomeScreenState extends State<HomeScreen> {
         Row(mainAxisSize: MainAxisSize.min, children: [
           IconButton(
             icon: const Icon(Icons.refresh, size: 22, color: YiColors.textTertiary),
-            onPressed: () => widget.vm.refreshHero(),
+            onPressed: () {
+              Haptics.light();
+              widget.vm.refreshHero();
+            },
             tooltip: '换一卦',
           ),
           IconButton(
