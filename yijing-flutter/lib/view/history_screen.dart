@@ -262,7 +262,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  // ---------- 历史记录列表 ----------
+  // ---------- 历史记录列表 (iter67: 时间轴可视化) ----------
   List<Widget> _recordList() {
     final list = widget.vm.filtered;
     if (list.isEmpty) {
@@ -276,20 +276,84 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final group2 = list.where((r) => r.day < 16).toList();
     final out = <Widget>[_groupCap('近 期')];
     var idx = 0;
-    for (final r in group1) {
-      out.add(_staggered(r, idx++));
+    void addGroup(List<HistoryRecord> g) {
+      for (var i = 0; i < g.length; i++) {
+        final r = g[i];
+        final firstOfDay = i == 0 || g[i - 1].day != r.day;
+        // 组尾不出轨 (避免线穿过下一组标题); 日节点: 每日首条出日期徽章
+        final railAfter = i < g.length - 1;
+        out.add(_staggered(r, idx++, _timelineRow(r, firstOfDay: firstOfDay, railAfter: railAfter)));
+      }
     }
+    addGroup(group1);
     if (group2.isNotEmpty) out.add(_groupCap('同 月 早 些'));
-    for (final r in group2) {
-      out.add(_staggered(r, idx++));
-    }
+    addGroup(group2);
     return out;
   }
 
+  /// iter67: 时间轴行 — 左轨节点 (每日首条 = 日期徽章, 其后 = 小圆点) + 右侧记录卡
+  Widget _timelineRow(HistoryRecord r, {required bool firstOfDay, required bool railAfter}) {
+    final Widget node = firstOfDay
+        ? Container(
+            key: ValueKey('tl_day_${r.ts.day}'),
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF221C15),
+              border: Border.all(color: YiColors.gold, width: 1.2),
+            ),
+            child: Text('${r.ts.day}'.padLeft(2, '0'),
+                style: const TextStyle(fontSize: 12, color: YiColors.gold,
+                    fontWeight: FontWeight.w500, letterSpacing: 0.5)),
+          )
+        : Container(
+            key: ValueKey('tl_dot_${r.ts.millisecondsSinceEpoch}_${r.question}'),
+            width: 8,
+            height: 8,
+            margin: const EdgeInsets.only(top: 13),
+            decoration: const BoxDecoration(shape: BoxShape.circle, color: YiColors.goldDark),
+          );
+    // ListView 子项高度无界 → IntrinsicHeight 先算出卡高, stretch 才有界
+    return IntrinsicHeight(
+      child: Row(
+        key: ValueKey('tlrow_${r.ts.millisecondsSinceEpoch}_${r.question}'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 40,
+            child: Column(children: [
+              node,
+              Expanded(
+                child: railAfter
+                    ? Center(
+                        child: Container(
+                          key: ValueKey('tl_rail_${r.ts.millisecondsSinceEpoch}_${r.question}'),
+                          width: 1.6,
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0x66C9A876), Color(0x22C9A876)],
+                            ),
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ]),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: _recordCard(r)),
+        ],
+      ),
+    );
+  }
+
   /// iter65: 列表逐项淡入上浮 (仅前 10 项, 避免长列表开销)
-  Widget _staggered(HistoryRecord r, int i) {
-    final card = _recordCard(r);
-    if (i >= 10) return card;
+  Widget _staggered(HistoryRecord r, int i, Widget row) {
+    if (i >= 10) return row;
     return TweenAnimationBuilder<double>(
       key: ValueKey('hist_${r.ts.millisecondsSinceEpoch}_${r.question}'),
       tween: Tween(begin: 0.0, end: 1.0),
@@ -301,7 +365,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         child: Transform.translate(
             offset: Offset(0, (1 - v) * 10), child: child!),
       ),
-      child: card,
+      child: row,
     );
   }
 
