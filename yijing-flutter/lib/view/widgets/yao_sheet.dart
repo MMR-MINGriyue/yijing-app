@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -7,7 +9,7 @@ import '../../theme/yijing_theme.dart';
 /// 爻辞弹窗 — PWA 屏4/屏5 爻行弹窗对应物 (原文 + 白话 + 复制)
 void showYaoSheet(BuildContext context, Hex hex, int i) {
   final yao = hex.yao[i];
-  showModalBottomSheet<void>(
+  unawaited(showModalBottomSheet<void>(
     context: context,
     backgroundColor: YiColors.inkCard,
     shape: const RoundedRectangleBorder(
@@ -52,5 +54,5 @@ void showYaoSheet(BuildContext context, Hex hex, int i) {
                     fontSize: 13, height: 1.7, color: YiColors.textSecondary)),
           ]),
     ),
-  );
+  ));
 }

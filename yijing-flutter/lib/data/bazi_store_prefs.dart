@@ -1,11 +1,13 @@
 /// BaziBirth — shared_preferences 实现 (iter47)
 library;
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'bazi_store.dart';
+import 'prefs_io.dart';
 
 class PrefsBaziBirthStore implements BaziBirthStore {
   // iter63: 单例 — 设置页导入命盘后八字页立即读到同一份缓存
@@ -56,8 +58,7 @@ class PrefsBaziBirthStore implements BaziBirthStore {
   @override
   void write(BaziBirth birth) {
     _cache = birth;
-    final raw = jsonEncode(birth.toJson());
-    SharedPreferences.getInstance().then((p) => p.setString(_key, raw));
+    unawaited(enqueuePrefsWrite(_key, jsonEncode(birth.toJson())));
   }
 
   @override
@@ -70,6 +71,6 @@ class PrefsBaziBirthStore implements BaziBirthStore {
       ..addAll(profiles);
     final raw = jsonEncode(
         profiles.map((k, v) => MapEntry(k, v.toJson())));
-    SharedPreferences.getInstance().then((p) => p.setString(_profilesKey, raw));
+    unawaited(enqueuePrefsWrite(_profilesKey, raw));
   }
 }

@@ -56,12 +56,12 @@ class _AppShellState extends State<AppShell> {
     super.initState();
     // iter41: 点通知直达起卦屏 (前台/后台点击)
     _tapSub = NotificationTapBus.instance.stream.listen(_onNotificationPayload);
-    _bootFromNotification(); // 冷启动 (通知拉起)
+    unawaited(_bootFromNotification()); // 冷启动 (通知拉起)
   }
 
   @override
   void dispose() {
-    _tapSub?.cancel();
+    unawaited(_tapSub?.cancel());
     super.dispose();
   }
 

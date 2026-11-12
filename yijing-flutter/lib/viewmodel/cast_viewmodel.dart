@@ -107,6 +107,9 @@ class CastViewModel extends ChangeNotifier {
   DateTime get now => _clock;
 
   void setMethod(CastMethod m) {
+    // iter72: 换占法必须丢弃上一次的预计算结果
+    _pendingRes = null;
+    _pendingHex = null;
     _state = _state.copyWith(method: m, phase: CastPhase.form, clearResult: true, clearXlr: true);
     notifyListeners();
   }
@@ -143,6 +146,8 @@ class CastViewModel extends ChangeNotifier {
 
   /// 推演动画结束后调用: 落盘预计算卦象 + 写入历史
   void finishCast() {
+    // iter72: 只有处于推演中才允许落库, 防止换占法/重置后误落旧结果
+    if (_state.phase != CastPhase.casting) return;
     final now = _clock;
     final res = _pendingRes ??
         cast(_state.method.id, _state.question, rand: _rand); // 兜底
@@ -262,9 +267,11 @@ class CastViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 展开/收起某步大运的流年列表
   /// 重置回表单 (再占一卦)
   void reset() {
+    // iter72: 连注释一起修 — 原注释误贴自 BaziViewModel.selectStep
+    _pendingRes = null;
+    _pendingHex = null;
     _state = CastState(direction: _state.direction);
     notifyListeners();
   }

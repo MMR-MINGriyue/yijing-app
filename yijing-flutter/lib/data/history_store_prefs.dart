@@ -1,6 +1,7 @@
 /// shared_preferences 持久化实现 — 仅 main.dart 引入 (保持核心层纯 Dart)
 library;
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,6 +11,9 @@ import 'bazi_store.dart';
 import 'bazi_store_prefs.dart';
 import 'favorites_store.dart';
 import 'history_store.dart';
+import 'prefs_io.dart';
+import 'profile_store.dart';
+import 'profile_store_prefs.dart';
 
 /// 历史 — shared_preferences 实现 (JSON 数组, 坏数据自动回退空)
 class PrefsHistoryStore implements HistoryStore {
@@ -44,7 +48,7 @@ class PrefsHistoryStore implements HistoryStore {
   void write(List<HistoryRecord> list) {
     _cache = List.of(list);
     _rawCache = jsonEncode(_cache!.map((r) => r.toJson()).toList());
-    SharedPreferences.getInstance().then((p) => p.setString(_key, _rawCache!));
+    unawaited(enqueuePrefsWrite(_key, _rawCache!));
   }
 }
 
@@ -65,8 +69,8 @@ class PrefsFavoritesStore implements FavoritesStore {
   @override
   void write(List<int> hexNos) {
     _cache = List.of(hexNos);
-    SharedPreferences.getInstance()
-        .then((p) => p.setStringList(_key, _cache!.map((n) => '$n').toList()));
+    unawaited(enqueuePrefsWrite(
+        _key, _cache!.map((n) => '$n').toList(growable: false)));
   }
 }
 
@@ -75,4 +79,5 @@ void installPrefsStores() {
   historyStoreFactory = () => PrefsHistoryStore();
   favoritesStoreFactory = () => PrefsFavoritesStore();
   baziBirthStoreFactory = () => PrefsBaziBirthStore();
+  profileStoreFactory = () => PrefsProfileStore();
 }

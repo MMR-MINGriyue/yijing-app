@@ -5,6 +5,7 @@ import '../core/daily_hex.dart';
 import '../core/yi_calendar.dart';
 import '../data/history_repository.dart';
 import '../data/hex_repository.dart';
+import '../data/profile_store.dart';
 import '../model/hex.dart';
 import '../model/history.dart';
 
@@ -13,13 +14,16 @@ class HomeViewModel extends ChangeNotifier {
   final HexRepository _hexRepo;
   final HistoryRepository _history;
   final DateTime Function() _nowFn; // 可注入时钟 (测试)
+  final ProfileStore _profile;
 
   HomeViewModel({
     HexRepository? hexRepo,
     HistoryRepository? history,
     DateTime Function()? now,
+    ProfileStore? profile,
   })  : _hexRepo = hexRepo ?? HexRepository.instance,
         _history = history ?? HistoryRepository.instance,
+        _profile = profile ?? profileStoreFactory(),
         _nowFn = now ?? DateTime.now;
 
   int _refreshCount = 0;
@@ -28,11 +32,24 @@ class HomeViewModel extends ChangeNotifier {
   DateTime get _now => _nowFn();
 
   Hex? _quoteHex; // 当日卦语 (日期确定性抽取, iter54)
-  Hex get quoteHex => _quoteHex ??= _computeQuote();
+  DateTime? _quoteDay; // iter72: 缓存所属日期, 跨日自动失效
 
   /// 同日同卦: 日期哈希 → 64 卦之一
-  Hex _computeQuote() {
+  Hex get quoteHex {
     final n = _now;
+    final d = _quoteDay;
+    if (_quoteHex == null ||
+        d == null ||
+        d.year != n.year ||
+        d.month != n.month ||
+        d.day != n.day) {
+      _quoteHex = _computeQuote(n);
+      _quoteDay = n;
+    }
+    return _quoteHex!;
+  }
+
+  Hex _computeQuote(DateTime n) {
     final idx = (n.year * 367 + n.month * 31 + n.day) % 64;
     return _hexRepo.hexByNo(idx + 1);
   }
@@ -51,10 +68,10 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 问候 (时辰): 子夜安，慕白
+  /// 问候 (时辰): 子夜安，<称呼> (iter72: 称呼可在设置里改)
   String get greeting {
     final sc = shichenOf(_now);
-    return '${sc.greet}，慕白';
+    return '${sc.greet}，${_profile.readName()}';
   }
 
   String get shichenTip {

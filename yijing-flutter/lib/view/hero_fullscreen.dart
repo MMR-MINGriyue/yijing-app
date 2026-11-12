@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -224,7 +225,7 @@ class _HeroFullscreenState extends State<HeroFullscreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () {
-            HapticFeedback.selectionClick();
+            unawaited(HapticFeedback.selectionClick());
             setState(() => _expandedYao = expanded ? null : i);
           },
           child: Padding(

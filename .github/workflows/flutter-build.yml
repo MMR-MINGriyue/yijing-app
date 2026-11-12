@@ -47,8 +47,10 @@ jobs:
         run: flutter pub get
 
       - name: Analyze
-        # lint 不阻塞 (engine 正确性由 verify_engine + flutter test 单独验证)
-        run: flutter analyze 2>&1 | tail -200 || true
+        # iter72: analyze 必须阻塞发布; pipefail 防止 tail 吞掉退出码
+        run: |
+          set -o pipefail
+          flutter analyze 2>&1 | tail -200
 
       - name: Run engine verification
         run: dart run tool/verify_engine.dart

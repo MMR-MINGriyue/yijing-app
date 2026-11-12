@@ -69,8 +69,12 @@ class BaziViewModel extends ChangeNotifier {
       : _store = store ?? baziBirthStoreFactory(),
         _now = clock,
         _history = historyRepo {
-    _boot();
+    // iter72: 保存 boot Future, 调用方可等待 (原先纯 fire-and-forget 不可观测)
+    ready = _boot();
   }
+
+  /// 启动恢复完成信号 (测试可 await)
+  late final Future<void> ready;
 
   final BaziBirthStore _store;
   final DateTime Function()? _now;
@@ -91,7 +95,8 @@ class BaziViewModel extends ChangeNotifier {
       if (saved == null) return;
       _state = _state.copyWith(
           birth: saved.dt, gender: saved.gender, options: saved.options, restored: true);
-      compute();
+      // iter72: 恢复命盘只是展示, 绝不能落一条新的历史记录
+      compute(logHistory: false);
     } catch (_) {} // 无存储环境静默
   }
 
@@ -106,7 +111,8 @@ class BaziViewModel extends ChangeNotifier {
   }
 
   /// 排盘 + 大运 + 解读 (落记忆)
-  void compute() {
+  /// [logHistory] = false 用于启动恢复 (iter72: 修冷启动污染历史)
+  void compute({bool logHistory = true}) {
     final birth = _state.birth;
     if (birth == null) return;
     final chart = computeBaZi(birth, options: _state.options);
@@ -123,14 +129,16 @@ class BaziViewModel extends ChangeNotifier {
     _store.write(BaziBirth(
         dt: birth, gender: _state.gender, options: _state.options));
     // 落历史 (与旧 CastVM 行为一致)
-    final repo = _history ?? HistoryRepository.instance;
-    repo.add(HistoryRecord(
-      question: '八字排盘 · ${chart.pillars.map((p) => p.gz).join(' ')}',
-      direction: '事业',
-      directionColor: 'cinnabar',
-      type: 'bazi',
-      ts: _clock(),
-    ));
+    if (logHistory) {
+      final repo = _history ?? HistoryRepository.instance;
+      repo.add(HistoryRecord(
+        question: '八字排盘 · ${chart.pillars.map((p) => p.gz).join(' ')}',
+        direction: '事业',
+        directionColor: 'cinnabar',
+        type: 'bazi',
+        ts: _clock(),
+      ));
+    }
     notifyListeners();
   }
 

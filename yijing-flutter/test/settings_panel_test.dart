@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yijing_transform/data/profile_store.dart';
 import 'package:yijing_transform/view/settings_panel.dart';
+import 'package:yijing_transform/viewmodel/home_viewmodel.dart';
 import 'package:yijing_transform/viewmodel/settings_viewmodel.dart';
 
 void main() {
@@ -36,6 +38,27 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(tester.takeException(), isNull);
     expect(find.text('每 日 提 醒'), findsOneWidget);
+  });
+
+  testWidgets('iter72: 问候称呼输入提交后首页问候同步', (tester) async {
+    final profile = MemoryProfileStore();
+    final svm = SettingsViewModel(profile: profile);
+    final home = HomeViewModel(
+      profile: profile,
+      now: () => DateTime(2026, 9, 6, 10), // 巳时
+    );
+    await tester.pumpWidget(panel(svm));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('问 候 称 呼'), findsOneWidget);
+    expect(home.greeting, '巳时安，慕白');
+
+    final field = find.byType(TextField);
+    expect(field, findsOneWidget);
+    await tester.enterText(field, '青禾');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(svm.greetingName, '青禾');
+    expect(home.greeting, '巳时安，青禾');
   });
 
   testWidgets('清空双击确认: 首次进入确认态, 再点执行', (tester) async {

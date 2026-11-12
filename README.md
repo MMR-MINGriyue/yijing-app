@@ -1,14 +1,15 @@
 # 易道 - 卦象解读 (yijing-app)
 
-> 国风移动端 PWA - 六爻起卦 - AI 解卦 - 历史回溯
+> 国风易经占卜应用 — 六爻起卦 · 四大占法 · 卦辞解读 · 历史回溯
+> 当前唯一交付形态: **Flutter 原生 App** (Android/iOS), 无云端 AI 服务, 全部推演本地完成。
 
 仓库地址: git@github.com:MMR-MINGriyue/yijing-app.git
 HTTPS: https://github.com/MMR-MINGriyue/yijing-app
 
-> **纯 App 主线 (iter33, v1.30.0)**: Flutter 原生 App 已成为唯一交付形态 —
+> **纯 App 主线 (iter72, v1.63.0)**: Flutter 原生 App 是唯一交付形态 —
 > 7 屏全量 + 真实持久化, 见 [`yijing-flutter/`](yijing-flutter/README.md) 与
 > [`yijing-flutter/ARCHITECTURE.md`](yijing-flutter/ARCHITECTURE.md)。
-> 本 README 描述的 PWA 保留为设计基准与数据源, 不再打包分发。
+> 本 README 描述的是**根目录 PWA**, 保留为设计基准与数据源, 不再打包分发。
 
 ## 简介
 
@@ -117,7 +118,11 @@ node -e "const h=require('http'),f=require('fs'),p=require('path');h.createServe
 
 ## 分发 (安卓 APK)
 
-仓库保持私有 (GitHub Free 计划不支持私有仓库的 Pages, 无网页版):
+Flutter App (当前主线): 推送 `v*` tag → `.github/workflows/flutter-release.yml` 调用
+`flutter-build.yml`, 出 Release 并附 arm64 / armeabi-v7a / x86_64 三个 release 签名 APK
+(已混淆, `--split-debug-info` 符号表另存构建产物)。按手机 CPU 选包, 绝大多数选 arm64。
+
+以下 PWA/Capacitor 内容为**历史遗留** (仅供设计基准参考, 不再分发):
 
 1. 推送到 `main` 分支自动触发 `.github/workflows/android-build.yml` (含 www/ 与根目录哈希一致性守卫 + 内联脚本语法冒烟检查)
 2. Actions 运行页下载 `yijing-debug` 构建产物, 解压取 APK 传输安装

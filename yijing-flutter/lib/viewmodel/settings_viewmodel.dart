@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../data/bazi_store.dart';
 import '../data/favorites_store.dart';
 import '../data/history_repository.dart';
+import '../data/profile_store.dart';
 import '../model/history.dart';
 import '../service/backup_service.dart';
 import '../service/reminder_service.dart';
@@ -18,6 +19,7 @@ class SettingsViewModel extends ChangeNotifier {
   final ReminderService _reminder;
   final BackupService _backup;
   final BaziBirthStore _bazi;
+  final ProfileStore _profile;
 
   SettingsViewModel({
     HistoryRepository? history,
@@ -25,11 +27,13 @@ class SettingsViewModel extends ChangeNotifier {
     ReminderService? reminder,
     BackupService? backup,
     BaziBirthStore? baziStore,
+    ProfileStore? profile,
   })  : _history = history ?? HistoryRepository.instance,
         _favs = favs ?? FavoritesRepository.instance,
         _reminder = reminder ?? ReminderService(),
         _backup = backup ?? BackupService(),
-        _bazi = baziStore ?? baziBirthStoreFactory();
+        _bazi = baziStore ?? baziBirthStoreFactory(),
+        _profile = profile ?? profileStoreFactory();
 
   bool _remindEnabled = false;
   int _remindHour = 8;
@@ -46,6 +50,14 @@ class SettingsViewModel extends ChangeNotifier {
 
   String get metaLine => '本地记录 $recordCount 条 · 收藏 $favCount 卦';
 
+  /// iter72: 首页问候称呼 (默认「慕白」, 可在设置里改)
+  String get greetingName => _profile.readName();
+
+  void setGreetingName(String name) {
+    _profile.writeName(name);
+    notifyListeners();
+  }
+
   /// 启动时载入提醒偏好 (落盘值即真相; 恢复调度由插件 boot receiver 负责)
   Future<void> loadReminderPrefs() async {
     final p = await _reminder.loadPrefs();
@@ -55,6 +67,7 @@ class SettingsViewModel extends ChangeNotifier {
     _remindLoaded = true;
     try {
       await _bazi.warmUp(); // 命盘册随设置页一起就绪 (iter63)
+      await _profile.warmUp(); // 称呼随设置页就绪 (iter72)
     } catch (_) {}
     notifyListeners();
   }

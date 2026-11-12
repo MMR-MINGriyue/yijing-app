@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -38,7 +40,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   void _onVm() => setState(() {});
 
   void _enterSelectMode(HistoryRecord r) {
-    HapticFeedback.selectionClick();
+    unawaited(HapticFeedback.selectionClick());
     setState(() {
       _selectMode = true;
       _selected.add(r);
@@ -53,7 +55,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _toggleSelect(HistoryRecord r) {
-    HapticFeedback.selectionClick();
+    unawaited(HapticFeedback.selectionClick());
     setState(() {
       if (_selected.contains(r)) {
         _selected.remove(r);

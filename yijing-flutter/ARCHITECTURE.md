@@ -8,14 +8,15 @@
 ```
 ┌──────────────────────────────────────────────────────────┐
 │ 应用壳层   main.dart + app/app_shell.dart                 │
-│            5 Tab Hub (IndexedStack 保留各屏状态)           │
-│            详情/推演 → Navigator.push 独立路由             │
+│            4 Tab Hub (IndexedStack 保留各屏状态)           │
+│            详情/推演/八字 → Navigator.push 独立路由        │
 ├──────────────────────────────────────────────────────────┤
 │ View 层    view/*.dart — 7 屏纯 UI, 一切状态来自 ViewModel │
 │            共享组件 view/widgets/hex_glyph.dart            │
 ├──────────────────────────────────────────────────────────┤
-│ ViewModel  ChangeNotifier × 7 (状态 + 意图, 无 Flutter UI  │
-│            依赖, flutter_test 直接单测)                    │
+│ ViewModel  ChangeNotifier × 9 (状态 + 意图, 无 Flutter UI  │
+│            依赖, flutter_test 直接单测; 7 个壳层持有 +     │
+│            Detail/Transform 随路由新建)                    │
 ├──────────────────────────────────────────────────────────┤
 │ 核心引擎   core/ — 纯 Dart, 零 Flutter 依赖, dart run 可验  │
 │            yi_calendar   干支历 (JDN/纪日/纪年/月干支/时辰) │
@@ -36,7 +37,9 @@
 │            hex_repository       卦库访问 + 变卦推演引擎     │
 │            history_store        接口 → Prefs(真机)/Mock(测试)│
 │            history_repository   历史聚合 (月份/范围)        │
-│            favorites_repository 收藏 (接口 + 同上双实现)    │
+│            favorites_store.dart 收藏 (接口 + 同上双实现)    │
+│            profile_store.dart  用户称呼 (iter72)            │
+│            prefs_io.dart      串行落盘队列 + 错误上报       │
 ├──────────────────────────────────────────────────────────┤
 │ 模型层     model/  Hex / HistoryRecord / CastResult        │
 └──────────────────────────────────────────────────────────┘
@@ -90,3 +93,7 @@ core 与 data 不 import Flutter (仅 ViewModel 用 foundation.ChangeNotifier)�
   (NotificationTapBus 单总线 + Darwin/macOS 通道 + 冷启动 payload 还原) +
   iOS 工程脚手架 (Runner/Info.plist 中文化/Podfile/AppIcon 与 Android 同源生成) +
   Android 启动屏全墨化 (避免白闪) + App 名「易道」
+- iter72 (v1.63.0): 正确性迭代 — 冷启动恢复命盘不再污染历史 / 当日卦语跨日失效 /
+  落盘改串行队列 + 错误上报 (修 fire-and-forget 静默丢数据) / 起卦 pending 状态机 /
+  问候称呼可设置 (ProfileStore) / CI analyze 不再 `|| true` 且补 pipefail /
+  lint 提升 unawaited_futures+discarded_futures 为 error; 222 测试

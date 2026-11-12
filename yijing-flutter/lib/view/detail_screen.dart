@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -325,7 +326,7 @@ class _DetailScreenState extends State<DetailScreen> {
   void _share() {
     final mv = widget.vm.moving;
     final action = widget.onShare ?? _shareCardDefault;
-    action(widget.vm.hex, mv, widget.vm.question);
+    unawaited(action(widget.vm.hex, mv, widget.vm.question));
   }
 
   Widget _shareBtn(Hex h) {

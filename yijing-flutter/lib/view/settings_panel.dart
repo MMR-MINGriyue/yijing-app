@@ -23,21 +23,78 @@ class SettingsPanel extends StatefulWidget {
 class _SettingsPanelState extends State<SettingsPanel> {
   bool _clearArmed = false;
   Timer? _clearTimer;
+  late final TextEditingController _nameCtrl;
+  late final FocusNode _nameFocus;
 
   @override
   void initState() {
     super.initState();
     widget.vm.addListener(_onVm);
-    widget.vm.loadReminderPrefs(); // 载入提醒偏好 (开关/时间)
+    _nameCtrl = TextEditingController(text: widget.vm.greetingName);
+    _nameFocus = FocusNode();
+    unawaited(widget.vm.loadReminderPrefs()); // 载入提醒偏好 + 称呼
   }
 
-  void _onVm() => setState(() {});
+  void _onVm() {
+    // warmUp 完成后同步称呼; 输入中不打断光标
+    final n = widget.vm.greetingName;
+    if (!_nameFocus.hasFocus && _nameCtrl.text != n) _nameCtrl.text = n;
+    setState(() {});
+  }
 
   @override
   void dispose() {
     widget.vm.removeListener(_onVm);
     _clearTimer?.cancel();
+    _nameCtrl.dispose();
+    _nameFocus.dispose();
     super.dispose();
+  }
+
+  /// iter72: 问候称呼 (替代写死在 HomeViewModel 里的名字)
+  Widget _nameCard() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
+      decoration: yiCardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Row(children: [
+            Icon(Icons.person_outline, size: 14, color: YiColors.gold),
+            SizedBox(width: 8),
+            Text('问 候 称 呼',
+                style: TextStyle(
+                    fontSize: 11,
+                    letterSpacing: 2,
+                    color: YiColors.textTertiary)),
+          ]),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _nameCtrl,
+            focusNode: _nameFocus,
+            maxLength: 12,
+            style: const TextStyle(fontSize: 13, color: YiColors.textPrimary),
+            decoration: InputDecoration(
+              isDense: true,
+              filled: true,
+              fillColor: const Color(0xFF161209),
+              counterText: '',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: YiColors.strokeSoft),
+              ),
+              hintText: '输入后按回车保存',
+              hintStyle: const TextStyle(fontSize: 11, color: YiColors.textMuted),
+            ),
+            onSubmitted: (v) {
+              widget.vm.setGreetingName(v);
+              _toast('称呼已保存：${widget.vm.greetingName}');
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _pickRemindTime() async {
@@ -95,7 +152,8 @@ class _SettingsPanelState extends State<SettingsPanel> {
 
   Future<void> _import() async {
     final controller = TextEditingController();
-    final ok = await showDialog<bool>(
+    try {
+      final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: YiColors.inkCard,
@@ -143,6 +201,9 @@ class _SettingsPanelState extends State<SettingsPanel> {
       _toast('导入失败：不是有效的 JSON');
     }
     setState(() {});
+    } finally {
+      controller.dispose();
+    }
   }
 
   void _clear() {
@@ -187,6 +248,8 @@ class _SettingsPanelState extends State<SettingsPanel> {
           ]),
           const SizedBox(height: 12),
           _summaryCard(),
+          const SizedBox(height: 14),
+          _nameCard(),
           const SizedBox(height: 14),
           _sectionTitle('数 据 管 理', Icons.storage_outlined),
           _item(
@@ -395,7 +458,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
 
 /// 打开设置面板 (屏1/屏7 共用)
 void showSettingsSheet(BuildContext context, SettingsViewModel vm) {
-  showModalBottomSheet<void>(
+  unawaited(showModalBottomSheet<void>(
     context: context,
     backgroundColor: YiColors.inkCard,
     shape: const RoundedRectangleBorder(
@@ -403,5 +466,5 @@ void showSettingsSheet(BuildContext context, SettingsViewModel vm) {
     ),
     isScrollControlled: true,
     builder: (_) => SettingsPanel(vm: vm),
-  );
+  ));
 }

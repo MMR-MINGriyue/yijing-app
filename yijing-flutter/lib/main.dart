@@ -5,6 +5,8 @@ import 'data/favorites_store.dart';
 import 'data/history_repository.dart';
 import 'data/hex_repository.dart';
 import 'data/history_store_prefs.dart';
+import 'data/prefs_io.dart';
+import 'data/profile_store.dart';
 import 'service/reminder_service.dart';
 import 'theme/yijing_theme.dart';
 import 'view/splash/bagua_splash.dart';
@@ -13,6 +15,15 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HexRepository.instance.init(); // 加载 64 卦
   installPrefsStores(); // 真机持久化: 默认存储工厂 → shared_preferences 实现
+  // iter72: 落盘失败不再静默, 统一上报到 FlutterError
+  onPersistenceError = (Object e, StackTrace st) {
+    FlutterError.reportError(FlutterErrorDetails(
+      exception: e,
+      stack: st,
+      library: 'yijing.persistence',
+      context: ErrorDescription('写入本地数据失败'),
+    ));
+  };
   // iter60: 历史/收藏/通知通道互不依赖, 并行预热缩短冷启动首帧等待
   Future<void> initReminder() async {
     try {
@@ -23,6 +34,7 @@ Future<void> main() async {
   await Future.wait<void>([
     HistoryRepository.instance.warmUp(),
     FavoritesRepository.instance.warmUp(),
+    profileStoreFactory().warmUp(), // iter72: 称呼在首帧前就绪
     initReminder(),
   ]);
   // 通知冷启动直达起卦屏: 不播放启动动画 (iter57)
