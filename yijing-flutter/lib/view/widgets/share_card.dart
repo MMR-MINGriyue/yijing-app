@@ -64,6 +64,12 @@ class ShareCardPreview extends StatelessWidget {
 class ShareCardPainter extends CustomPainter {
   final ShareCardData data;
 
+  // iter73: 断行测量复用同一 TextPainter, 避免逐字符 new + layout 的对象分配
+  final TextPainter _measureTp = TextPainter(
+    textAlign: TextAlign.center,
+    textDirection: TextDirection.ltr,
+  );
+
   ShareCardPainter(this.data);
 
   @override
@@ -326,23 +332,30 @@ class ShareCardPainter extends CustomPainter {
   }
 
   /// 居中多行绘制 (CJK 逐字断行), 返回行数
+  /// iter73: 逐字符线性测量 → 二分找最长不超宽前缀, 测量次数 O(n) → O(行数·log n),
+  /// 且共享 _measureTp 不再每字 new TextPainter. 断行语义与原实现等价.
   int _wrapCentered(Canvas canvas, String text, double maxW, TextStyle style,
       int maxLines, double lineH, {double? top}) {
     final lines = <String>[];
     for (final para in text.split('\n')) {
-      var line = '';
-      for (final ch in para.split('')) {
-        final test = line + ch;
-        if (_measure(test, style) > maxW && line.isNotEmpty) {
-          lines.add(line);
-          line = ch;
-        } else {
-          line = test;
-        }
-        if (lines.length >= maxLines) break;
-      }
-      if (line.isNotEmpty && lines.length < maxLines) lines.add(line);
       if (lines.length >= maxLines) break;
+      var start = 0;
+      while (start < para.length && lines.length < maxLines) {
+        var lo = start + 1;
+        var hi = para.length;
+        var best = start + 1; // 单字超宽时仍强制收 1 字, 与原实现一致
+        while (lo <= hi) {
+          final mid = (lo + hi) >> 1;
+          if (_measure(para.substring(start, mid), style) <= maxW) {
+            best = mid;
+            lo = mid + 1;
+          } else {
+            hi = mid - 1;
+          }
+        }
+        lines.add(para.substring(start, best));
+        start = best;
+      }
     }
     if (top == null) return lines.length;
     var y = top;
@@ -353,8 +366,12 @@ class ShareCardPainter extends CustomPainter {
     return lines.length;
   }
 
-  double _measure(String text, TextStyle style) =>
-      _tp(text, style).width;
+  double _measure(String text, TextStyle style) {
+    _measureTp
+      ..text = TextSpan(text: text, style: style)
+      ..layout(maxWidth: _kCardW - 80);
+    return _measureTp.width;
+  }
 
   @override
   bool shouldRepaint(covariant ShareCardPainter old) => old.data != data;

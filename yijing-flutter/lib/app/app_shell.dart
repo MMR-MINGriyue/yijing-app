@@ -49,6 +49,33 @@ class _AppShellState extends State<AppShell> {
   late final MeViewModel _meVm = MeViewModel();
   late final SettingsViewModel _settingsVm = SettingsViewModel();
 
+  // iter73: 4 个 Screen Widget 构造一次并稳定复用; 切 Tab 只重建轻量的
+  // AnimatedSlide/AnimatedScale 外壳, 不再每次 _go() 都重造整屏配置树
+  late final List<Widget> _screens = [
+    HomeScreen(
+      heroImmediate: widget.fromSplash,
+      vm: _homeVm,
+      onOpenDetail: (no, {question}) => _openDetail(no, question: question),
+      onGoCast: () => _go(1),
+      onGoGrid: _openGrid,
+      onGoHistory: _openHistory,
+      onOpenSettings: _openSettings,
+    ),
+    CastScreen(
+      vm: _castVm,
+      onOpenDetail: (hex, {question}) => _openDetail(hex.no,
+          question: question, direction: _castVm.state.direction),
+    ),
+    BaziScreen(vm: _baziVm),
+    MeScreen(
+      vm: _meVm,
+      onOpenDetail: _openDetail,
+      onGoHistory: _openHistory,
+      onGoGrid: _openGrid,
+      onOpenSettings: _openSettings,
+    ),
+  ];
+
   StreamSubscription<String>? _tapSub;
 
   @override
@@ -155,28 +182,7 @@ class _AppShellState extends State<AppShell> {
         child: IndexedStack(
           index: _tab,
           children: [
-            _fadeTab(0, HomeScreen(
-            heroImmediate: widget.fromSplash,
-            vm: _homeVm,
-            onOpenDetail: (no, {question}) => _openDetail(no, question: question),
-            onGoCast: () => _go(1),
-            onGoGrid: _openGrid,
-            onGoHistory: _openHistory,
-            onOpenSettings: _openSettings,
-          )),
-            _fadeTab(1, CastScreen(
-            vm: _castVm,
-            onOpenDetail: (hex, {question}) => _openDetail(hex.no,
-                question: question, direction: _castVm.state.direction),
-          )),
-            _fadeTab(2, BaziScreen(vm: _baziVm)),
-            _fadeTab(3, MeScreen(
-            vm: _meVm,
-            onOpenDetail: _openDetail,
-            onGoHistory: _openHistory,
-            onGoGrid: _openGrid,
-            onOpenSettings: _openSettings,
-          )),
+            for (var i = 0; i < _screens.length; i++) _fadeTab(i, _screens[i]),
           ]),
       ),
       bottomNavigationBar: DecoratedBox(

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../core/yi_almanac.dart';
-
 import '../model/hex.dart';
 import '../theme/yijing_theme.dart';
 import '../theme/yi_ornament.dart';
@@ -214,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ---------- 节气宜忌 + 今日四柱 (iter54) ----------
   Widget _almanacRow() {
-    final a = almanacOf(DateTime.now());
+    final a = widget.vm.almanac;
     return Row(children: [
       Expanded(
         flex: 3,

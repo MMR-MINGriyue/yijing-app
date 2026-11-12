@@ -55,61 +55,117 @@ class HistoryViewModel extends ChangeNotifier {
   HistoryState get state => _s;
   ({int minY, int minM, int maxY, int maxM}) get range => _range;
 
-  List<HistoryRecord> get monthAll =>
-      _repo.ofMonth(_s.year, _s.month);
+  // iter73: 派生数据缓存 — 原实现一帧内 monthAll/chips/filtered/统计 各遍历一次
+  // 全表 (~10 次复制 + 聚合). 以 repository.version + 状态 + 当天日期为失效键,
+  // 外部写入 (CastViewModel 落历史) 也能自动失效, 不会 stale.
+  String _cacheKey = '';
+  bool _cacheReady = false;
+  late List<HistoryRecord> _monthAll;
+  late List<({int no, String name, int count})> _hexChips;
+  late List<({String dir, int count, String color})> _dirChips;
+  late List<({String type, String label, int count})> _typeChips;
+  late List<HistoryRecord> _filtered;
+  late int _totalCount;
+  late int _weekCount;
+  late int _monthCount;
+
+  void _sync() {
+    final n = DateTime.now();
+    final key = '${_repo.version}|${_s.year}|${_s.month}|${_s.hexFilter}|'
+        '${_s.dirFilter}|${_s.typeFilter}|${_s.keyword}|${_s.newestFirst}|'
+        '${n.year}-${n.month}-${n.day}';
+    if (_cacheReady && key == _cacheKey) return;
+    _cacheKey = key;
+    _cacheReady = true;
+
+    final all = _repo.load();
+    _totalCount = all.length;
+    final weekStart = DateTime(n.year, n.month, n.day - 6);
+    _weekCount = all.where((r) => !r.ts.isBefore(weekStart)).length;
+    final month = all
+        .where((r) => r.ts.year == _s.year && r.ts.month == _s.month)
+        .toList();
+    _monthAll = month;
+    _monthCount = month.length;
+
+    final hexMap = <int, ({String name, int count})>{};
+    final dirMap = <String, ({int count, String color})>{};
+    final typeMap = <String, ({String label, int count})>{};
+    for (final r in month) {
+      if (r.hexNo != null && r.name != null) {
+        final cur = hexMap[r.hexNo!] ?? (name: r.name!, count: 0);
+        hexMap[r.hexNo!] = (name: cur.name, count: cur.count + 1);
+      }
+      final d = dirMap[r.direction] ?? (count: 0, color: r.directionColor);
+      dirMap[r.direction] = (count: d.count + 1, color: r.directionColor);
+      final t = typeMap[r.type] ?? (label: r.methodName, count: 0);
+      typeMap[r.type] = (label: t.label, count: t.count + 1);
+    }
+    _hexChips = hexMap.entries
+        .map((e) => (no: e.key, name: e.value.name, count: e.value.count))
+        .toList()
+      ..sort((a, b) => b.count - a.count);
+    _dirChips = dirMap.entries
+        .map((e) => (dir: e.key, count: e.value.count, color: e.value.color))
+        .toList()
+      ..sort((a, b) => b.count - a.count);
+    _typeChips = typeMap.entries
+        .map((e) =>
+            (type: e.key, label: e.value.label, count: e.value.count))
+        .toList();
+
+    var list = month;
+    if (_s.hexFilter != null) {
+      list = list.where((r) => r.hexNo == _s.hexFilter).toList();
+    }
+    if (_s.dirFilter.isNotEmpty) {
+      list = list.where((r) => r.direction == _s.dirFilter).toList();
+    }
+    if (_s.typeFilter.isNotEmpty) {
+      list = list.where((r) => r.type == _s.typeFilter).toList();
+    }
+    if (_s.keyword.isNotEmpty) {
+      final kw = _s.keyword.toLowerCase();
+      list = list
+          .where((r) =>
+              (r.name?.toLowerCase().contains(kw) ?? false) ||
+              r.question.toLowerCase().contains(kw) ||
+              r.direction.contains(kw))
+          .toList();
+    }
+    list.sort((a, b) =>
+        _s.newestFirst ? b.ts.compareTo(a.ts) : a.ts.compareTo(b.ts));
+    _filtered = list;
+  }
+
+  /// 以下派生结果按约定只读 (调用方不要就地修改缓存列表)
+  List<HistoryRecord> get monthAll {
+    _sync();
+    return _monthAll;
+  }
 
   /// 卦象筛选 chips (当月出现过的 hex)
   List<({int no, String name, int count})> get hexChips {
-    final map = <int, ({String name, int count})>{};
-    for (final r in monthAll) {
-      if (r.hexNo == null || r.name == null) continue;
-      final cur = map[r.hexNo!] ?? (name: r.name!, count: 0);
-      map[r.hexNo!] = (name: cur.name, count: cur.count + 1);
-    }
-    final list = map.entries.map((e) => (no: e.key, name: e.value.name, count: e.value.count)).toList();
-    list.sort((a, b) => b.count - a.count);
-    return list;
+    _sync();
+    return _hexChips;
   }
 
   /// 方向 chips
   List<({String dir, int count, String color})> get dirChips {
-    final map = <String, ({int count, String color})>{};
-    for (final r in monthAll) {
-      final cur = map[r.direction] ?? (count: 0, color: r.directionColor);
-      map[r.direction] = (count: cur.count + 1, color: r.directionColor);
-    }
-    final list = map.entries.map((e) => (dir: e.key, count: e.value.count, color: e.value.color)).toList();
-    list.sort((a, b) => b.count - a.count);
-    return list;
+    _sync();
+    return _dirChips;
   }
 
   /// 占法 chips
   List<({String type, String label, int count})> get typeChips {
-    final map = <String, ({String label, int count})>{};
-    for (final r in monthAll) {
-      final cur = map[r.type] ?? (label: r.methodName, count: 0);
-      map[r.type] = (label: cur.label, count: cur.count + 1);
-    }
-    return map.entries
-        .map((e) => (type: e.key, label: e.value.label, count: e.value.count))
-        .toList();
+    _sync();
+    return _typeChips;
   }
 
   /// 筛选后的当月记录 (卦象 + 方向 + 占法 + 关键词 AND)
   List<HistoryRecord> get filtered {
-    var list = monthAll;
-    if (_s.hexFilter != null) list = list.where((r) => r.hexNo == _s.hexFilter).toList();
-    if (_s.dirFilter.isNotEmpty) list = list.where((r) => r.direction == _s.dirFilter).toList();
-    if (_s.typeFilter.isNotEmpty) list = list.where((r) => r.type == _s.typeFilter).toList();
-    if (_s.keyword.isNotEmpty) {
-      final kw = _s.keyword.toLowerCase();
-      list = list.where((r) =>
-        (r.name?.toLowerCase().contains(kw) ?? false) ||
-        r.question.toLowerCase().contains(kw) ||
-        r.direction.contains(kw)).toList();
-    }
-    list.sort((a, b) => _s.newestFirst ? b.ts.compareTo(a.ts) : a.ts.compareTo(b.ts));
-    return list;
+    _sync();
+    return _filtered;
   }
 
   // ---- 月份导航 ----
@@ -161,13 +217,20 @@ class HistoryViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ---- 统计 ----
-  int get totalCount => _repo.load().length;
-  int get weekCount {
-    final now = DateTime.now();
-    final weekStart = DateTime(now.year, now.month, now.day - 6);
-    return _repo.load().where((r) => !r.ts.isBefore(weekStart)).length;
+  // ---- 统计 (iter73: 与派生缓存共用一次全表扫描) ----
+  int get totalCount {
+    _sync();
+    return _totalCount;
   }
+
+  int get weekCount {
+    _sync();
+    return _weekCount;
+  }
+
   int get favCount => _favs.load().length;
-  int get monthCount => monthAll.length;
+  int get monthCount {
+    _sync();
+    return _monthCount;
+  }
 }

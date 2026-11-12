@@ -87,35 +87,46 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final s = widget.vm.state;
+    // iter73: 一帧只算一次筛选 + 分组; 记录区改 ListView.builder 惰性构造
+    final list = widget.vm.filtered;
+    final g1 = list.where((r) => r.day >= 16).toList();
+    final g2 = list.where((r) => r.day < 16).toList();
+    final header = <Widget>[
+      if (!_selectMode) ...[
+        _stats(s),
+        const SizedBox(height: 14),
+        _monthNav(s),
+        const SizedBox(height: 14),
+        _searchBox(s),
+        const SizedBox(height: 8),
+        if (widget.vm.hexChips.isNotEmpty) _chips('卦象', widget.vm.hexChips
+            .map((c) => _chip(label: c.name, count: c.count, active: s.hexFilter == c.no,
+                onTap: () => widget.vm.setHexFilter(s.hexFilter == c.no ? null : c.no))).toList(),
+            s.hexFilter != null, () => widget.vm.setHexFilter(null)),
+        if (widget.vm.dirChips.isNotEmpty) _chips('方向', widget.vm.dirChips
+            .map((c) => _chip(label: c.dir, count: c.count, active: s.dirFilter == c.dir,
+                onTap: () => widget.vm.setDirFilter(s.dirFilter == c.dir ? '' : c.dir))).toList(),
+            s.dirFilter.isNotEmpty, () => widget.vm.setDirFilter('')),
+        if (widget.vm.typeChips.isNotEmpty) _chips('占法', widget.vm.typeChips
+            .map((c) => _chip(label: c.label, count: c.count, active: s.typeFilter == c.type,
+                onTap: () => widget.vm.setTypeFilter(s.typeFilter == c.type ? '' : c.type))).toList(),
+            s.typeFilter.isNotEmpty, () => widget.vm.setTypeFilter('')),
+        const SizedBox(height: 6),
+      ],
+    ];
+    // 记录区: [近 期] + g1 行 + (g2 非空 ? [同 月 早 些] + g2 行 : 空)
+    final rowCount = list.isEmpty
+        ? 2
+        : 1 + g1.length + (g2.isEmpty ? 0 : 1 + g2.length);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: _selectMode ? _selectAppBar() : _normalAppBar(),
-      body: SwipeBackPage(child: ListView(
+      body: SwipeBackPage(child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
-        children: [
-          if (!_selectMode) ...[
-            _stats(s),
-            const SizedBox(height: 14),
-            _monthNav(s),
-            const SizedBox(height: 14),
-            _searchBox(s),
-            const SizedBox(height: 8),
-            if (widget.vm.hexChips.isNotEmpty) _chips('卦象', widget.vm.hexChips
-                .map((c) => _chip(label: c.name, count: c.count, active: s.hexFilter == c.no,
-                    onTap: () => widget.vm.setHexFilter(s.hexFilter == c.no ? null : c.no))).toList(),
-                s.hexFilter != null, () => widget.vm.setHexFilter(null)),
-            if (widget.vm.dirChips.isNotEmpty) _chips('方向', widget.vm.dirChips
-                .map((c) => _chip(label: c.dir, count: c.count, active: s.dirFilter == c.dir,
-                    onTap: () => widget.vm.setDirFilter(s.dirFilter == c.dir ? '' : c.dir))).toList(),
-                s.dirFilter.isNotEmpty, () => widget.vm.setDirFilter('')),
-            if (widget.vm.typeChips.isNotEmpty) _chips('占法', widget.vm.typeChips
-                .map((c) => _chip(label: c.label, count: c.count, active: s.typeFilter == c.type,
-                    onTap: () => widget.vm.setTypeFilter(s.typeFilter == c.type ? '' : c.type))).toList(),
-                s.typeFilter.isNotEmpty, () => widget.vm.setTypeFilter('')),
-            const SizedBox(height: 6),
-          ],
-          ..._recordList(),
-        ],
+        itemCount: header.length + rowCount,
+        itemBuilder: (_, i) => i < header.length
+            ? header[i]
+            : _rowAt(i - header.length, list, g1, g2),
       )),
     );
   }
@@ -266,33 +277,36 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  // ---------- 历史记录列表 (iter67: 时间轴可视化) ----------
-  List<Widget> _recordList() {
-    final list = widget.vm.filtered;
+  // ---------- 历史记录列表 (iter67 时间轴 / iter73 惰性化) ----------
+  /// 记录区第 [i] 项: 空状态 / 分组标题 / 时间轴行, 按索引即时构造
+  Widget _rowAt(int i, List<HistoryRecord> list, List<HistoryRecord> g1,
+      List<HistoryRecord> g2) {
     if (list.isEmpty) {
-      return [
-        const SizedBox(height: 60),
-        Text(widget.vm.hasFilter ? '无 匹 配 记 录' : '本 月 尚 未 起 卦',
-            textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: YiColors.textTertiary)),
-      ];
+      return i == 0
+          ? const SizedBox(height: 60)
+          : Text(widget.vm.hasFilter ? '无 匹 配 记 录' : '本 月 尚 未 起 卦',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  fontSize: 13, color: YiColors.textTertiary));
     }
-    final group1 = list.where((r) => r.day >= 16).toList();
-    final group2 = list.where((r) => r.day < 16).toList();
-    final out = <Widget>[_groupCap('近 期')];
-    var idx = 0;
-    void addGroup(List<HistoryRecord> g) {
-      for (var i = 0; i < g.length; i++) {
-        final r = g[i];
-        final firstOfDay = i == 0 || g[i - 1].day != r.day;
-        // 组尾不出轨 (避免线穿过下一组标题); 日节点: 每日首条出日期徽章
-        final railAfter = i < g.length - 1;
-        out.add(_staggered(r, idx++, _timelineRow(r, firstOfDay: firstOfDay, railAfter: railAfter)));
-      }
+    if (i == 0) return _groupCap('近 期');
+    var j = i - 1;
+    if (j < g1.length) return _timelineAt(g1, j, j);
+    j -= g1.length;
+    if (g2.isNotEmpty) {
+      if (j == 0) return _groupCap('同 月 早 些');
+      j -= 1;
+      if (j < g2.length) return _timelineAt(g2, j, g1.length + j);
     }
-    addGroup(group1);
-    if (group2.isNotEmpty) out.add(_groupCap('同 月 早 些'));
-    addGroup(group2);
-    return out;
+    return const SizedBox.shrink();
+  }
+
+  Widget _timelineAt(List<HistoryRecord> g, int i, int globalIdx) {
+    final r = g[i];
+    final firstOfDay = i == 0 || g[i - 1].day != r.day;
+    final railAfter = i < g.length - 1;
+    return _staggered(r, globalIdx,
+        _timelineRow(r, firstOfDay: firstOfDay, railAfter: railAfter));
   }
 
   /// iter67: 时间轴行 — 左轨节点 (每日首条 = 日期徽章, 其后 = 小圆点) + 右侧记录卡
@@ -319,39 +333,42 @@ class _HistoryScreenState extends State<HistoryScreen> {
             margin: const EdgeInsets.only(top: 13),
             decoration: const BoxDecoration(shape: BoxShape.circle, color: YiColors.goldDark),
           );
-    // ListView 子项高度无界 → IntrinsicHeight 先算出卡高, stretch 才有界
-    return IntrinsicHeight(
-      child: Row(
-        key: ValueKey('tlrow_${r.ts.millisecondsSinceEpoch}_${r.question}'),
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            width: 40,
-            child: Column(children: [
-              node,
-              Expanded(
-                child: railAfter
-                    ? Center(
-                        child: Container(
-                          key: ValueKey('tl_rail_${r.ts.millisecondsSinceEpoch}_${r.question}'),
-                          width: 1.6,
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [Color(0x66C9A876), Color(0x22C9A876)],
-                            ),
+    // iter73: Stack 高度由右侧记录卡决定, 左轨用 Positioned(top:0,bottom:0)
+    // 拿到有界高度后 Expanded 可直接拉伸 — 去掉 IntrinsicHeight 的双次布局
+    return Stack(
+      key: ValueKey('tlrow_${r.ts.millisecondsSinceEpoch}_${r.question}'),
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 52),
+          child: _recordCard(r),
+        ),
+        Positioned(
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: 40,
+          child: Column(children: [
+            node,
+            Expanded(
+              child: railAfter
+                  ? Center(
+                      child: Container(
+                        key: ValueKey('tl_rail_${r.ts.millisecondsSinceEpoch}_${r.question}'),
+                        width: 1.6,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0x66C9A876), Color(0x22C9A876)],
                           ),
                         ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ]),
-          ),
-          const SizedBox(width: 12),
-          Expanded(child: _recordCard(r)),
-        ],
-      ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ]),
+        ),
+      ],
     );
   }
 

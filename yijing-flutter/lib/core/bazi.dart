@@ -177,12 +177,12 @@ const List<(String, String)> _kNayinPairs = [
 ];
 
 /// 干支 → 纳音五行 (如 庚辰 → 白蜡金); 未知干支返回空串
-String nayinOf(String gz) {
-  for (final (k, v) in _kNayinPairs) {
-    if (k == gz) return v;
-  }
-  return '';
-}
+/// iter73: 60 组纳音一次建索引, 查表 O(1) (原实现每次线性扫 60 对)
+final Map<String, String> _kNayinMap = {
+  for (final (k, v) in _kNayinPairs) k: v,
+};
+
+String nayinOf(String gz) => _kNayinMap[gz] ?? '';
 
 // ---------- 神煞 (iter44: 规则推算, 年支/日支查四柱地支) ----------
 

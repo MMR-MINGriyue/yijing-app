@@ -16,6 +16,12 @@ class HistoryRepository {
   List<HistoryRecord> _real = [];
   List<HistoryRecord> _samples = [];
 
+  /// iter73: 数据版本号 — 供 ViewModel 判定派生缓存是否失效.
+  /// 外部 (CastViewModel 等) 写入后即使本 VM 没收到通知, 缓存也能自动失效.
+  int _version = 0;
+  int get version => _version;
+  void _bump() => _version++;
+
   /// 启动预热 (转发给存储实现; Prefs 实现读取一次 shared_preferences)
   Future<void> warmUp() => _store.warmUp();
 
@@ -37,6 +43,7 @@ class HistoryRepository {
     _ensureLoaded();
     _real.insert(0, rec);
     _store.write(_real);
+    _bump();
     return rec;
   }
 
@@ -52,6 +59,7 @@ class HistoryRepository {
       }
     }
     _store.write(_real);
+    _bump();
   }
 
   /// 清空真实记录 (示例保留, 收藏不受影响)
@@ -59,6 +67,7 @@ class HistoryRepository {
     _ensureLoaded();
     _real = [];
     _store.write(_real);
+    _bump();
   }
 
   /// 合并导入 (PWA 设置面板语义): 按 ts 去重, 无 ts 用 name|question 组合键
@@ -81,7 +90,10 @@ class HistoryRepository {
         added++;
       }
     }
-    if (added > 0) _store.write(_real);
+    if (added > 0) {
+      _store.write(_real);
+      _bump();
+    }
     return (added: added, skipped: skipped);
   }
 

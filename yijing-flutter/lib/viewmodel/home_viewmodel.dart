@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../core/cast_engine.dart';
 import '../core/daily_hex.dart';
+import '../core/yi_almanac.dart';
 import '../core/yi_calendar.dart';
 import '../data/history_repository.dart';
 import '../data/hex_repository.dart';
@@ -66,6 +67,21 @@ class HomeViewModel extends ChangeNotifier {
     _refreshCount++;
     _refreshed = true;
     notifyListeners();
+  }
+
+  /// iter73: 黄历按「日期 + 时辰」缓存 — 原实现每次整屏重建都重算节气表 +
+  /// 四柱 (around() 构造 3 年 × 12 JieMoment 并排序). 跨时辰自动失效.
+  String? _almanacKey;
+  AlmanacInfo? _almanacCache;
+
+  AlmanacInfo get almanac {
+    final n = _now;
+    final key = '${n.year}-${n.month}-${n.day}-${(n.hour + 1) ~/ 2}';
+    if (_almanacKey != key) {
+      _almanacCache = almanacOf(n);
+      _almanacKey = key;
+    }
+    return _almanacCache!;
   }
 
   /// 问候 (时辰): 子夜安，<称呼> (iter72: 称呼可在设置里改)

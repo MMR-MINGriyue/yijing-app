@@ -114,8 +114,10 @@ class _HexGridScreenState extends State<HexGridScreen> {
                       child: child,
                     ),
                   ),
+                  // iter73: key 不含 keyword/list.length — 搜索逐字符不再销毁整个网格
+                  // Element 树并重播 64 格入场动画; 宫筛选变化才需要换子树
                   child: GridView.builder(
-            key: ValueKey('${widget.vm.palaceFilter}|${widget.vm.keyword}|${list.length}'),
+            key: ValueKey('hexgrid_${widget.vm.palaceFilter}'),
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 4,

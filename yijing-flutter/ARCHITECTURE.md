@@ -97,3 +97,8 @@ core 与 data 不 import Flutter (仅 ViewModel 用 foundation.ChangeNotifier)�
   落盘改串行队列 + 错误上报 (修 fire-and-forget 静默丢数据) / 起卦 pending 状态机 /
   问候称呼可设置 (ProfileStore) / CI analyze 不再 `|| true` 且补 pipefail /
   lint 提升 unawaited_futures+discarded_futures 为 error; 222 测试
+- iter73 (v1.64.0): P1 性能迭代 — hexgrid 网格 key 去 keyword (搜索不销毁 64 格子树) /
+  SwipeBackPage 位移改 ValueNotifier (拖拽零整页重建) / 历史屏改 ListView.builder +
+  Stack 定高去 IntrinsicHeight / app_shell 缓存 4 个 Screen 配置 /
+  HistoryRepository.version + ViewModel 派生缓存 (外部写入自动失效) /
+  分享卡断行二分测量 + 复用 TextPainter / 纳音查表化 / 首页黄历按时辰缓存; 230 测试
