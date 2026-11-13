@@ -285,7 +285,7 @@ class _CastScreenState extends State<CastScreen> {
               onPressed: widget.vm.startCast,
               style: FilledButton.styleFrom(
                 backgroundColor: YiColors.cinnabar,
-                foregroundColor: const Color(0xFFFFF6EC),
+                foregroundColor: YiColors.onFill,
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
@@ -328,7 +328,7 @@ class _CastScreenState extends State<CastScreen> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: active
-                  ? const Color(0x33D04D3E)
+                  ? YiColors.activeTint
                   : const Color(0x22C9A876),
               borderRadius: BorderRadius.circular(9),
             ),
@@ -348,7 +348,7 @@ class _CastScreenState extends State<CastScreen> {
   Widget _questionInput(CastState s) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: _card(),
+      decoration: yiCardDecoration(),
       child: TextField(
         controller: _qController,
         style: const TextStyle(color: YiColors.textPrimary, fontSize: 14),
@@ -479,7 +479,7 @@ class _CastScreenState extends State<CastScreen> {
       children: [
         Container(
           padding: const EdgeInsets.all(20),
-          decoration: _card(),
+          decoration: yiCardDecoration(),
           child: Column(children: [
             const Text('卦 象 已 成',
                 style: TextStyle(fontSize: 12, letterSpacing: 4, color: YiColors.gold)),
@@ -517,7 +517,7 @@ class _CastScreenState extends State<CastScreen> {
           onPressed: () => widget.onOpenDetail(hex, question: s.question),
           style: FilledButton.styleFrom(
             backgroundColor: YiColors.cinnabar,
-            foregroundColor: const Color(0xFFFFF6EC),
+            foregroundColor: YiColors.onFill,
             padding: const EdgeInsets.symmetric(vertical: 13),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
@@ -544,7 +544,7 @@ class _CastScreenState extends State<CastScreen> {
   Widget _xlrPanel(CastState s) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: _card(),
+      decoration: yiCardDecoration(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Row(children: [
           Text('小六壬', style: TextStyle(fontSize: 14, letterSpacing: 2, color: YiColors.textPrimary)),
@@ -659,7 +659,7 @@ class _CastScreenState extends State<CastScreen> {
   Widget _meihuaPanel(CastState s) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: _card(),
+      decoration: yiCardDecoration(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Row(children: [
           Text('梅花易数', style: TextStyle(fontSize: 14, letterSpacing: 2, color: YiColors.textPrimary)),
@@ -740,7 +740,7 @@ class _CastScreenState extends State<CastScreen> {
 
   InputDecoration _numInput(String hint) => InputDecoration(
         filled: true,
-        fillColor: const Color(0xFF161209),
+        fillColor: YiColors.inputBg,
         counterText: '',
         isDense: true,
         border: OutlineInputBorder(
@@ -815,7 +815,6 @@ class _CastScreenState extends State<CastScreen> {
         _ => YiColors.gold,
       };
 
-  Decoration _card() => yiCardDecoration();
 }
 
 /// 一次起课仪式: 动画类型 / 小六壬停位 / 动画结束后的落库动作

@@ -7,6 +7,7 @@ import '../theme/yijing_theme.dart';
 import '../theme/yi_ornament.dart';
 import '../viewmodel/settings_viewmodel.dart';
 import 'widgets/pressable.dart';
+import 'widgets/yi_kit.dart';
 
 /// 设置面板 (iter62 分组重构) — 屏1 ⚙ / 屏7 ⚙ 共用
 /// 三组: 数据管理 (导出/备份/导入) / 本地数据 (清空) / 每日提醒.
@@ -78,7 +79,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
             decoration: InputDecoration(
               isDense: true,
               filled: true,
-              fillColor: const Color(0xFF161209),
+              fillColor: YiColors.inputBg,
               counterText: '',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -112,7 +113,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
         content: Text(msg, style: const TextStyle(color: YiColors.textPrimary)),
-        backgroundColor: const Color(0xFF231A11),
+        backgroundColor: YiColors.sheetBg,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
@@ -170,7 +171,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
               style: const TextStyle(fontSize: 11, color: YiColors.textPrimary),
               decoration: InputDecoration(
                 filled: true,
-                fillColor: const Color(0xFF161209),
+                fillColor: YiColors.inputBg,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(color: YiColors.strokeSoft),
@@ -189,7 +190,7 @@ class _SettingsPanelState extends State<SettingsPanel> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: YiColors.cinnabar),
-            child: const Text('导入合并', style: TextStyle(color: Color(0xFFFFF6EC))),
+            child: const Text('导入合并', style: TextStyle(color: YiColors.onFill)),
           ),
         ],
       ),
@@ -363,20 +364,12 @@ class _SettingsPanelState extends State<SettingsPanel> {
       ]);
 
   Widget _sectionTitle(String text, IconData icon, {bool danger = false}) {
-    final color = danger ? YiColors.cinnabar : YiColors.gold;
-    return Padding(
+    return YiSectionTitle(
+      text,
+      icon: icon,
+      color: danger ? YiColors.cinnabar : YiColors.gold,
+      divider: true,
       padding: const EdgeInsets.fromLTRB(4, 6, 4, 6),
-      child: Row(children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 8),
-        Text(text,
-            style: TextStyle(
-                fontSize: 11, letterSpacing: 3, color: color)),
-        const SizedBox(width: 10),
-        Expanded(
-            child: Divider(
-                color: color.withValues(alpha: 0.28), height: 1, thickness: 1)),
-      ]),
     );
   }
 

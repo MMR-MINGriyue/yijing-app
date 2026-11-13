@@ -13,6 +13,7 @@ import 'widgets/share_card.dart';
 import 'widgets/haptics.dart';
 import 'widgets/stagger_in.dart';
 import 'widgets/yao_sheet.dart';
+import 'widgets/yi_kit.dart';
 import '../theme/ink_wash.dart';
 import '../theme/yi_transitions.dart';
 import '../theme/yijing_theme.dart';
@@ -302,23 +303,19 @@ class _DetailScreenState extends State<DetailScreen> {
       '感情' => YiColors.pine,
       _ => YiColors.gold,
     };
-    return InkWell(
+    return YiFilterChip(
+      label: d,
+      active: selected,
       onTap: () => widget.vm.setAdviceDir(d),
-      borderRadius: BorderRadius.circular(10),
-      child: AnimatedContainer(
-        duration: YiMotion.base,
-        curve: YiMotion.easeOutExpo,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? color.withValues(alpha: 0.18) : YiColors.inkCard,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: selected ? color : YiColors.stroke),
-        ),
-        alignment: Alignment.center,
-        child: Text(d, style: TextStyle(
-            fontSize: 12, letterSpacing: 2,
-            color: selected ? color : YiColors.textSecondary)),
-      ),
+      accent: color,
+      activeFill: color.withValues(alpha: 0.18),
+      inactiveTextColor: YiColors.textSecondary,
+      inactiveBorderColor: YiColors.stroke,
+      radius: 10,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      letterSpacing: 2,
+      inkWell: true,
+      center: true,
     );
   }
 

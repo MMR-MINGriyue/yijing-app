@@ -106,7 +106,7 @@ class _BaziScreenState extends State<BaziScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFF161209),
+              color: YiColors.inputBg,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: YiColors.strokeSoft),
             ),
@@ -598,7 +598,7 @@ class _BaziScreenState extends State<BaziScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: selected || st.current
-                        ? const Color(0x33D04D3E) : const Color(0x22C9A876),
+                        ? YiColors.activeTint : const Color(0x22C9A876),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                         color: selected || st.current ? YiColors.cinnabar : YiColors.strokeSoft),

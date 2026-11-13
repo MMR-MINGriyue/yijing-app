@@ -22,6 +22,44 @@ class YiColors {
   static const talisman = Color(0xFFD8B25A);    // 符箓金
   static const starSilver = Color(0xFF9AA6A2);  // 星宿银
   static const parchment = Color(0xFFE8D9BC);   // 旧纸米
+
+  // iter74 语义色 — 从 view 层**完全同值**的硬编码收敛而来 (视觉零变化).
+  // 近似色 (0x22/0x2A/0x33/0x55/0x88 等激活透明度) 属设计决策, 本轮不合并.
+  static const inputBg = Color(0xFF161209);           // 输入框底
+  static const sheetBg = Color(0xFF231A11);           // 弹窗 / 抽屉 / SnackBar 底
+  static const onFill = Color(0xFFFFF6EC);            // 朱砂底上的暖白前景
+  static const activeTint = Color(0x33D04D3E);        // 激活态朱砂 20%
+  static const activeTintSoft = Color(0x2AD04D3E);    // 激活态朱砂 16.5%
+  static const gridCellBg = Color(0x0AFFFFFF);        // 卦序格底
+  static const gridCellBorder = Color(0x1AFFFFFF);    // 卦序格描边
+  static const gridCellActiveBorder = Color(0x88D04D3E);
+}
+
+/// 语义文本样式 (iter74) — 共享组件统一取用; 散落各屏的 fontSize 留待渐进收敛
+class YiType {
+  YiType._();
+
+  static const section = TextStyle(
+      fontSize: 11, letterSpacing: 3, color: YiColors.textTertiary);
+  static const chip = TextStyle(fontSize: 12, letterSpacing: 1);
+  static const hint = TextStyle(fontSize: 11, color: YiColors.textMuted);
+  static const caption = TextStyle(
+      fontSize: 10, letterSpacing: 1, color: YiColors.textTertiary);
+  static const body = TextStyle(fontSize: 13, color: YiColors.textPrimary);
+}
+
+/// 间距刻度 (iter74) — 共享组件内使用, 避免同类间距各写各的魔法数
+class YiSpacing {
+  YiSpacing._();
+
+  static const double xs = 4;
+  static const double sm = 6;
+  static const double md = 8;
+  static const double lg = 10;
+  static const double xl = 12;
+  static const double xxl = 14;
+  static const double section = 16;
+  static const double page = 20;
 }
 
 /// 动效 token — PWA v1.17 全站 ease-out-expo 曲线体系 (iter38)

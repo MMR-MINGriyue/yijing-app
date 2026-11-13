@@ -8,7 +8,7 @@ import '../theme/yijing_theme.dart';
 import 'widgets/swipe_back.dart';
 import '../viewmodel/history_viewmodel.dart';
 import 'widgets/haptics.dart';
-import 'widgets/pressable.dart';
+import 'widgets/yi_kit.dart';
 
 /// 屏 6 历史记录 — View 层 (长按多选删除, PWA 对齐)
 class HistoryScreen extends StatefulWidget {
@@ -76,7 +76,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
         content: Text('已删除 $count 条记录', style: const TextStyle(color: YiColors.textPrimary)),
-        backgroundColor: const Color(0xFF231A11),
+        backgroundColor: YiColors.sheetBg,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
@@ -163,7 +163,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget _stats(HistoryState s) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: _card(),
+      decoration: yiCardDecoration(),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         _stat('起卦', widget.vm.totalCount, null),
         _stat('本周', widget.vm.weekCount, YiColors.cinnabar),
@@ -241,7 +241,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       padding: const EdgeInsets.only(top: 6),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Text(title, style: const TextStyle(fontSize: 10, color: YiColors.textTertiary, letterSpacing: 1)),
+          YiSectionTitle(title, fontSize: 10, letterSpacing: 1),
           if (active)
             InkWell(onTap: clear, child: Padding(
               padding: const EdgeInsets.only(left: 8),
@@ -257,22 +257,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget _chip({required String label, required int count, required bool active, required VoidCallback onTap}) {
     return Padding(
       padding: const EdgeInsets.only(right: 6),
-      child: PressableScale(
+      child: YiFilterChip(
+        label: label,
+        count: count,
+        active: active,
         onTap: onTap,
-        scale: 0.94,
-        child: AnimatedContainer(
-          duration: YiMotion.base,
-          curve: YiMotion.easeOutExpo,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: active ? const Color(0x2AD04D3E) : YiColors.inkCard,
-            borderRadius: BorderRadius.circular(17),
-            border: Border.all(color: active ? YiColors.cinnabar : YiColors.strokeSoft),
-          ),
-          child: Text('$label  $count', style: TextStyle(fontSize: 12,
-              color: active ? YiColors.cinnabar : YiColors.textSecondary, letterSpacing: 0.5)),
-        ),
+        radius: 17,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        activeFill: YiColors.activeTintSoft,
+        inactiveTextColor: YiColors.textSecondary,
+        letterSpacing: 0.5,
+        center: true,
       ),
     );
   }
@@ -284,10 +279,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (list.isEmpty) {
       return i == 0
           ? const SizedBox(height: 60)
-          : Text(widget.vm.hasFilter ? '无 匹 配 记 录' : '本 月 尚 未 起 卦',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontSize: 13, color: YiColors.textTertiary));
+          : YiEmptyState(
+              message: widget.vm.hasFilter
+                  ? '无 匹 配 记 录'
+                  : '本 月 尚 未 起 卦',
+              messageStyle: const TextStyle(
+                  fontSize: 13, color: YiColors.textTertiary),
+            );
     }
     if (i == 0) return _groupCap('近 期');
     var j = i - 1;
@@ -432,7 +430,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               color: selected ? YiColors.cinnabar : Colors.transparent,
             ),
             child: selected
-                ? const Icon(Icons.check, size: 14, color: Color(0xFFFFF6EC))
+                ? const Icon(Icons.check, size: 14, color: YiColors.onFill)
                 : null,
           ),
         ],
@@ -500,6 +498,4 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (d == 1) return '昨日 $hh:$mm';
     return '${r.ts.month}/${r.ts.day} $hh:$mm';
   }
-
-  Decoration _card() => yiCardDecoration();
 }

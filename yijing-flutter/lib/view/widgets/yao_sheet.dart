@@ -35,7 +35,7 @@ void showYaoSheet(BuildContext context, Hex hex, int i) {
                     ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
                       content:
                           Text('爻辞已复制', style: TextStyle(color: YiColors.textPrimary)),
-                      backgroundColor: Color(0xFF231A11),
+                      backgroundColor: YiColors.sheetBg,
                       behavior: SnackBarBehavior.floating,
                       duration: Duration(seconds: 2),
                     ));

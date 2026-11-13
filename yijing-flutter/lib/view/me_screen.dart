@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/yijing_theme.dart';
 import '../viewmodel/me_viewmodel.dart';
 import 'widgets/hex_glyph.dart';
+import 'widgets/yi_kit.dart';
 
 /// 屏 7 我的 — 统计概览 + 收藏卦 + 方向/占法分布 + 快捷入口
 class MeScreen extends StatefulWidget {
@@ -81,7 +82,7 @@ class _MeScreenState extends State<MeScreen> {
     final since = widget.vm.since;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: _card(),
+      decoration: yiCardDecoration(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text('占 卜 概 览',
             style: TextStyle(fontSize: 11, letterSpacing: 3, color: YiColors.textTertiary)),
@@ -118,7 +119,7 @@ class _MeScreenState extends State<MeScreen> {
       if (favs.isEmpty)
         Container(
           padding: const EdgeInsets.all(14),
-          decoration: _card(),
+          decoration: yiCardDecoration(),
           child: const Text('屏 4 卦辞解析中点 ☆ 收藏心仪之卦',
               style: TextStyle(fontSize: 11, color: YiColors.textMuted)),
         )
@@ -137,7 +138,7 @@ class _MeScreenState extends State<MeScreen> {
                 child: Container(
                   width: 92,
                   padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: _card(),
+                  decoration: yiCardDecoration(),
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                     HexGlyph(lines: h.yangs, width: 28, lineH: 4, gap: 3.4),
                     const SizedBox(height: 8),
@@ -157,18 +158,18 @@ class _MeScreenState extends State<MeScreen> {
   Widget _distribution(String title, List<({String label, int count, Color color})> items) {
     final maxCount = items.fold<int>(1, (m, e) => e.count > m ? e.count : m);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(title, style: const TextStyle(fontSize: 11, letterSpacing: 3, color: YiColors.textTertiary)),
+      YiSectionTitle(title),
       const SizedBox(height: 10),
       if (items.isEmpty)
         Container(
           padding: const EdgeInsets.all(14),
-          decoration: _card(),
+          decoration: yiCardDecoration(),
           child: const Text('暂无数据', style: TextStyle(fontSize: 11, color: YiColors.textMuted)),
         )
       else
         Container(
           padding: const EdgeInsets.all(14),
-          decoration: _card(),
+          decoration: yiCardDecoration(),
           child: Column(children: [
             for (var ei = 0; ei < items.length; ei++)
               _distRow(title, items[ei], ei, maxCount),
@@ -247,5 +248,4 @@ class _MeScreenState extends State<MeScreen> {
         _ => YiColors.gold,
       };
 
-  Decoration _card() => yiCardDecoration();
 }

@@ -102,3 +102,8 @@ core 与 data 不 import Flutter (仅 ViewModel 用 foundation.ChangeNotifier)�
   Stack 定高去 IntrinsicHeight / app_shell 缓存 4 个 Screen 配置 /
   HistoryRepository.version + ViewModel 派生缓存 (外部写入自动失效) /
   分享卡断行二分测量 + 复用 TextPainter / 纳音查表化 / 首页黄历按时辰缓存; 230 测试
+- iter74 (v1.65.0): P2 设计系统收敛 — `view/widgets/yi_kit.dart` 抽
+  YiFilterChip / YiEmptyState / YiSectionTitle (参数化保留各屏视觉差异, 严格等价);
+  删 5 处 `_card()` 转发直接用 `yiCardDecoration()`; YiColors 补 8 个语义色 +
+  YiType / YiSpacing token, 14 处同值硬编码色清零;
+  7 项视觉参数锁定测试; 237 测试

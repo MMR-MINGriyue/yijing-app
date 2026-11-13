@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../data/favorites_store.dart';
 import '../theme/yijing_theme.dart';
-import '../theme/yi_ornament.dart';
 import '../viewmodel/hexgrid_viewmodel.dart';
 import 'widgets/hex_glyph.dart';
 import 'widgets/swipe_back.dart';
 import 'widgets/pressable.dart';
+import 'widgets/yi_kit.dart';
 
 /// 屏 3 六十四卦 — 网格浏览 + 八宫筛选 + 搜索
 class HexGridScreen extends StatefulWidget {
@@ -87,20 +87,10 @@ class _HexGridScreenState extends State<HexGridScreen> {
           // iter61: 空结果即时反馈 (不走切换动画, 避免旧网格残留过渡层);
           // 网格筛选/搜索仍保留 iter39 的淡入滑入
           child: list.isEmpty
-              ? const Center(
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    YiSeal(text: '无', size: 34),
-                    SizedBox(height: 12),
-                    Text('未找到相关卦象',
-                        style: TextStyle(
-                            fontSize: 13,
-                            letterSpacing: 2,
-                            color: YiColors.textSecondary)),
-                    SizedBox(height: 6),
-                    Text('换个卦名 / 拼音 / 卦序试试',
-                        style: TextStyle(
-                            fontSize: 11, color: YiColors.textMuted)),
-                  ]),
+              ? const YiEmptyState(
+                  seal: '无',
+                  message: '未找到相关卦象',
+                  hint: '换个卦名 / 拼音 / 卦序试试',
                 )
               : AnimatedSwitcher(
                   duration: YiMotion.base,
@@ -238,33 +228,12 @@ class _HexGridScreenState extends State<HexGridScreen> {
   Widget _chip(String label, bool active, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: PressableScale(
+      child: YiFilterChip(
+        label: label,
+        active: active,
         onTap: onTap,
-        scale: 0.94,
-        child: AnimatedContainer(
-          duration: YiMotion.base,
-          curve: YiMotion.easeOutExpo,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-          decoration: BoxDecoration(
-            color: active ? const Color(0x33D04D3E) : YiColors.inkCard,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: active ? YiColors.cinnabar : YiColors.strokeSoft),
-          ),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Container(
-              width: 5,
-              height: 5,
-              decoration: BoxDecoration(
-                color: active ? YiColors.cinnabar : YiColors.textMuted,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Text(label, style: TextStyle(
-                fontSize: 12, letterSpacing: 1,
-                color: active ? YiColors.cinnabar : YiColors.textTertiary)),
-          ]),
-        ),
+        dot: true,
+        activeFill: YiColors.activeTint,
       ),
     );
   }

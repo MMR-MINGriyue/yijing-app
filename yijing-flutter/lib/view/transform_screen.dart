@@ -64,7 +64,7 @@ class _TransformScreenState extends State<TransformScreen> {
     final r = s.result;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: _cardDeco(),
+      decoration: yiCardDecoration(border: YiColors.stroke, radius: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         // iter66: 本卦 → 变卦 → 互卦 三列接力入场
@@ -137,7 +137,7 @@ class _TransformScreenState extends State<TransformScreen> {
     final changes = widget.vm.yaoChanges();
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: _cardDeco(),
+      decoration: yiCardDecoration(border: YiColors.stroke, radius: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -232,7 +232,7 @@ class _TransformScreenState extends State<TransformScreen> {
     final r = s.result;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: _cardDeco(),
+      decoration: yiCardDecoration(border: YiColors.stroke, radius: 16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('从 ${r.ben.name} 至 ${r.changed.name} 之 推 演', style: const TextStyle(
             fontSize: 12, letterSpacing: 2, color: YiColors.cinnabar)),
@@ -272,9 +272,12 @@ class _TransformScreenState extends State<TransformScreen> {
       child: Container(
         margin: const EdgeInsets.all(2),
         decoration: BoxDecoration(
-          color: active ? const Color(0x33D04D3E) : const Color(0x0AFFFFFF),
+          color: active ? YiColors.activeTint : YiColors.gridCellBg,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: active ? const Color(0x88D04D3E) : const Color(0x1AFFFFFF)),
+          border: Border.all(
+              color: active
+                  ? YiColors.gridCellActiveBorder
+                  : YiColors.gridCellBorder),
         ),
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           Text(hex.name, style: TextStyle(fontSize: 15,
@@ -285,7 +288,6 @@ class _TransformScreenState extends State<TransformScreen> {
     );
   }
 
-  Decoration _cardDeco() => yiCardDecoration(border: YiColors.stroke, radius: 16);
 }
 
 /// 爻象竖排 (上爻在上, 初爻在下); 阳爻实线 阴爻两短段
